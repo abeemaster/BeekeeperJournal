@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/selected_note_background" /> <!-- НОВЕ: Колір фону при виборі -->
+    <corners android:radius="8dp" /> <!-- Закруглені кути, як у note_item_background -->
+    <stroke
+        android:width="2dp"
+        android:color="@color/note_border_selected" /> <!-- НОВЕ: Рамка при виборі -->
+</shape>

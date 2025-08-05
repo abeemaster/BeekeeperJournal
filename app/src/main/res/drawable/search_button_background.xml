@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Pressed state -->
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <solid android:color="@color/sync_button_color_pressed"/> <!-- Використовуйте колір для натиснутого стану -->
+            <size android:width="@dimen/search_button_size" android:height="@dimen/search_button_size"/>
+        </shape>
+    </item>
+    <!-- Default state -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/sync_button_color"/> <!-- Використовуйте ваш колір для кнопки синхронізації -->
+            <size android:width="@dimen/search_button_size" android:height="@dimen/search_button_size"/>
+        </shape>
+    </item>
+</selector>

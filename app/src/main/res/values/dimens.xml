@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="button_margin_bottom">16dp</dimen>
+    <dimen name="button_padding_vertical">8dp</dimen>
+    <dimen name="button_corner_radius">12dp</dimen>
+    <dimen name="button_elevation">4dp</dimen>
+    <dimen name="main_button_height">50dp</dimen>
+
+    <!-- Розміри для кнопок дій на екрані інформації -->
+    <dimen name="action_button_padding_vertical">4dp</dimen>
+    <dimen name="action_button_padding_horizontal">20dp</dimen>
+    <dimen name="action_button_corner_radius">12dp</dimen>
+    <dimen name="action_button_text_size">8sp</dimen>
+    <dimen name="action_button_elevation">8dp</dimen>
+    <dimen name="action_button_min_width">120dp</dimen>
+    <dimen name="action_button_min_height">30dp</dimen>
+
+    <!-- Розміри для кнопок навігації (Матка, Примітки) -->
+    <dimen name="nav_button_padding_vertical">8dp</dimen>
+    <dimen name="nav_button_padding_horizontal">16dp</dimen>
+    <dimen name="nav_button_corner_radius">12dp</dimen>
+    <dimen name="nav_button_text_size">12sp</dimen>
+    <dimen name="nav_button_elevation">6dp</dimen>
+
+    <!-- Загальні відступи -->
+    <dimen name="screen_padding">16dp</dimen>
+    <dimen name="content_padding">16dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">16dp</dimen>
+    <dimen name="spacing_large">24dp</dimen>
+
+    <!-- Загальний розмір тексту для кнопок головного екрану -->
+    <dimen name="common_button_text_size">16sp</dimen>
+    <dimen name="hive_button_text_size">12sp</dimen>
+
+    <!-- Розміри для кольорових кружечків у діалозі вибору кольору -->
+    <dimen name="color_swatch_size">48dp</dimen>
+    <dimen name="color_swatch_border_width">2dp</dimen>
+    <dimen name="color_swatch_selected_border_width">4dp</dimen>
+
+    <!-- Розмір для додаткового кольорового маркера на кнопці вулика -->
+    <dimen name="secondary_marker_size">24dp</dimen>
+    <!-- Ширина рамки для кнопок вуликів -->
+    <dimen name="hive_button_border_width">2dp</dimen>
+    <!-- Розмір для кнопки пошуку -->
+    <dimen name="search_button_size">48dp</dimen>
+</resources>
+

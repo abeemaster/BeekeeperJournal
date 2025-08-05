@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/screen_padding"
+    android:background="@color/background_light_green"
+    android:gravity="center_horizontal"
+    tools:context=".SearchActivity">
+
+    <TextView
+        android:id="@+id/searchScreenTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Пошук записів"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/title_dark_green"
+        android:layout_marginBottom="@dimen/spacing_large"/>
+
+    <EditText
+        android:id="@+id/searchQueryInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введіть пошуковий запит"
+        android:inputType="text"
+        android:padding="12dp"
+        android:background="@drawable/edittext_background"
+        android:textColor="@color/note_text_color"
+        android:textColorHint="@color/note_date_text"
+        android:layout_marginBottom="@dimen/spacing_medium" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical" android:layout_marginBottom="@dimen/spacing_medium">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/searchExecuteButton"
+            android:layout_width="0dp"  android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Пошук"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/sync_button_color"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="16dp"
+            app:cornerRadius="12dp"
+            android:elevation="4dp"
+            android:stateListAnimator="@null"
+            android:layout_marginEnd="@dimen/spacing_small" />
+
+        <ImageButton
+            android:id="@+id/microphoneBtnSearch"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_mic"
+            android:background="@drawable/microphone_button_background"
+            android:contentDescription="Голосовий ввід для пошуку"
+            android:elevation="@dimen/button_elevation"
+            android:stateListAnimator="@null"
+            android:scaleType="centerInside" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/searchResultsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/rounded_background"
+        android:padding="@dimen/content_padding"
+        android:elevation="2dp"
+        tools:listitem="@layout/note_item_search_result"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+
+</LinearLayout>

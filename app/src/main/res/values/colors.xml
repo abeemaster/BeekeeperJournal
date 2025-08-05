@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Існуючі кольори -->
+    <color name="background_light_green">#F0FDF4</color>
+    <color name="title_dark_green">#14532D</color>
+    <color name="hive_button_color">#65A30D</color> <!-- Стандартний зелений для вуликів -->
+    <color name="add_note_button_color">#16A34A</color>
+    <color name="nav_button_color">#0284C7</color> <!-- Стандартний синій для Матки/Приміток -->
+    <color name="note_date_text">#6B7280</color>
+    <color name="note_text_color">#1F2937</color>
+    <color name="edit_button_color">#F59E0B</color>
+    <color name="delete_button_color">#EF4444</color>
+    <color name="save_button_color">#10B981</color>
+    <color name="cancel_button_color">#6B7280</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="edittext_background">#E5E7EB</color>
+    <color name="note_item_background">#FFFFFF</color>
+    <color name="note_item_background_selected">#E0F7FA</color> <!-- Колір фону при виборі запису -->
+    <color name="note_border_selected">#00BCD4</color> <!-- Колір рамки при виділенні запису -->
+
+    <!-- Кольори для Material Theme -->
+    <color name="primary_green">#4CAF50</color>
+    <color name="dark_green">#388E3C</color>
+    <color name="accent_yellow">#FFC107</color>
+    <color name="dark_yellow">#FFA000</color>
+    <color name="note_border">#D1D5DB</color>
+    <color name="microphone_button_color">#4CAF50</color> <!-- Зелений (неактивний) -->
+    <color name="microphone_button_active_color">#F44336</color> <!-- Червоний (активний) -->
+    <color name="green_50">#F1F8E9</color>
+    <color name="green_200">#C5E1A5</color>
+
+    <!-- НОВІ КОЛЬОРИ ДЛЯ ВИБОРУ ВУЛИКІВ -->
+    <color name="color_red">#F44336</color>
+    <color name="color_blue">#2196F3</color>
+    <color name="color_yellow">#FFEB3B</color>
+    <color name="color_purple">#9C27B0</color>
+    <color name="color_orange">#FF9800</color>
+    <!-- НОВЕ: Колір, який використовується у note_item_background_selected.xml -->
+    <color name="selected_note_background">#E0F7FA</color>
+    <!-- Додайте ці кольори, якщо вони відсутні -->
+    <color name="card_background_light">#FFFFFF</color>
+    <color name="text_dark">#333333</color>
+    <color name="sync_button_color_pressed">#4CAF50</color>
+    <color name="sync_button_color">#0284C7</color>
+    <color name="general_notes_button_color">#65A30D</color>
+    <color name="add_hive_button_color">#388E3C</color>
+    <color name="note_type_text">#388E3C</color>
+
+
+
+</resources>
