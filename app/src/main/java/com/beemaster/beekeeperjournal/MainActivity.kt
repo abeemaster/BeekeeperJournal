@@ -42,6 +42,12 @@ import android.content.res.Resources
 import android.view.Gravity // Import Gravity
 import com.google.android.material.button.MaterialButton
 import android.widget.ImageButton
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
+import androidx.activity.OnBackPressedCallback
+
 
 // Клас для структури файлу резервної копії
 data class BackupData(
@@ -51,6 +57,7 @@ data class BackupData(
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var drawerLayout: DrawerLayout
     private lateinit var hiveButtonsContainer: LinearLayout
     private var hiveList: MutableList<HiveData> = mutableListOf()
     private val TAG = "MainActivity"
@@ -181,6 +188,44 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        drawerLayout = findViewById(R.id.drawer_layout)
+        val navView: NavigationView = findViewById(R.id.nav_view)
+
+        val toggle = ActionBarDrawerToggle(
+            this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        // *** НОВИЙ КОД ДЛЯ ОБРОБКИ ЖЕСТУ "НАЗАД" ***
+        onBackPressedDispatcher.addCallback(this /* lifecycle owner */, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                } else {
+                    // Якщо бічна панель закрита, викликаємо стандартну поведінку
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_general_notes -> {
+                    // Код для переходу до загальних нотаток
+                }
+                R.id.nav_export -> {
+                    // Код для експорту
+                }
+                R.id.nav_settings -> {
+                    // Код для налаштувань
+                }
+            }
+            drawerLayout.closeDrawer(GravityCompat.START)
+            true
+        }
+
         val generalNotesBtn: MaterialButton = findViewById(R.id.generalNotesBtn) // Змінено на MaterialButton
         val searchBtn: ImageButton = findViewById(R.id.searchBtn) // Нова кнопка пошуку
         hiveButtonsContainer = findViewById(R.id.hiveButtonsContainer)
@@ -228,6 +273,8 @@ class MainActivity : AppCompatActivity() {
             showSyncOptionsDialog()
         }
     }
+
+
 
     // Діалог для вибору опцій синхронізації (резервне копіювання / відновлення)
     private fun showSyncOptionsDialog() {
@@ -813,6 +860,8 @@ class MainActivity : AppCompatActivity() {
 
         return "${note.id},${formattedDate},$textForCsv,${note.type},${note.hiveNumber},${note.timestamp}"
     }
+
+
 
     // ... (початок функції)
     private fun exportNotesToCsvFiles(folderUri: android.net.Uri) {

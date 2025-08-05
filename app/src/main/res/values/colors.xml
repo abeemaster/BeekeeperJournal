@@ -29,6 +29,7 @@
     <color name="microphone_button_active_color">#F44336</color> <!-- Червоний (активний) -->
     <color name="green_50">#F1F8E9</color>
     <color name="green_200">#C5E1A5</color>
+    <color name="background_dark_green">#388E3C</color>
 
     <!-- НОВІ КОЛЬОРИ ДЛЯ ВИБОРУ ВУЛИКІВ -->
     <color name="color_red">#F44336</color>

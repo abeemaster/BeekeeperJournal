@@ -50,7 +50,6 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     // Gson для роботи з JSON
     implementation(libs.google.gson)
-    // implementation("com.alphacephei:vosk-android:0.3.47")
     implementation("androidx.activity:activity-ktx:1.9.0") // Або новіша версія
     implementation("com.google.android.material:material:1.12.0") // Зверніть увагу на дужки!
     // Vosk для розпізнавання мовлення
@@ -59,4 +58,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation("androidx.drawerlayout:drawerlayout:1.2.0")
 }
