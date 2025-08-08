@@ -24,11 +24,15 @@
 
     <string name="save_record_button_text">Зберегти запис</string>
 
-    <string name="your_name_here">Журнал бджоляра</string>
+    <string name="hive_count">Вулики: %d</string>
 
     <string name="navigation_drawer_open">Відкрити бічну панель</string>
     <string name="navigation_drawer_close">Закрити бічну панель</string>
 
+    <string name="general_notes_text">Загальні записи</string>
+
+    <string name="hive_name_default">Вулик №1</string>
+    <string name="options_description">Опції</string>
 
 
 

@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="@dimen/screen_padding"
-    android:background="@color/background_light_green"
+    android:id="@+id/new_note_root_layout"
+    android:background="@android:color/white"
     android:gravity="center_horizontal"
     tools:context=".NewNoteActivity">
 
@@ -46,7 +47,7 @@
         android:layout_marginBottom="0dp">
 
         <!-- Кнопка "Зберегти запис" -->
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/saveNoteButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -57,9 +58,6 @@
             android:textColor="@android:color/white"
             android:backgroundTint="@color/add_note_button_color"
             android:paddingVertical="8dp"
-            app:cornerRadius="12dp"
-            android:stateListAnimator="@null"
-            android:elevation="4dp"
             android:layout_marginEnd="@dimen/spacing_small" />
 
         <!-- Кнопка мікрофона на новому екрані -->

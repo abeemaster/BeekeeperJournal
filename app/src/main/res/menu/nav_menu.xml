@@ -5,13 +5,21 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_search"
+            android:icon="@drawable/ic_search"
+            android:title="Пошук" />
+        <item
             android:id="@+id/nav_general_notes"
             android:icon="@drawable/ic_notes"
-            android:title="Загальні нотатки" />
+            android:title="Загальні записи" />
         <item
-            android:id="@+id/nav_export"
-            android:icon="@drawable/ic_export"
-            android:title="Експорт" />
+            android:id="@+id/nav_sync"
+            android:icon="@drawable/ic_sync"
+            android:title="Синхронізація" />
+        <item
+            android:id="@+id/nav_add_hive"
+            android:icon="@drawable/ic_add_box"
+            android:title="Додати вулик" />
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings"

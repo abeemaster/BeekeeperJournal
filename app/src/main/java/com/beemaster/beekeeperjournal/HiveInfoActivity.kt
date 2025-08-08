@@ -36,6 +36,9 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import androidx.activity.OnBackPressedCallback
 import com.beemaster.beekeeperjournal.NewNoteActivity
+import android.graphics.Color
+import android.os.Build
+import android.content.res.ColorStateList
 
 class HiveInfoActivity : AppCompatActivity() {
 
@@ -74,9 +77,14 @@ class HiveInfoActivity : AppCompatActivity() {
     private lateinit var newNoteActivityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var editNoteActivityResultLauncher: ActivityResultLauncher<Intent>
 
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
+
+        // Ініціалізація змінних та отримання даних з Intent
 
         infoTitle = findViewById(R.id.infoTitle)
         notesDisplayArea = findViewById(R.id.notesDisplayArea)
@@ -87,11 +95,9 @@ class HiveInfoActivity : AppCompatActivity() {
 
         currentEntryType = intent.getStringExtra("TYPE") ?: "hive"
         val titleFromIntent = intent.getStringExtra("TITLE")
-        currentHiveNumber = intent.getIntExtra("HIVE_NUMBER", 0)
+        currentHiveNumber = intent.getIntExtra("EXTRA_HIVE_NUMBER", 0)
         currentQueenButtonColor = intent.getIntExtra(EXTRA_QUEEN_BUTTON_COLOR, R.color.nav_button_color)
         currentNotesButtonColor = intent.getIntExtra(EXTRA_NOTES_BUTTON_COLOR, R.color.nav_button_color)
-
-        // Отримання актуальної назви вулика з Intent
         currentHiveActualName = intent.getStringExtra(EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveNumber"
 
         // Встановлення заголовка екрану. Якщо titleFromIntent є, використовуємо його, інакше - актуальну назву.
@@ -106,19 +112,21 @@ class HiveInfoActivity : AppCompatActivity() {
             queenBtn.visibility = View.GONE
             notesBtn.visibility = View.GONE
         } else {
-            queenBtn.backgroundTintList = ContextCompat.getColorStateList(this, currentQueenButtonColor)
+            queenBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentQueenButtonColor))
             val queenShapeDrawable = GradientDrawable().apply {
                 cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
                 setColor(ContextCompat.getColor(this@HiveInfoActivity, currentQueenButtonColor))
             }
             queenBtn.background = queenShapeDrawable
 
-            notesBtn.backgroundTintList = ContextCompat.getColorStateList(this, currentNotesButtonColor)
+            notesBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentNotesButtonColor))
             val notesShapeDrawable = GradientDrawable().apply {
                 cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
                 setColor(ContextCompat.getColor(this@HiveInfoActivity, currentNotesButtonColor))
             }
             notesBtn.background = notesShapeDrawable
+            // Лог, щоб підтвердити, що кольори були встановлені
+            Log.d("BeeDebug", "HiveInfoActivity: Кольори кнопок встановлено програмно.")
         }
 
         loadNotes()
@@ -230,16 +238,14 @@ class HiveInfoActivity : AppCompatActivity() {
             true
         }
 
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                setResultAndFinish()
-                isEnabled = false
-                onBackPressedDispatcher.onBackPressed()
-            }
-        }
-        onBackPressedDispatcher.addCallback(this, callback)
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        Log.d("BeeDebug", "HiveInfoActivity: onNewIntent() був викликаний. Активність оновлюється.")
+        loadNotes()
+    }
     private fun setResultAndFinish() {
         val resultIntent = Intent().apply {
             putExtra(RESULT_QUEEN_BUTTON_COLOR, currentQueenButtonColor)
@@ -475,6 +481,8 @@ class HiveInfoActivity : AppCompatActivity() {
         currentlySelectedNoteItem = null
     }
 
+
+
     fun editNote(button: Button) {
         val noteItem = button.parent.parent as LinearLayout
         val noteId = noteItem.tag as String
@@ -578,6 +586,7 @@ class HiveInfoActivity : AppCompatActivity() {
 
         val dialog = dialogBuilder.create()
 
+
         for (colorResId in colorsResIds) {
             val colorSwatch = View(this).apply {
                 val size = resources.getDimensionPixelSize(R.dimen.color_swatch_size)
@@ -621,4 +630,26 @@ class HiveInfoActivity : AppCompatActivity() {
         }
         dialog.show()
     }
+
+    private fun showInfo(entryType: String) {
+        currentEntryType = entryType
+        val title: String = when (currentEntryType) {
+            "queen" -> "Записи про матку"
+            "notes" -> "Загальні записи"
+            else -> currentHiveActualName
+        }
+        infoTitle.text = title
+        loadNotes()
+    }
+
+    // Обробник натискання для кнопки "Матка"
+    fun openQueenInfo(view: View) {
+        showInfo("queen")
+    }
+
+    // Обробник натискання для кнопки "Примітки"
+    fun openNotesInfo(view: View) {
+        showInfo("notes")
+    }
+
 }

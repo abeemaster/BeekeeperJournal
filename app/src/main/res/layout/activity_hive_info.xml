@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="@dimen/screen_padding"
-    android:background="@color/background_light_green"
+    android:id="@+id/hive_info_root_layout"
     android:gravity="center_horizontal"
     tools:context=".HiveInfoActivity">
 
@@ -25,10 +25,11 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@drawable/rounded_background"
         android:padding="@dimen/content_padding"
         android:layout_marginBottom="@dimen/spacing_medium"
-        android:elevation="2dp">
+        android:elevation="2dp"
+        android:background="@drawable/notes_area_background">
+        <!-- android:background="@drawable/rounded_background" -->
 
         <LinearLayout
             android:id="@+id/notesDisplayArea"
@@ -67,12 +68,14 @@
             android:id="@+id/microphoneBtn"
             android:layout_width="wrap_content"
             android:layout_height="48dp"
-            android:background="@drawable/microphone_button_background"
+
             android:contentDescription="Голосовий ввід"
             android:elevation="@dimen/button_elevation"
             android:scaleType="centerInside"
             android:src="@drawable/ic_mic"
-            android:stateListAnimator="@null" />
+            android:stateListAnimator="@null"
+            android:background="@drawable/microphone_button_background"/>
+            <!-- android:background="@drawable/microphone_button_background" -->
     </LinearLayout>
 
     <!-- Кнопки "Матка" та "Примітки" -->

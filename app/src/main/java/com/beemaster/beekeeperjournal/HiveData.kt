@@ -12,10 +12,10 @@ package com.beemaster.beekeeperjournal
  */
 data class HiveData(
     val number: Int,
-    val name: String,
-    var color: Int,
-    var queenButtonColor: Int,
-    var notesButtonColor: Int,
-    var secondaryColor: Int
+    var name: String, // <-- Змінили на 'var'
+    var color: Int = R.color.hive_button_color,
+    var queenButtonColor: Int = R.color.nav_button_color,
+    var notesButtonColor: Int = R.color.nav_button_color,
+    var secondaryColor: Int = android.R.color.transparent
 )
 
