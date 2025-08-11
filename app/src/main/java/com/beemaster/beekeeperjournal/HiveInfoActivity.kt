@@ -80,12 +80,12 @@ class HiveInfoActivity : AppCompatActivity() {
 
 
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
 
         // Ініціалізація змінних та отримання даних з Intent
-
         infoTitle = findViewById(R.id.infoTitle)
         notesDisplayArea = findViewById(R.id.notesDisplayArea)
         microphoneBtn = findViewById(R.id.microphoneBtn)
@@ -93,44 +93,61 @@ class HiveInfoActivity : AppCompatActivity() {
         queenBtn = findViewById(R.id.queenBtn)
         notesBtn = findViewById(R.id.notesBtn)
 
-        currentEntryType = intent.getStringExtra("TYPE") ?: "hive"
+        // Встановлення currentEntryType.
+        // Якщо прийшло з Intent, то використовуємо його, інакше за замовчуванням "hive".
+        val initialEntryType = intent.getStringExtra("TYPE") ?: "hive"
         val titleFromIntent = intent.getStringExtra("TITLE")
         currentHiveNumber = intent.getIntExtra("EXTRA_HIVE_NUMBER", 0)
+        Log.d(TAG, "HiveInfoActivity: В onCreate, отриманий hiveNumber: $currentHiveNumber")
         currentQueenButtonColor = intent.getIntExtra(EXTRA_QUEEN_BUTTON_COLOR, R.color.nav_button_color)
         currentNotesButtonColor = intent.getIntExtra(EXTRA_NOTES_BUTTON_COLOR, R.color.nav_button_color)
         currentHiveActualName = intent.getStringExtra(EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveNumber"
 
-        // Встановлення заголовка екрану. Якщо titleFromIntent є, використовуємо його, інакше - актуальну назву.
-        // infoTitle.text = titleFromIntent ?: currentHiveActualName
+
         if (titleFromIntent != null) {
             infoTitle.text = titleFromIntent
         } else {
             infoTitle.text = currentHiveActualName
         }
 
-        if (currentEntryType == "queen" || currentEntryType == "notes") {
-            queenBtn.visibility = View.GONE
-            notesBtn.visibility = View.GONE
-        } else {
-            queenBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentQueenButtonColor))
-            val queenShapeDrawable = GradientDrawable().apply {
-                cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
-                setColor(ContextCompat.getColor(this@HiveInfoActivity, currentQueenButtonColor))
-            }
-            queenBtn.background = queenShapeDrawable
+        // Викликаємо showInfo для ініціалізації
+        showInfo(initialEntryType)
 
-            notesBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentNotesButtonColor))
-            val notesShapeDrawable = GradientDrawable().apply {
-                cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
-                setColor(ContextCompat.getColor(this@HiveInfoActivity, currentNotesButtonColor))
-            }
-            notesBtn.background = notesShapeDrawable
-            // Лог, щоб підтвердити, що кольори були встановлені
-            Log.d("BeeDebug", "HiveInfoActivity: Кольори кнопок встановлено програмно.")
+        // Встановлюємо кольори кнопок "Матка" та "Примітки"
+        queenBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentQueenButtonColor))
+        val queenShapeDrawable = GradientDrawable().apply {
+            cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
+            setColor(ContextCompat.getColor(this@HiveInfoActivity, currentQueenButtonColor))
+        }
+        queenBtn.background = queenShapeDrawable
+
+        notesBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentNotesButtonColor))
+        val notesShapeDrawable = GradientDrawable().apply {
+            cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
+            setColor(ContextCompat.getColor(this@HiveInfoActivity, currentNotesButtonColor))
+        }
+        notesBtn.background = notesShapeDrawable
+
+        // Встановлюємо слухачів для кнопок "Матка" і "Примітки", щоб вони лише оновлювали поточну активність
+        queenBtn.setOnClickListener {
+            showInfo("queen")
         }
 
-        loadNotes()
+        notesBtn.setOnClickListener {
+            showInfo("notes")
+        }
 
+        val type = intent.getStringExtra("TYPE")
+
+        if (type == "general") {
+            // Якщо це екран для загальних записів, приховуємо кнопки "Матка" та "Примітки"
+            queenBtn = findViewById(R.id.queenBtn)
+            notesBtn = findViewById(R.id.notesBtn)
+            queenBtn.visibility = View.GONE
+            notesBtn.visibility = View.GONE
+        }
+
+        // ... (залиште інший код onCreate без змін) ...
         newNoteActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data = result.data
@@ -186,30 +203,6 @@ class HiveInfoActivity : AppCompatActivity() {
             newNoteActivityResultLauncher.launch(intent)
         }
 
-        queenBtn.setOnClickListener {
-            val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                putExtra("TYPE", "queen")
-                putExtra("HIVE_NUMBER", currentHiveNumber)
-                putExtra(EXTRA_HIVE_NAME, "Матка " + currentHiveActualName) // Передаємо актуальну назву
-                putExtra("TITLE", "Матка $currentHiveActualName") // Формуємо заголовок з актуальної назви
-                putExtra(EXTRA_QUEEN_BUTTON_COLOR, currentQueenButtonColor)
-                putExtra(EXTRA_NOTES_BUTTON_COLOR, currentNotesButtonColor)
-            }
-            startActivity(intent)
-        }
-
-        notesBtn.setOnClickListener {
-            val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                putExtra("TYPE", "notes")
-                putExtra("HIVE_NUMBER", currentHiveNumber)
-                putExtra(EXTRA_HIVE_NAME, "Примітки " + currentHiveActualName) // Передаємо актуальну назву
-                putExtra("TITLE", "Примітки $currentHiveActualName") // Формуємо заголовок з актуальної назви
-                putExtra(EXTRA_QUEEN_BUTTON_COLOR, currentQueenButtonColor)
-                putExtra(EXTRA_NOTES_BUTTON_COLOR, currentNotesButtonColor)
-            }
-            startActivity(intent)
-        }
-
         queenBtn.setOnLongClickListener {
             showColorPickerDialogForNavButton("Матка", currentQueenButtonColor) { selectedColorResId ->
                 currentQueenButtonColor = selectedColorResId
@@ -238,6 +231,8 @@ class HiveInfoActivity : AppCompatActivity() {
             true
         }
 
+
+
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -257,6 +252,7 @@ class HiveInfoActivity : AppCompatActivity() {
     }
 
     private fun addNoteFromNewNoteActivity(noteText: String, entryType: String, hiveNumber: Int) {
+        Log.d(TAG, "HiveInfoActivity: addNoteFromNewNoteActivity викликано з hiveNumber: $hiveNumber")
         if (noteText.isNotEmpty()) {
             val dateFormat = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
             val formattedDate = dateFormat.format(Date())
@@ -336,13 +332,13 @@ class HiveInfoActivity : AppCompatActivity() {
 
     private fun loadNotes() {
         val allNotes = readAllNotesFromJson()
+
         val filteredNotes = allNotes.filter { note ->
-            if (currentEntryType == "general") {
-                note.type == currentEntryType
-            } else {
-                note.type == currentEntryType && note.hiveNumber == currentHiveNumber
-            }
+            // Фільтруємо за типом запису та номером вулика
+            note.type == currentEntryType && note.hiveNumber == currentHiveNumber
+
         }.sortedByDescending { it.timestamp }
+        Log.d(TAG, "HiveInfoActivity: Знайдено ${filteredNotes.size} нотаток для hiveNumber: $currentHiveNumber і type: $currentEntryType")
 
         notesDisplayArea.removeAllViews()
 
@@ -634,8 +630,8 @@ class HiveInfoActivity : AppCompatActivity() {
     private fun showInfo(entryType: String) {
         currentEntryType = entryType
         val title: String = when (currentEntryType) {
-            "queen" -> "Записи про матку"
-            "notes" -> "Загальні записи"
+            "queen" -> "Матка $currentHiveActualName"
+            "notes" -> "Примітки $currentHiveActualName"
             else -> currentHiveActualName
         }
         infoTitle.text = title

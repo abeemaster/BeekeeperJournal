@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<View xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/colorView"
+    android:layout_width="60dp"
+    android:layout_height="60dp"
+    android:background="@drawable/color_picker_circle_shape"
+    android:elevation="4dp"
+    android:layout_margin="4dp" />
+
+
+
+

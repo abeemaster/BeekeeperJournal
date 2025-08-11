@@ -29,7 +29,7 @@
         android:hint="Введіть новий запис"
         android:gravity="top"
         android:padding="@dimen/content_padding"
-        android:background="@drawable/rounded_background"
+        android:background="@drawable/notes_area_background"
         android:textColor="@color/note_text_color"
         android:textColorHint="@color/note_date_text"
         android:layout_marginBottom="@dimen/spacing_medium"

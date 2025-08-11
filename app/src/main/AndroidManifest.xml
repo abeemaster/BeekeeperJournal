@@ -39,10 +39,10 @@
         <activity
             android:name=".NewNoteActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:label="Новий Запис"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.NewNoteActivity"/>
         <activity
             android:name=".EditNoteActivity"
             android:exported="false"

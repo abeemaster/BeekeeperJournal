@@ -34,6 +34,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import android.widget.Button
+import android.os.Looper
 
 class NewNoteActivity : AppCompatActivity(), RecognitionListener {
 
@@ -69,6 +70,7 @@ class NewNoteActivity : AppCompatActivity(), RecognitionListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_note)
 
+
         // Ініціалізуємо ActivityResultLauncher
         voiceInputLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -91,13 +93,22 @@ class NewNoteActivity : AppCompatActivity(), RecognitionListener {
         microphoneBtnNewNote = findViewById(R.id.microphoneBtnNewNote)
         saveNoteButton = findViewById(R.id.saveNoteButton)
 
+        // Програмно встановлюємо білий фон для самого вікна Activity
+        window.setBackgroundDrawableResource(android.R.color.white)
+
+
         // Отримуємо дані з Intent
         currentEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "hive"
         currentHiveNumber = intent.getIntExtra(EXTRA_HIVE_NUMBER, 0)
         val hiveNameFromIntent = intent.getStringExtra(EXTRA_HIVE_NAME)
 
         // Встановлюємо заголовок
-        newNoteScreenTitle.text = hiveNameFromIntent ?: "Вулик №$currentHiveNumber"
+        val newNoteTitle = when (currentEntryType) {
+            "queen" -> "Матка $hiveNameFromIntent"
+            "notes" -> "Примітки $hiveNameFromIntent"
+            else -> hiveNameFromIntent
+        }
+        newNoteScreenTitle.text = newNoteTitle
 
         // Перевіряємо наявність моделі Vosk
         if (BeekeeperApplication.voskModel != null) {
@@ -127,72 +138,102 @@ class NewNoteActivity : AppCompatActivity(), RecognitionListener {
             if (isVoskListening) {
                 stopListening()
             } else {
-                startListening()
+                // Замість прямого виклику startListening()
+                // Викликаємо функцію, яка перевіряє модель і дозволи
+                setupVoskAndStartListening()
             }
         }
     }
 
     // Методи для роботи з Vosk
+    // У вашому класі NewNoteActivity
+
     private fun setupVoskAndStartListening() {
         Log.d(TAG, "setupVoskAndStartListening() called")
-        // Якщо Vosk модель завантажено
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // Якщо дозвіл не надано, запитуємо його
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
+            return
+        }
+
+        // Якщо Vosk модель завантажено, запускаємо з затримкою
         if (BeekeeperApplication.voskModel != null) {
-            startListening()
+            // ⚠️ Новий код: додаємо невелику затримку в 300 мс
+            android.os.Handler(Looper.getMainLooper()).postDelayed({
+                startListening()
+            }, 300)
         } else {
-            // Якщо модель ще не завантажена, запит на дозволи та очікування
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                // Модель завантажується, чекаємо
-                Toast.makeText(this, "Vosk модель завантажується, зачекайте...", Toast.LENGTH_LONG).show()
-                // Додаємо лістенер, який запустить розпізнавання, коли модель буде готова
-                BeekeeperApplication.addVoskModelReadyListener {
-                    // Перевіряємо, чи ми все ще на цьому екрані
-                    if (!isFinishing) {
+            // Якщо модель ще не завантажена, чекаємо
+            Toast.makeText(this, "Vosk модель завантажується, зачекайте...", Toast.LENGTH_LONG).show()
+            BeekeeperApplication.addVoskModelReadyListener {
+                if (!isFinishing) {
+                    // ⚠️ Новий код: також додаємо затримку після завантаження моделі
+                    android.os.Handler(Looper.getMainLooper()).postDelayed({
                         startListening()
-                    }
+                    }, 300)
                 }
-            } else {
-                // Запитуємо дозвіл
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
             }
         }
     }
 
+    // У вашому класі NewNoteActivity
+
+    // У вашому класі NewNoteActivity
+
     private fun startListening() {
+        // ⚠️ Новий рядок: Виходимо, якщо вже слухаємо
+        if (isVoskListening) return
+
+        Log.d(TAG, "startListening() викликано")
         if (BeekeeperApplication.voskModel == null) {
             Toast.makeText(this, "Vosk модель ще не завантажено. Спробуйте пізніше.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (speechService != null) {
+            Log.d(TAG, "speechService не null, зупиняємо його.")
             speechService?.stop()
             speechService = null
         }
+
         try {
+            // ⚠️ Новий рядок: Робимо кнопку неактивною, щоб запобігти подвійним натисканням
+            microphoneBtnNewNote.isEnabled = false
+
+            Log.d(TAG, "Створюємо Recognizer...")
             val rec = Recognizer(BeekeeperApplication.voskModel, 16000f)
+            Log.d(TAG, "Створюємо SpeechService...")
             speechService = SpeechService(rec, 16000f)
 
-            // Встановлюємо таймаут 30 секунд
             val timeoutInMs = 10000
             speechService?.startListening(this, timeoutInMs)
+            Log.d(TAG, "SpeechService.startListening() викликано.")
 
-            // Змінюємо стан і вигляд кнопки
             isVoskListening = true
+            // ⚠️ Новий рядок: Робимо кнопку знову активною
+            microphoneBtnNewNote.isEnabled = true
             microphoneBtnNewNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_active_color)
             Toast.makeText(this, "Початок голосового вводу...", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
+            // ⚠️ Новий рядок: В разі помилки, також повертаємо кнопку в активний стан
+            microphoneBtnNewNote.isEnabled = true
             Toast.makeText(this, "Помилка Vosk: ${e.message}", Toast.LENGTH_LONG).show()
             Log.e(TAG, "Vosk start listening error", e)
         }
     }
+    // У вашому класі NewNoteActivity
 
     private fun stopListening() {
         speechService?.stop()
         speechService = null
 
-        // Змінюємо стан і вигляд кнопки
         isVoskListening = false
         microphoneBtnNewNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_color)
         Toast.makeText(this, "Голосовий ввід зупинено.", Toast.LENGTH_SHORT).show()
+
+        // ⚠️ Новий рядок: Робимо кнопку знову активною
+        microphoneBtnNewNote.isEnabled = true
     }
 
     // Методи інтерфейсу RecognitionListener
@@ -201,9 +242,12 @@ class NewNoteActivity : AppCompatActivity(), RecognitionListener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                // Якщо дозвіл отримано, запускаємо Vosk
+                // Якщо дозвіл отримано, запускаємо Vosk з затримкою
                 if (BeekeeperApplication.voskModel != null) {
-                    startListening()
+                    // ⚠️ Новий код: додаємо затримку
+                    android.os.Handler(Looper.getMainLooper()).postDelayed({
+                        startListening()
+                    }, 300)
                 }
             } else {
                 Toast.makeText(this, "Дозвіл на запис аудіо відхилено. Голосовий ввід неможливий.", Toast.LENGTH_LONG).show()

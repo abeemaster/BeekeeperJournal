@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.BeekeeperJournal" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary_green</item>
         <item name="colorPrimaryVariant">@color/dark_green</item>
         <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/accent_yellow</item>
         <item name="colorSecondaryVariant">@color/dark_yellow</item>
         <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
 
-        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorBackground">@android:color/white</item>
     </style>
 
     <style name="Theme.HiveInfoActivity" parent="Theme.BeekeeperJournal">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+    <style name="Theme.NewNoteActivity" parent="Theme.BeekeeperJournal">
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
