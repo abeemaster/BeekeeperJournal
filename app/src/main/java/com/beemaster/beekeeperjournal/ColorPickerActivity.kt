@@ -3,7 +3,6 @@ package com.beemaster.beekeeperjournal
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.GridView
 import android.widget.Toast
@@ -39,7 +38,7 @@ class ColorPickerActivity : AppCompatActivity() {
             R.color.transparent_color
         )
 
-        val colorNames = colors.map { getString(it) }
+        // val colorNames = colors.map { getString(it) } не використовується
         val colorGrid: GridView = findViewById(R.id.colorGrid)
 
         // Використовуємо адаптер для GridView
