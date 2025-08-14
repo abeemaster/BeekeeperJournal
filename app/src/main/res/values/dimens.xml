@@ -26,6 +26,7 @@
     <!-- Загальні відступи -->
     <dimen name="screen_padding">16dp</dimen>
     <dimen name="content_padding">16dp</dimen>
+    <dimen name="spacing_tiny">0dp</dimen>
     <dimen name="spacing_small">8dp</dimen>
     <dimen name="spacing_medium">16dp</dimen>
     <dimen name="spacing_large">24dp</dimen>

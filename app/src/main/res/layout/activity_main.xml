@@ -6,45 +6,63 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:fitsSystemWindows="true"
+    tools:context=".MainActivity"
+    tools:openDrawer="start">
 
-    <LinearLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="@dimen/content_padding">
+        android:layout_height="match_parent">
 
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/generalNotesButton"
-            android:text="@string/general_notes_button_text"
-            style="@style/MainActionButton"
-            android:layout_marginTop="@dimen/spacing_medium"
-            android:layout_marginBottom="@dimen/spacing_small"
-            android:layout_gravity="center_horizontal"
-
-            />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/hiveListRecyclerView"
+        <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@drawable/rounded_background"
-            android:padding="8dp"
-            android:elevation="2dp"
-            tools:listitem="@layout/item_hive"/>
-
-
-        <TextView
-            android:id="@+id/hiveCountTextView"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hive_count"
-            android:textSize="16sp"
-            android:layout_marginBottom="0dp"/>
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-    </LinearLayout>
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                app:title="Щоденник пасічника" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="@dimen/content_padding"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/generalNotesButton"
+                android:text="@string/general_notes_button_text"
+                style="@style/MainActionButton"
+                android:layout_marginTop="@dimen/spacing_tiny"
+                android:layout_marginBottom="@dimen/spacing_small"
+                android:layout_gravity="center_horizontal"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/hiveListRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/rounded_background"
+                android:padding="8dp"
+                android:elevation="2dp"
+                tools:listitem="@layout/item_hive"/>
+
+            <TextView
+                android:id="@+id/hiveCountTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hive_count"
+                android:textSize="16sp"
+                android:layout_marginBottom="0dp"/>
+
+        </LinearLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"

@@ -15,6 +15,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -101,14 +102,24 @@ class MainActivity : AppCompatActivity() {
             pickFolderLauncher
         )
 
+        // ✅ Ініціалізуємо Toolbar та встановлюємо його як ActionBar
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+
+        // ✅ Ініціалізуємо DrawerLayout і NavigationView лише один раз
         drawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 
+        // ✅ Використовуємо ActionBarDrawerToggle для іконки-гамбургера
         val toggle = ActionBarDrawerToggle(
-            this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close
+            this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
         )
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
+
+        // ✅ Видаляємо зайвий код для "хвостика", оскільки тепер є іконка-гамбургер
+        // drawerTail = findViewById(R.id.drawer_tail) // Цей рядок видаляємо
+        // та відповідний addDrawerListener
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -131,7 +142,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_sync -> {
                     dataSynchronizer.showSyncOptionsDialog()
                 }
-                R.id.nav_add_hive -> { // ⬅️ Додаємо обробник для пункту "Додати вулик"
+                R.id.nav_add_hive -> {
                     showAddHiveDialog()
                 }
             }
@@ -142,6 +153,11 @@ class MainActivity : AppCompatActivity() {
         val generalNotesBtn: MaterialButton = findViewById(R.id.generalNotesButton)
 
         loadHives()
+
+        // ✅ Видаляємо цей слухач, оскільки іконка-гамбургер робить те саме
+        // drawerTail.setOnClickListener {
+        //     drawerLayout.openDrawer(GravityCompat.START)
+        // }
 
         generalNotesBtn.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
