@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.util.Log
-import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -22,17 +21,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.json.JSONObject
-import org.vosk.LibVosk
-import org.vosk.LogLevel
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import org.vosk.android.StorageService
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
-import java.util.UUID
 import android.widget.Button
 import android.os.Looper
 
@@ -123,6 +116,8 @@ class NewNoteActivity : AppCompatActivity(), RecognitionListener {
         if (isVoiceInputStarted) {
             // Якщо голосовий ввід потрібен, одразу запускаємо його
             setupVoskAndStartListening()
+            noteContentInput.requestFocus()
+            showKeyboard(noteContentInput)
         } else {
             // Якщо ні, фокусуємося на полі введення і показуємо клавіатуру
             noteContentInput.requestFocus()
@@ -177,7 +172,6 @@ class NewNoteActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    // У вашому класі NewNoteActivity
 
     // У вашому класі NewNoteActivity
 
