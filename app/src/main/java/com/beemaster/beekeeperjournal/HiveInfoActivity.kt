@@ -1,17 +1,15 @@
+// HiveInfoActivity файл котрий спрацьовує при натисканні на кнопку "Вулик№"
+
 package com.beemaster.beekeeperjournal
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.text.InputType
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
-import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -20,12 +18,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import android.util.Log
-import java.io.File
-import java.io.FileReader
-import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -34,18 +27,13 @@ import android.widget.GridLayout
 import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
-import androidx.activity.OnBackPressedCallback
-import com.beemaster.beekeeperjournal.NewNoteActivity
-import android.graphics.Color
-import android.os.Build
 import android.content.res.ColorStateList
+import androidx.core.view.isVisible
 
 class HiveInfoActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "HiveInfoActivity"
-        private const val REQUEST_CODE_NEW_NOTE = 1001
-        private const val REQUEST_CODE_EDIT_NOTE = 1002
 
         const val EXTRA_QUEEN_BUTTON_COLOR = "com.beemaster.beekeeperjournal.QUEEN_BUTTON_COLOR"
         const val EXTRA_NOTES_BUTTON_COLOR = "com.beemaster.beekeeperjournal.NOTES_BUTTON_COLOR"
@@ -59,24 +47,18 @@ class HiveInfoActivity : AppCompatActivity() {
     private lateinit var microphoneBtn: ImageButton
     private lateinit var newNoteButton: com.google.android.material.button.MaterialButton
     private lateinit var queenBtn: Button
+    private lateinit var hiveInfoBtn: Button
     private lateinit var notesBtn: Button
-
-    private var currentHiveNumber: Int = 0
+    private lateinit var noteRepository: NoteRepository
     private lateinit var currentHiveActualName: String // Зберігаємо актуальну назву вулика
-    private var currentEntryType: String = ""
-
-    private var currentQueenButtonColor: Int = 0
-    private var currentNotesButtonColor: Int = 0
-
-    private val gson = Gson()
-    private val NOTES_FILE_NAME = "notes.json"
-
-    private var currentlyVisibleActionsLayout: LinearLayout? = null
-    private var currentlySelectedNoteItem: LinearLayout? = null
-
     private lateinit var newNoteActivityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var editNoteActivityResultLauncher: ActivityResultLauncher<Intent>
-
+    private var currentHiveNumber: Int = 0
+    private var currentQueenButtonColor: Int = 0
+    private var currentNotesButtonColor: Int = 0
+    private var currentEntryType: String = ""
+    private var currentlyVisibleActionsLayout: LinearLayout? = null
+    private var currentlySelectedNoteItem: LinearLayout? = null
 
 
 
@@ -85,12 +67,15 @@ class HiveInfoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
 
+        noteRepository = NoteRepository(this)
+
         // Ініціалізація змінних та отримання даних з Intent
         infoTitle = findViewById(R.id.infoTitle)
         notesDisplayArea = findViewById(R.id.notesDisplayArea)
         microphoneBtn = findViewById(R.id.microphoneBtn)
         newNoteButton = findViewById(R.id.newNoteButton)
         queenBtn = findViewById(R.id.queenBtn)
+        hiveInfoBtn = findViewById(R.id.hiveInfoBtn)
         notesBtn = findViewById(R.id.notesBtn)
 
         // Встановлення currentEntryType.
@@ -115,36 +100,31 @@ class HiveInfoActivity : AppCompatActivity() {
 
         // Встановлюємо кольори кнопок "Матка" та "Примітки"
         queenBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentQueenButtonColor))
-        val queenShapeDrawable = GradientDrawable().apply {
-            cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
-            setColor(ContextCompat.getColor(this@HiveInfoActivity, currentQueenButtonColor))
-        }
-        queenBtn.background = queenShapeDrawable
 
         notesBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentNotesButtonColor))
-        val notesShapeDrawable = GradientDrawable().apply {
-            cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
-            setColor(ContextCompat.getColor(this@HiveInfoActivity, currentNotesButtonColor))
-        }
-        notesBtn.background = notesShapeDrawable
 
         // Встановлюємо слухачів для кнопок "Матка" і "Примітки", щоб вони лише оновлювали поточну активність
         queenBtn.setOnClickListener {
-            showInfo("queen")
+            openQueenInfo()
         }
-
+        hiveInfoBtn.setOnClickListener { // ⬅️ Додаємо обробник натискання
+            showInfo("hive")
+        }
         notesBtn.setOnClickListener {
-            showInfo("notes")
+            openNotesInfo()
         }
 
         val type = intent.getStringExtra("TYPE")
 
         if (type == "general") {
-            // Якщо це екран для загальних записів, приховуємо кнопки "Матка" та "Примітки"
+            // Якщо це екран для загальних записів, приховуємо кнопки "Матка" "Вулик" та "Примітки"
             queenBtn = findViewById(R.id.queenBtn)
             notesBtn = findViewById(R.id.notesBtn)
+            hiveInfoBtn = findViewById(R.id.hiveInfoBtn)
+
             queenBtn.visibility = View.GONE
             notesBtn.visibility = View.GONE
+            hiveInfoBtn.visibility = View.GONE
         }
 
         // ... (залиште інший код onCreate без змін) ...
@@ -207,11 +187,11 @@ class HiveInfoActivity : AppCompatActivity() {
             showColorPickerDialogForNavButton("Матка", currentQueenButtonColor) { selectedColorResId ->
                 currentQueenButtonColor = selectedColorResId
                 queenBtn.backgroundTintList = ContextCompat.getColorStateList(this, currentQueenButtonColor)
-                val queenShapeDrawable = GradientDrawable().apply {
+                val newQueenShapeDrawable = GradientDrawable().apply {
                     cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
                     setColor(ContextCompat.getColor(this@HiveInfoActivity, currentQueenButtonColor))
                 }
-                queenBtn.background = queenShapeDrawable
+                queenBtn.background = newQueenShapeDrawable
                 setResultAndFinish()
             }
             true
@@ -221,11 +201,11 @@ class HiveInfoActivity : AppCompatActivity() {
             showColorPickerDialogForNavButton("Примітки", currentNotesButtonColor) { selectedColorResId ->
                 currentNotesButtonColor = selectedColorResId
                 notesBtn.backgroundTintList = ContextCompat.getColorStateList(this, currentNotesButtonColor)
-                val notesShapeDrawable = GradientDrawable().apply {
+                val newnotesShapeDrawable = GradientDrawable().apply {
                     cornerRadius = resources.getDimension(R.dimen.nav_button_corner_radius)
                     setColor(ContextCompat.getColor(this@HiveInfoActivity, currentNotesButtonColor))
                 }
-                notesBtn.background = notesShapeDrawable
+                notesBtn.background = newnotesShapeDrawable
                 setResultAndFinish()
             }
             true
@@ -268,9 +248,9 @@ class HiveInfoActivity : AppCompatActivity() {
                 timestamp = timestamp
             )
 
-            val allNotes = readAllNotesFromJson()
+            val allNotes = noteRepository.readAllNotesFromJson()
             allNotes.add(newNote)
-            writeAllNotesToJson(allNotes)
+            noteRepository.writeAllNotesToJson(allNotes)
 
             Toast.makeText(this, "Запис додано!", Toast.LENGTH_SHORT).show()
             loadNotes()
@@ -280,7 +260,7 @@ class HiveInfoActivity : AppCompatActivity() {
     }
 
     private fun updateNoteFromEditNoteActivity(noteId: String, updatedNoteText: String) {
-        val allNotes = readAllNotesFromJson()
+        val allNotes = noteRepository.readAllNotesFromJson()
         val noteIndex = allNotes.indexOfFirst { it.id == noteId }
         if (noteIndex != -1) {
             val updatedNote = allNotes[noteIndex].copy(
@@ -288,7 +268,7 @@ class HiveInfoActivity : AppCompatActivity() {
                 timestamp = System.currentTimeMillis()
             )
             allNotes[noteIndex] = updatedNote
-            writeAllNotesToJson(allNotes)
+            noteRepository.writeAllNotesToJson(allNotes)
             Toast.makeText(this, "Запис оновлено!", Toast.LENGTH_SHORT).show()
             loadNotes()
         } else {
@@ -297,41 +277,8 @@ class HiveInfoActivity : AppCompatActivity() {
         hideActionsAndResetBackground()
     }
 
-    private fun getNotesFile(): File {
-        return File(filesDir, NOTES_FILE_NAME)
-    }
-
-    private fun readAllNotesFromJson(): MutableList<Note> {
-        val file = getNotesFile()
-        if (!file.exists() || file.length() == 0L) {
-            return mutableListOf()
-        }
-        return try {
-            FileReader(file).use { reader ->
-                val type = object : TypeToken<MutableList<Note>>() {}.type
-                gson.fromJson(reader, type) ?: mutableListOf()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Помилка читання записів з файлу: ${e.message}", Toast.LENGTH_LONG).show()
-            mutableListOf()
-        }
-    }
-
-    private fun writeAllNotesToJson(notes: List<Note>) {
-        val file = getNotesFile()
-        try {
-            FileWriter(file).use { writer ->
-                gson.toJson(notes, writer)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Помилка запису записів до файлу: ${e.message}", Toast.LENGTH_LONG).show()
-        }
-    }
-
     private fun loadNotes() {
-        val allNotes = readAllNotesFromJson()
+        val allNotes = noteRepository.readAllNotesFromJson()
 
         val filteredNotes = allNotes.filter { note ->
             // Фільтруємо за типом запису та номером вулика
@@ -446,8 +393,8 @@ class HiveInfoActivity : AppCompatActivity() {
                 currentlySelectedNoteItem?.background = ContextCompat.getDrawable(this, R.drawable.note_item_background)
             }
 
-            if (actionsLayout.visibility == View.VISIBLE) {
-                actionsLayout.visibility = View.GONE
+            if (actionsLayout.isVisible) { // ⬅️ Оновлено
+                actionsLayout.isVisible = false // ⬅️ Оновлено
                 noteItem.background = ContextCompat.getDrawable(this, R.drawable.note_item_background)
                 currentlyVisibleActionsLayout = null
                 currentlySelectedNoteItem = null
@@ -461,7 +408,7 @@ class HiveInfoActivity : AppCompatActivity() {
         }
 
         noteItem.setOnClickListener {
-            if (currentlyVisibleActionsLayout == actionsLayout && actionsLayout.visibility == View.VISIBLE) {
+            if (currentlyVisibleActionsLayout == actionsLayout && actionsLayout.isVisible) { // ⬅️ Оновлено
                 hideActionsAndResetBackground()
                 Toast.makeText(this, "Дії приховано.", Toast.LENGTH_SHORT).show()
             }
@@ -477,25 +424,7 @@ class HiveInfoActivity : AppCompatActivity() {
         currentlySelectedNoteItem = null
     }
 
-
-
-    fun editNote(button: Button) {
-        val noteItem = button.parent.parent as LinearLayout
-        val noteId = noteItem.tag as String
-        val noteTextView = noteItem.getChildAt(1) as TextView
-        val originalText = noteTextView.text.toString()
-
-        val intent = Intent(this, EditNoteActivity::class.java).apply {
-            putExtra(EditNoteActivity.EXTRA_NOTE_ID, noteId)
-            putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, originalText)
-            putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, currentEntryType)
-            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, currentHiveNumber)
-            putExtra(EditNoteActivity.EXTRA_HIVE_NAME, currentHiveActualName) // Передаємо актуальну назву
-        }
-        editNoteActivityResultLauncher.launch(intent)
-    }
-
-    fun deleteNote(button: Button) {
+    private fun deleteNote(button: Button) {
         val noteItem = button.parent.parent as LinearLayout
         val noteId = noteItem.tag as String
 
@@ -503,11 +432,11 @@ class HiveInfoActivity : AppCompatActivity() {
             .setTitle("Видалити запис")
             .setMessage("Ви впевнені, що хочете видалити цей запис?")
             .setPositiveButton("Видалити") { dialog, _ ->
-                val allNotes = readAllNotesFromJson()
+                val allNotes = noteRepository.readAllNotesFromJson()
                 val initialSize = allNotes.size
                 allNotes.removeIf { it.id == noteId }
                 if (allNotes.size < initialSize) {
-                    writeAllNotesToJson(allNotes)
+                    noteRepository.writeAllNotesToJson(allNotes)
                     Toast.makeText(this, "Запис видалено!", Toast.LENGTH_SHORT).show()
                     loadNotes()
                 } else {
@@ -631,6 +560,7 @@ class HiveInfoActivity : AppCompatActivity() {
         currentEntryType = entryType
         val title: String = when (currentEntryType) {
             "queen" -> "Матка $currentHiveActualName"
+            "hive" -> "Вулик $currentHiveActualName"
             "notes" -> "Примітки $currentHiveActualName"
             else -> currentHiveActualName
         }
@@ -639,12 +569,12 @@ class HiveInfoActivity : AppCompatActivity() {
     }
 
     // Обробник натискання для кнопки "Матка"
-    fun openQueenInfo(view: View) {
+    private fun openQueenInfo() {
         showInfo("queen")
     }
 
     // Обробник натискання для кнопки "Примітки"
-    fun openNotesInfo(view: View) {
+    private fun openNotesInfo() {
         showInfo("notes")
     }
 

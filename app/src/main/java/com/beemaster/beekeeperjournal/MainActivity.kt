@@ -1,3 +1,5 @@
+// MainActivity Файл головної сторінки додатка
+
 package com.beemaster.beekeeperjournal
 
 import android.app.Activity
@@ -6,7 +8,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
-import android.util.Log
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -21,21 +22,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.navigation.NavigationView
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.io.File
-import java.io.FileReader
-import java.io.FileWriter
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var hiveRepository: HiveRepository
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var hiveListRecyclerView: RecyclerView
     private lateinit var hiveAdapter: HiveAdapter
     private lateinit var hiveCountTextView: TextView
-    private val gson = Gson()
 
-    // Тут ми оголошуємо лончери
     private val pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val uri = result.data?.data
@@ -64,16 +59,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Тепер можемо ініціалізувати DataSynchronizer
     private lateinit var dataSynchronizer: DataSynchronizer
 
     companion object {
-        const val TAG = "MainActivity"
         const val EXTRA_HIVE_NUMBER_FOR_COLOR_UPDATE = "com.beemaster.beekeeperjournal.HIVE_NUMBER_FOR_COLOR_UPDATE"
-        const val HIVE_DATA_FILE_NAME = "hives.json"
-        const val EXTRA_HIVE_NAME = "com.beemaster.beekeeperjournal.HIVE_NAME"
-        private const val BACKUP_FILE_MIME_TYPE = "application/json"
-        private const val BACKUP_FILE_EXTENSION = ".json"
         const val PREFS_NAME = "BeekeeperJournalPrefs"
         const val KEY_HIVE_LIST = "hive_list"
     }
@@ -85,14 +74,14 @@ class MainActivity : AppCompatActivity() {
             val colorType = result.data?.getStringExtra("color_type")
 
             if (hiveNumber != -1 && selectedColor != null && colorType != null) {
-                val hives = readHivesFromJson()
+                val hives = hiveRepository.readHivesFromJson()
                 val hiveToUpdate = hives.find { it.number == hiveNumber }
                 if (hiveToUpdate != null) {
                     when (colorType) {
                         "primary" -> hiveToUpdate.color = selectedColor
                         "secondary" -> hiveToUpdate.secondaryColor = selectedColor
                     }
-                    writeHivesToJson(hives)
+                    hiveRepository.writeHivesToJson(hives)
                     loadHives()
                 }
             }
@@ -103,7 +92,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Ініціалізуємо DataSynchronizer, передаючи йому лончери
+        hiveRepository = HiveRepository(this)
+
         dataSynchronizer = DataSynchronizer(
             this,
             createBackupFileLauncher,
@@ -141,13 +131,15 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_sync -> {
                     dataSynchronizer.showSyncOptionsDialog()
                 }
-                // ...
+                R.id.nav_add_hive -> { // ⬅️ Додаємо обробник для пункту "Додати вулик"
+                    showAddHiveDialog()
+                }
             }
             drawerLayout.closeDrawer(GravityCompat.START)
             true
         }
 
-        val generalNotesBtn: MaterialButton = findViewById(R.id.generalNotesBtn)
+        val generalNotesBtn: MaterialButton = findViewById(R.id.generalNotesButton)
 
         loadHives()
 
@@ -163,6 +155,7 @@ class MainActivity : AppCompatActivity() {
 
     // ... Інші методи (showAddHiveDialog, loadHives, showHiveOptionsDialog, тощо)
     // які не відносяться до синхронізації...
+
     private fun showAddHiveDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Додати новий вулик")
@@ -171,17 +164,17 @@ class MainActivity : AppCompatActivity() {
         builder.setPositiveButton("Додати") { dialog, _ ->
             val hiveName = input.text.toString().trim()
             if (hiveName.isNotEmpty()) {
-                val hives = readHivesFromJson()
+                val hives = hiveRepository.readHivesFromJson()
                 val newHiveNumber = (hives.maxByOrNull { it.number }?.number ?: 0) + 1
                 hives.add(HiveData(
                     number = newHiveNumber,
                     name = hiveName,
-                    color = com.beemaster.beekeeperjournal.R.color.hive_button_color,
-                    queenButtonColor = com.beemaster.beekeeperjournal.R.color.nav_button_color,
-                    notesButtonColor = com.beemaster.beekeeperjournal.R.color.nav_button_color,
+                    color = R.color.hive_button_color,
+                    queenButtonColor = R.color.nav_button_color,
+                    notesButtonColor = R.color.nav_button_color,
                     secondaryColor = android.R.color.transparent
                 ))
-                writeHivesToJson(hives)
+                hiveRepository.writeHivesToJson(hives)
                 loadHives()
                 dialog.dismiss()
             } else {
@@ -194,20 +187,20 @@ class MainActivity : AppCompatActivity() {
 
     // ... інші методи, які не належать до синхронізації...
     private fun loadHives() {
-        val hives = readHivesFromJson()
+        val hives = hiveRepository.readHivesFromJson()
 
         if (hives.isEmpty()) {
             for (i in 1..30) {
                 hives.add(HiveData(
                     number = i,
                     name = "Вулик №$i",
-                    color = com.beemaster.beekeeperjournal.R.color.hive_button_color,
-                    queenButtonColor = com.beemaster.beekeeperjournal.R.color.nav_button_color,
-                    notesButtonColor = com.beemaster.beekeeperjournal.R.color.nav_button_color,
+                    color = R.color.hive_button_color,
+                    queenButtonColor = R.color.nav_button_color,
+                    notesButtonColor = R.color.nav_button_color,
                     secondaryColor = android.R.color.transparent
                 ))
             }
-            writeHivesToJson(hives)
+            hiveRepository.writeHivesToJson(hives)
         }
 
         hiveCountTextView.text = getString(R.string.hive_count, hives.size)
@@ -218,34 +211,6 @@ class MainActivity : AppCompatActivity() {
         hiveListRecyclerView.adapter = hiveAdapter
     }
 
-    // ...
-    private fun readHivesFromJson(): MutableList<HiveData> {
-        val file = File(filesDir, HIVE_DATA_FILE_NAME)
-        if (!file.exists() || file.length() == 0L) {
-            return mutableListOf()
-        }
-        return try {
-            FileReader(file).use { reader ->
-                val type = object : TypeToken<MutableList<HiveData>>() {}.type
-                gson.fromJson(reader, type) ?: mutableListOf()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Помилка читання вуликів з файлу: ${e.message}", e)
-            mutableListOf()
-        }
-    }
-
-    private fun writeHivesToJson(hives: List<HiveData>) {
-        val file = File(filesDir, HIVE_DATA_FILE_NAME)
-        try {
-            FileWriter(file).use { writer ->
-                gson.toJson(hives, writer)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Помилка запису вуликів до файлу: ${e.message}", e)
-        }
-    }
-
     private fun showHiveOptionsDialog(hive: HiveData) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_hive_options, null)
         val dialogTitleTextView: TextView = dialogView.findViewById(R.id.dialogTitle)
@@ -254,7 +219,7 @@ class MainActivity : AppCompatActivity() {
         val selectSecondaryColorCard: MaterialCardView = dialogView.findViewById(R.id.selectSecondaryColorCard)
         val deleteHiveCard: MaterialCardView = dialogView.findViewById(R.id.deleteHiveCard)
 
-        dialogTitleTextView.text = "Опції для ${hive.name}"
+        dialogTitleTextView.text = getString(R.string.hive_options_title, hive.name)
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -291,9 +256,9 @@ class MainActivity : AppCompatActivity() {
         builder.setPositiveButton("Зберегти") { dialog, _ ->
             val newName = input.text.toString().trim()
             if (newName.isNotEmpty() && newName != hive.name) {
-                val hives = readHivesFromJson()
+                val hives = hiveRepository.readHivesFromJson()
                 hives.find { it.number == hive.number }?.name = newName
-                writeHivesToJson(hives)
+                hiveRepository.writeHivesToJson(hives)
                 loadHives()
             } else {
                 Toast.makeText(this, "Назва не може бути порожньою", Toast.LENGTH_SHORT).show()
@@ -309,8 +274,8 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Видалити вулик")
             .setMessage("Ви впевнені, що хочете видалити вулик №${hive.number} (${hive.name})? Всі пов'язані з ним записи також будуть видалені.")
             .setPositiveButton("Видалити") { dialog, _ ->
-                val hives = readHivesFromJson().filter { it.number != hive.number }.toMutableList()
-                writeHivesToJson(hives)
+                val hives = hiveRepository.readHivesFromJson().filter { it.number != hive.number }.toMutableList()
+                hiveRepository.writeHivesToJson(hives)
                 loadHives()
                 val notes = dataSynchronizer.readAllNotesFromJson().filter { it.hiveNumber != hive.number }.toMutableList()
                 dataSynchronizer.writeAllNotesToJson(notes)

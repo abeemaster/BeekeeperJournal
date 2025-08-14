@@ -8,18 +8,19 @@
     <string name="add_note_button_text">Додати запис</string>
     <string name="add_record_button_text">Зберегти запис</string>
     <string name="queen_button_text">Матка</string>
-    <string name="notes_button_text">Примітки</string>
+    <string name="hive_info_title">Вулик</string>
+    <string name="notes_button_text">Приміт</string>
 
     <!-- Рядки для activity_main.xml -->
     <string name="app_title">Щоденник Пасічника</string>
     <string name="general_notes_button_text">Загальні записи</string>
     <string name="add_hive_button_text">Вулик+</string>
     <string name="sync_button_text">Синхр.</string>
+    <string name="hive_options_title">Опції для %s</string>
 
-    <!-- НОВЕ: Скорочений текст для кнопки синхронізації -->
     <string name="sync_button_short_text">Синхр.</string>
     <string name="new_record_button_text">Новий запис</string>
-    <!-- НОВЕ: Повідомлення про додавання вулика -->
+
     <string name="hive_added_message">Додано Вулик №%d!</string>
 
     <string name="save_record_button_text">Зберегти запис</string>
@@ -33,6 +34,7 @@
 
     <string name="hive_name_default">Вулик №1</string>
     <string name="options_description">Опції</string>
+
 
 
 

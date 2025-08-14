@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="NavButton" parent="Widget.Material3.Button.ElevatedButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">1</item>
+
+        <item name="android:layout_height">56dp</item>
+        <item name="android:minHeight">56dp</item>
+
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+
+        <item name="android:textSize">@dimen/nav_button_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="backgroundTint">@color/nav_button_color</item>
+        <item name="cornerRadius">@dimen/nav_button_corner_radius</item>
+        <item name="android:elevation">@dimen/nav_button_elevation</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+
+    <style name="MainActionButton" parent="NavButton">
+        <item name="android:layout_height">62dp</item>
+        <item name="android:layout_width">340dp</item>
+        <item name="android:layout_weight">0</item>
+        <item name="backgroundTint">@color/hive_button_color</item>
+        <item name="android:textSize">@dimen/action_button_text_size</item>
+    </style>
+
+    <!-- Мій власний стиль -->
+    <style name="YourCustomButtonStyle" parent="Widget.Material3.Button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="backgroundTint">@color/nav_button_color</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textAllCaps">true</item>   <!-- всі букви великими -->
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+</resources>
+

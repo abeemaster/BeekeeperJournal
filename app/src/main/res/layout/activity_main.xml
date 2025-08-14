@@ -15,13 +15,15 @@
         android:padding="@dimen/content_padding">
 
 
-        <TextView
-            android:id="@+id/hiveCountTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hive_count"
-            android:textSize="18sp"
-            android:layout_marginBottom="16dp"/>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/generalNotesButton"
+            android:text="@string/general_notes_button_text"
+            style="@style/MainActionButton"
+            android:layout_marginTop="@dimen/spacing_medium"
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:layout_gravity="center_horizontal"
+
+            />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/hiveListRecyclerView"
@@ -33,12 +35,14 @@
             android:elevation="2dp"
             tools:listitem="@layout/item_hive"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/generalNotesBtn"
-            android:layout_width="match_parent"
+
+        <TextView
+            android:id="@+id/hiveCountTextView"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/general_notes_text"/>
+            android:text="@string/hive_count"
+            android:textSize="16sp"
+            android:layout_marginBottom="0dp"/>
 
     </LinearLayout>
 

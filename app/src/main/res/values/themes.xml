@@ -21,4 +21,9 @@
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
+    <!-- Моя власна тема -->
+    <style name="Theme.YourAppName" parent="Theme.Material3.DayNight">
+        <item name="materialButtonStyle">@style/YourCustomButtonStyle</item>
+    </style>
+
 </resources>

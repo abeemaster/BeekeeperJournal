@@ -14,7 +14,7 @@
         android:id="@+id/infoTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Інформація Вулик №1"
+        android:text="@string/hive_info_title_default"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/title_dark_green"
@@ -29,7 +29,6 @@
         android:layout_marginBottom="@dimen/spacing_medium"
         android:elevation="2dp"
         android:background="@drawable/notes_area_background">
-        <!-- android:background="@drawable/rounded_background" -->
 
         <LinearLayout
             android:id="@+id/notesDisplayArea"
@@ -69,16 +68,16 @@
             android:layout_width="wrap_content"
             android:layout_height="48dp"
 
-            android:contentDescription="Голосовий ввід"
+            android:contentDescription="@string/voice_input_description"
             android:elevation="@dimen/button_elevation"
             android:scaleType="centerInside"
             android:src="@drawable/ic_mic"
             android:stateListAnimator="@null"
             android:background="@drawable/microphone_button_background"/>
-            <!-- android:background="@drawable/microphone_button_background" -->
+
     </LinearLayout>
 
-    <!-- Кнопки "Матка" та "Примітки" -->
+    <!-- Кнопки "Матка" "Вулик" та "Примітки" -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -88,39 +87,20 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/queenBtn"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Матка"
-            android:textSize="@dimen/nav_button_text_size"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/nav_button_color"
-            android:paddingVertical="@dimen/nav_button_padding_vertical"
-            android:paddingHorizontal="@dimen/nav_button_padding_horizontal"
-            app:cornerRadius="@dimen/nav_button_corner_radius"
-            android:elevation="@dimen/nav_button_elevation"
-            android:stateListAnimator="@null"
-            android:layout_marginEnd="@dimen/spacing_small"
-            android:onClick="openQueenInfo" />
-
+            android:text="@string/queen_button_text"
+            style="@style/NavButton"
+            android:layout_marginEnd="@dimen/spacing_small" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/hiveInfoBtn"
+            android:text="@string/hive_info_title"
+            style="@style/NavButton"
+            android:layout_marginLeft="@dimen/spacing_small"
+            android:layout_marginRight="@dimen/spacing_small" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/notesBtn"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Примітки"
-            android:textSize="@dimen/nav_button_text_size"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/nav_button_color"
-            android:paddingVertical="@dimen/nav_button_padding_vertical"
-            android:paddingHorizontal="@dimen/nav_button_padding_horizontal"
-            app:cornerRadius="@dimen/nav_button_corner_radius"
-            android:elevation="@dimen/nav_button_elevation"
-            android:stateListAnimator="@null"
-            android:layout_marginStart="@dimen/spacing_small"
-            android:onClick="openNotesInfo" />
+            android:text="@string/notes_button_text"
+            style="@style/NavButton"
+            android:layout_marginStart="@dimen/spacing_small" />
     </LinearLayout>
 
 </LinearLayout>
