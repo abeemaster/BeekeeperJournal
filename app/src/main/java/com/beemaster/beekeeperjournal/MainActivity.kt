@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -92,6 +93,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // ✅ Підключаємо бічну панель за допомогою єдиного методу
+        DrawerManager.setupDrawer(this)
+
         hiveRepository = HiveRepository(this)
 
         dataSynchronizer = DataSynchronizer(
@@ -101,48 +105,13 @@ class MainActivity : AppCompatActivity() {
             pickFolderLauncher
         )
 
-        drawerLayout = findViewById(R.id.drawer_layout)
-        val navView: NavigationView = findViewById(R.id.nav_view)
-
-        val toggle = ActionBarDrawerToggle(
-            this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                    drawerLayout.closeDrawer(GravityCompat.START)
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                }
-            }
-        })
-
         hiveListRecyclerView = findViewById(R.id.hiveListRecyclerView)
         hiveCountTextView = findViewById(R.id.hiveCountTextView)
         hiveListRecyclerView.layoutManager = LinearLayoutManager(this)
 
-        navView.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                // ... інші пункти меню ...
-                R.id.nav_sync -> {
-                    dataSynchronizer.showSyncOptionsDialog()
-                }
-                R.id.nav_add_hive -> { // ⬅️ Додаємо обробник для пункту "Додати вулик"
-                    showAddHiveDialog()
-                }
-            }
-            drawerLayout.closeDrawer(GravityCompat.START)
-            true
-        }
 
         val generalNotesBtn: MaterialButton = findViewById(R.id.generalNotesButton)
-
         loadHives()
-
         generalNotesBtn.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
                 putExtra("TYPE", "general")
@@ -156,7 +125,7 @@ class MainActivity : AppCompatActivity() {
     // ... Інші методи (showAddHiveDialog, loadHives, showHiveOptionsDialog, тощо)
     // які не відносяться до синхронізації...
 
-    private fun showAddHiveDialog() {
+    fun showAddHiveDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Додати новий вулик")
         val input = EditText(this).apply { hint = "Назва вулика"; inputType = InputType.TYPE_CLASS_TEXT }

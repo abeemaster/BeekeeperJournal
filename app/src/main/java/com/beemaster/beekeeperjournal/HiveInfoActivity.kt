@@ -24,6 +24,7 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.content.res.ColorStateList
 
+
 class HiveInfoActivity : AppCompatActivity() {
 
     companion object {
@@ -58,8 +59,12 @@ class HiveInfoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
 
+        // ✅ Підключаємо бічну панель за допомогою єдиного методу
+        DrawerManager.setupDrawer(this)
+
         noteRepository = NoteRepository(this)
         noteManager = NoteManager(this, noteRepository)
+
 
         // ✅ Ініціалізація NoteViewCreator з колбеками
         noteViewCreator = NoteViewCreator(

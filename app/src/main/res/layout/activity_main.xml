@@ -6,6 +6,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <LinearLayout
@@ -14,27 +15,62 @@
         android:orientation="vertical"
         android:padding="@dimen/content_padding">
 
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <ImageButton
+            android:id="@+id/drawer_toggle_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|top"
+            android:layout_marginStart="@dimen/spacing_tiny"
+            android:layout_marginTop="@dimen/screen_padding_negative"
+            android:padding="8dp"
+            android:alpha="0.7"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_menu_black"
+            android:elevation="4dp"
+            android:contentDescription="@string/open_drawer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/newNoteScreenTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/title_dark_green"
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/drawer_toggle_button"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/generalNotesButton"
             android:text="@string/general_notes_button_text"
             style="@style/MainActionButton"
-            android:layout_marginTop="@dimen/spacing_medium"
             android:layout_marginBottom="@dimen/spacing_small"
-            android:layout_gravity="center_horizontal"
-
-            />
+            android:layout_gravity="center_horizontal"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/hiveListRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@drawable/rounded_background"
+            android:background="@color/background_light_green"
             android:padding="8dp"
             android:elevation="2dp"
             tools:listitem="@layout/item_hive"/>
-
 
         <TextView
             android:id="@+id/hiveCountTextView"
@@ -52,6 +88,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header"
         app:menu="@menu/nav_menu"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>
