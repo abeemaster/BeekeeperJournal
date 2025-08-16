@@ -1,5 +1,7 @@
 // HiveInfoActivity файл котрий спрацьовує при натисканні на кнопку "Вулик№"
 
+// HiveInfoActivity файл котрий спрацьовує при натисканні на кнопку "Вулик№"
+
 package com.beemaster.beekeeperjournal
 
 import android.app.Activity
@@ -23,6 +25,8 @@ import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.content.res.ColorStateList
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
 
 
 class HiveInfoActivity : AppCompatActivity() {
@@ -46,7 +50,7 @@ class HiveInfoActivity : AppCompatActivity() {
     private lateinit var notesBtn: Button
     private lateinit var noteManager: NoteManager
     private lateinit var noteRepository: NoteRepository
-    private lateinit var noteViewCreator: NoteViewCreator // ✅ Нова змінна для NoteViewCreator
+    private lateinit var noteViewCreator: NoteViewCreator
     private lateinit var currentHiveActualName: String
     private lateinit var newNoteActivityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var editNoteActivityResultLauncher: ActivityResultLauncher<Intent>
@@ -55,16 +59,24 @@ class HiveInfoActivity : AppCompatActivity() {
     private var currentNotesButtonColor: Int = 0
     private var currentEntryType: String = ""
 
+    // ✅ ДОДАНО: оголошення змінних для бічної панелі
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navView: NavigationView
+    private lateinit var drawerToggleButton: ImageButton
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
 
-        // ✅ Підключаємо бічну панель за допомогою єдиного методу
+        // ✅ ДОДАНО: ініціалізація змінних для бічної панелі
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navView = findViewById(R.id.nav_view)
+        drawerToggleButton = findViewById(R.id.drawer_toggle_button)
+
         DrawerManager.setupDrawer(this)
 
         noteRepository = NoteRepository(this)
         noteManager = NoteManager(this, noteRepository)
-
 
         // ✅ Ініціалізація NoteViewCreator з колбеками
         noteViewCreator = NoteViewCreator(
@@ -83,7 +95,7 @@ class HiveInfoActivity : AppCompatActivity() {
         newNoteButton = findViewById(R.id.newNoteButton)
         queenBtn = findViewById(R.id.queenBtn)
         notesBtn = findViewById(R.id.notesBtn)
-        hiveInfoBtn = findViewById(R.id.hiveInfoBtn) // Ініціалізуємо hiveInfoBtn
+        hiveInfoBtn = findViewById(R.id.hiveInfoBtn)
 
         val initialEntryType = intent.getStringExtra("TYPE") ?: "hive"
         val titleFromIntent = intent.getStringExtra("TITLE")

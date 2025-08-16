@@ -32,9 +32,7 @@ import java.util.Date
 import java.util.Locale
 import android.view.View
 import android.view.ViewGroup
-import com.beemaster.beekeeperjournal.MainActivity
 
-// Об'єднана та виправлена декларація класу SearchActivity
 class SearchActivity : AppCompatActivity(), RecognitionListener {
 
     companion object {
@@ -49,16 +47,14 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var searchExecuteButton: MaterialButton
     private lateinit var searchResultsRecyclerView: RecyclerView
     private lateinit var searchResultsAdapter: SearchResultsAdapter
+    private lateinit var hiveRepository: HiveRepository // ✅ ДОДАНО: Репозиторій для вуликів
 
     private var speechService: SpeechService? = null
     private val gson = Gson()
 
-
     override fun onResume() {
         super.onResume()
-        // Цей метод викликається щоразу, коли SearchActivity стає видимою.
-        // Ми викликаємо performSearch(), щоб вона заново завантажила список вуликів
-        // і оновила результати, використовуючи найактуальніші назви.
+        // При поверненні на екран пошуку, оновлюємо результати.
         performSearch(searchQueryInput.text.toString())
         Log.d(TAG, "SearchActivity: onResume called. Re-performing search to ensure updated hive names in results.")
     }
@@ -67,28 +63,26 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
-        // Ініціалізація View елементів
+        hiveRepository = HiveRepository(this) // ✅ ДОДАНО: Ініціалізація репозиторію
+
         searchQueryInput = findViewById(R.id.searchQueryInput)
         microphoneBtnSearch = findViewById(R.id.microphoneBtnSearch)
         searchExecuteButton = findViewById(R.id.searchExecuteButton)
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView)
 
-        // Налаштування RecyclerView
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this)
         searchResultsAdapter = SearchResultsAdapter(mutableListOf()) { note, hiveName ->
-            // Обробник натискання на елемент результату пошуку
             val intent = Intent(this, EditNoteActivity::class.java).apply {
                 putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
                 putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
                 putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
                 putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
-                putExtra(EditNoteActivity.EXTRA_HIVE_NAME, hiveName) // Передаємо назву вулика
+                putExtra(EditNoteActivity.EXTRA_HIVE_NAME, hiveName)
             }
             startActivityForResult(intent, REQUEST_CODE_EDIT_NOTE_FROM_SEARCH)
         }
         searchResultsRecyclerView.adapter = searchResultsAdapter
 
-        // Налаштування кнопки мікрофона
         microphoneBtnSearch.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.microphone_button_color))
 
         if (BeekeeperApplication.voskModel != null) {
@@ -98,13 +92,11 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             Toast.makeText(this, "Vosk модель завантажується, голосовий пошук недоступний.", Toast.LENGTH_LONG).show()
         }
 
-        // Обробник натискання кнопки "Пошук"
         searchExecuteButton.setOnClickListener {
             performSearch(searchQueryInput.text.toString())
-            hideKeyboard() // Приховуємо клавіатуру після пошуку
+            hideKeyboard()
         }
 
-        // Обробник натискання кнопки мікрофона
         microphoneBtnSearch.setOnClickListener {
             if (speechService != null) {
                 stopListening()
@@ -120,18 +112,16 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             }
         }
 
-        // *** Логіка для автоматичного фокусу та показу клавіатури - ПЕРЕНЕСЕНО СЮДИ ***
         searchQueryInput.requestFocus()
         searchQueryInput.postDelayed({
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(searchQueryInput, InputMethodManager.SHOW_IMPLICIT)
-        }, 100) // Невелика затримка для надійності
+        }, 100)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_EDIT_NOTE_FROM_SEARCH && resultCode == Activity.RESULT_OK) {
-            // Після редагування нотатки, оновлюємо результати пошуку
             performSearch(searchQueryInput.text.toString())
         }
     }
@@ -185,8 +175,8 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             val jsonResult = JSONObject(hypothesis)
             val text = jsonResult.optString("text", "")
             if (text.isNotEmpty()) {
-                searchQueryInput.setText(text) // Встановлюємо розпізнаний текст у поле пошуку
-                performSearch(text) // Виконуємо пошук
+                searchQueryInput.setText(text)
+                performSearch(text)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing Vosk JSON result: ${e.message}", e)
@@ -194,12 +184,9 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     }
 
     override fun onPartialResult(hypothesis: String) {
-        // Можна оновлювати поле вводу частковими результатами, якщо потрібно
-        // searchQueryInput.setText(hypothesis)
     }
 
     override fun onFinalResult(hypothesis: String) {
-        // Остаточний результат вже обробляється в onResult
     }
 
     override fun onError(exception: Exception) {
@@ -216,10 +203,10 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
 
     private fun performSearch(query: String) {
         val allNotes = readAllNotesFromJson()
-        val allHives = loadHiveListForSearch() // Завантажуємо список вуликів для отримання імен
+        val allHives = hiveRepository.readHivesFromJson() // ✅ ВИПРАВЛЕНО: Завантажуємо вулики з репозиторію
 
         val filteredNotes = if (query.isBlank()) {
-            emptyList() // Якщо запит порожній, не показуємо нічого
+            emptyList()
         } else {
             allNotes.filter { note ->
                 note.text.contains(query, ignoreCase = true) ||
@@ -227,16 +214,17 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
                         note.type.contains(query, ignoreCase = true) ||
                         (note.hiveNumber.toString() == query && note.type != "general") ||
                         (note.type == "hive" && allHives.find { it.number == note.hiveNumber }?.name?.contains(query, ignoreCase = true) == true)
-            }.sortedByDescending { it.timestamp } // Сортуємо за спаданням дати/часу
+            }.sortedByDescending { it.timestamp }
         }
 
-        // Перетворюємо відфільтровані нотатки на NoteSearchResult, додаючи назву вулика
         val searchResults = filteredNotes.map { note ->
             val hiveName = if (note.type == "general") {
                 "Загальні записи"
             } else {
-                allHives.find { it.number == note.hiveNumber }?.name ?: "Вулик №${note.hiveNumber}"
+                val foundHive = allHives.find { it.number == note.hiveNumber }
+                foundHive?.name ?: "Вулик №${note.hiveNumber}"
             }
+            Log.d(TAG, "Note ID: ${note.id}, Hive Name resolved: $hiveName, Original Hive Number: ${note.hiveNumber}")
             NoteSearchResult(note, hiveName)
         }
 
@@ -263,19 +251,10 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    private fun loadHiveListForSearch(): List<HiveData> {
-        val prefs = getSharedPreferences(MainActivity.PREFS_NAME, Context.MODE_PRIVATE)
-        val json = prefs.getString(MainActivity.KEY_HIVE_LIST, null)
-        return if (json != null) {
-            val type = object : TypeToken<MutableList<HiveData>>() {}.type
-            val loadedList = gson.fromJson<MutableList<HiveData>>(json, type) ?: mutableListOf()
-            Log.d(TAG, "loadHiveListForSearch: Завантажено ${loadedList.size} вуликів з SharedPreferences.")
-            loadedList
-        } else {
-            Log.d(TAG, "loadHiveListForSearch: Список вуликів порожній у SharedPreferences.")
-            emptyList()
-        }
-    }
+    // ✅ ВИДАЛЕНО: Цей метод більше не потрібен, оскільки ми використовуємо HiveRepository
+    // private fun loadHiveListForSearch(): List<HiveData> {
+    //     ...
+    // }
 
     private fun hideKeyboard() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager

@@ -36,7 +36,8 @@
                 android:src="@drawable/ic_menu_black"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                app:layout_constraintBottom_toBottomOf="parent"
+                />
 
             <TextView
                 android:id="@+id/infoTitle"
@@ -50,10 +51,10 @@
                 android:textColor="@color/title_dark_green"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/drawer_toggle_button"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/drawer_toggle_button"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="@id/drawer_toggle_button" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
