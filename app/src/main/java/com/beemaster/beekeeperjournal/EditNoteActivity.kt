@@ -1,3 +1,5 @@
+// EditNoteActivity.kt файл котрий працює коли відкрито поле редагування тексту.
+
 package com.beemaster.beekeeperjournal
 
 import android.Manifest
@@ -14,13 +16,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.json.JSONObject
-import org.vosk.LibVosk
-import org.vosk.LogLevel
-import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import org.vosk.android.StorageService
 import android.content.Context
 import android.view.inputmethod.InputMethodManager
 import android.view.WindowManager // Додано імпорт WindowManager

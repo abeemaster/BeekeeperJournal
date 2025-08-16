@@ -2,20 +2,22 @@
 
 package com.beemaster.beekeeperjournal
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
+
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -31,41 +33,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var hiveListRecyclerView: RecyclerView
     private lateinit var hiveAdapter: HiveAdapter
     private lateinit var hiveCountTextView: TextView
-
-    private val pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data
-            if (uri != null) {
-                dataSynchronizer.exportNotesToCsvFiles(uri)
-            }
-        }
-    }
-
-    private val createBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data
-            if (uri != null) {
-                dataSynchronizer.writeBackupDataToFile(uri)
-            }
-        }
-    }
-
-    private val openBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data
-            if (uri != null) {
-                // Додаємо callback, щоб оновити UI після відновлення
-                dataSynchronizer.readAndRestoreBackupDataFromFile(uri) { loadHives() }
-            }
-        }
-    }
-
     private lateinit var dataSynchronizer: DataSynchronizer
+
 
     companion object {
         const val EXTRA_HIVE_NUMBER_FOR_COLOR_UPDATE = "com.beemaster.beekeeperjournal.HIVE_NUMBER_FOR_COLOR_UPDATE"
-        const val PREFS_NAME = "BeekeeperJournalPrefs"
-        const val KEY_HIVE_LIST = "hive_list"
+
     }
 
     private val colorPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -89,6 +62,30 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val createBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                dataSynchronizer.writeBackupDataToFile(uri)
+            }
+        }
+    }
+
+    private val openBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                dataSynchronizer.readAndRestoreBackupDataFromFile(uri)
+            }
+        }
+    }
+
+    private val pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                dataSynchronizer.exportNotesToCsvFiles(uri)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -100,26 +97,16 @@ class MainActivity : AppCompatActivity() {
             createBackupFileLauncher,
             openBackupFileLauncher,
             pickFolderLauncher
-        )
+        ) { loadHives() }
 
-        // ✅ Ініціалізуємо Toolbar та встановлюємо його як ActionBar
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-
-        // ✅ Ініціалізуємо DrawerLayout і NavigationView лише один раз
         drawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 
-        // ✅ Використовуємо ActionBarDrawerToggle для іконки-гамбургера
-        val toggle = ActionBarDrawerToggle(
-            this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
+        val drawerToggleButton: ImageButton = findViewById(R.id.drawer_toggle_button)
 
-        // ✅ Видаляємо зайвий код для "хвостика", оскільки тепер є іконка-гамбургер
-        // drawerTail = findViewById(R.id.drawer_tail) // Цей рядок видаляємо
-        // та відповідний addDrawerListener
+        drawerToggleButton.setOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -138,7 +125,21 @@ class MainActivity : AppCompatActivity() {
 
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                // ... інші пункти меню ...
+                R.id.nav_home -> {
+                    // Ми вже на головному екрані, тому нічого не робимо.
+                }
+                R.id.nav_general_notes -> {
+                    val intent = Intent(this, HiveInfoActivity::class.java).apply {
+                        putExtra("TYPE", "general")
+                        putExtra("TITLE", "Загальні записи")
+                        putExtra(HiveInfoActivity.EXTRA_HIVE_NAME, "Загальні записи")
+                    }
+                    startActivity(intent)
+                }
+                R.id.nav_search -> {
+                    val intent = Intent(this, SearchActivity::class.java)
+                    startActivity(intent)
+                }
                 R.id.nav_sync -> {
                     dataSynchronizer.showSyncOptionsDialog()
                 }
@@ -151,14 +152,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         val generalNotesBtn: MaterialButton = findViewById(R.id.generalNotesButton)
-
-        loadHives()
-
-        // ✅ Видаляємо цей слухач, оскільки іконка-гамбургер робить те саме
-        // drawerTail.setOnClickListener {
-        //     drawerLayout.openDrawer(GravityCompat.START)
-        // }
-
         generalNotesBtn.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
                 putExtra("TYPE", "general")
@@ -167,16 +160,67 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(intent)
         }
+
+        val hives = hiveRepository.readHivesFromJson()
+        hiveAdapter = HiveAdapter(
+            hives = hives,
+            onItemClick = { position ->
+                val hive = hives[position]
+                val intent = Intent(this, HiveInfoActivity::class.java).apply {
+                    putExtra("HIVE_NUMBER", hive.number)
+                    putExtra("TYPE", "hive")
+                }
+                startActivity(intent)
+            },
+            onItemLongClick = { position ->
+                val hive = hives[position]
+                showHiveOptionsDialog(hive)
+            }
+        )
+        hiveListRecyclerView.adapter = hiveAdapter
+        updateHiveCount(hives.size)
     }
 
-    // ... Інші методи (showAddHiveDialog, loadHives, showHiveOptionsDialog, тощо)
-    // які не відносяться до синхронізації...
+    override fun onResume() {
+        super.onResume()
+        loadHives()
+    }
+
+    private fun loadHives() {
+        val hives = hiveRepository.readHivesFromJson()
+        if (hives.isEmpty()) {
+            for (i in 1..30) {
+                hives.add(HiveData(
+                    number = i,
+                    name = "Вулик №$i",
+                    color = R.color.hive_button_color,
+                    queenButtonColor = R.color.nav_button_color,
+                    notesButtonColor = R.color.nav_button_color,
+                    secondaryColor = android.R.color.transparent
+                ))
+            }
+            hiveRepository.writeHivesToJson(hives)
+        }
+        hiveAdapter.updateHives(hives)
+        updateHiveCount(hives.size)
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun updateHiveCount(count: Int) {
+        val countString = when (count) {
+            1 -> "вулик"
+            in 2..4 -> "вулики"
+            else -> "вуликів"
+        }
+        hiveCountTextView.text = "$count $countString"
+    }
 
     private fun showAddHiveDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Додати новий вулик")
         val input = EditText(this).apply { hint = "Назва вулика"; inputType = InputType.TYPE_CLASS_TEXT }
         builder.setView(input)
+
         builder.setPositiveButton("Додати") { dialog, _ ->
             val hiveName = input.text.toString().trim()
             if (hiveName.isNotEmpty()) {
@@ -192,39 +236,13 @@ class MainActivity : AppCompatActivity() {
                 ))
                 hiveRepository.writeHivesToJson(hives)
                 loadHives()
-                dialog.dismiss()
+                (dialog as AlertDialog).dismiss()
             } else {
                 Toast.makeText(this, "Назва вулика не може бути порожньою", Toast.LENGTH_SHORT).show()
             }
         }
         builder.setNegativeButton("Скасувати") { dialog, _ -> dialog.cancel() }
         builder.show()
-    }
-
-    // ... інші методи, які не належать до синхронізації...
-    private fun loadHives() {
-        val hives = hiveRepository.readHivesFromJson()
-
-        if (hives.isEmpty()) {
-            for (i in 1..30) {
-                hives.add(HiveData(
-                    number = i,
-                    name = "Вулик №$i",
-                    color = R.color.hive_button_color,
-                    queenButtonColor = R.color.nav_button_color,
-                    notesButtonColor = R.color.nav_button_color,
-                    secondaryColor = android.R.color.transparent
-                ))
-            }
-            hiveRepository.writeHivesToJson(hives)
-        }
-
-        hiveCountTextView.text = getString(R.string.hive_count, hives.size)
-
-        hiveAdapter = HiveAdapter(hives, this) { position ->
-            showHiveOptionsDialog(hives[position])
-        }
-        hiveListRecyclerView.adapter = hiveAdapter
     }
 
     private fun showHiveOptionsDialog(hive: HiveData) {
@@ -257,7 +275,6 @@ class MainActivity : AppCompatActivity() {
             dialog.dismiss()
             showDeleteHiveDialog(hive)
         }
-
         dialog.show()
     }
 
@@ -301,8 +318,6 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("Скасувати") { dialog, _ -> dialog.cancel() }
             .show()
     }
-
-
 
     private fun openColorPicker(hiveNumber: Int, colorType: String) {
         val intent = Intent(this, ColorPickerActivity::class.java).apply {

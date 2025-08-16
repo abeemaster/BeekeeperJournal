@@ -23,6 +23,11 @@ import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.content.res.ColorStateList
+import androidx.activity.OnBackPressedCallback
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
+import android.widget.Toast
 
 class HiveInfoActivity : AppCompatActivity() {
 
@@ -45,23 +50,92 @@ class HiveInfoActivity : AppCompatActivity() {
     private lateinit var notesBtn: Button
     private lateinit var noteManager: NoteManager
     private lateinit var noteRepository: NoteRepository
-    private lateinit var noteViewCreator: NoteViewCreator // ✅ Нова змінна для NoteViewCreator
+    private lateinit var noteViewCreator: NoteViewCreator
     private lateinit var currentHiveActualName: String
     private lateinit var newNoteActivityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var editNoteActivityResultLauncher: ActivityResultLauncher<Intent>
-    private var currentHiveNumber: Int = 0
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var dataSynchronizer: DataSynchronizer
+    private lateinit var hiveRepository: HiveRepository
+    private var currentHiveNumber: Int = -1
     private var currentQueenButtonColor: Int = 0
     private var currentNotesButtonColor: Int = 0
     private var currentEntryType: String = ""
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
 
+        hiveRepository = HiveRepository(this)
         noteRepository = NoteRepository(this)
         noteManager = NoteManager(this, noteRepository)
 
-        // ✅ Ініціалізація NoteViewCreator з колбеками
+        val hiveNumberFromIntent = intent.getIntExtra("HIVE_NUMBER", -1)
+        val entryTypeFromIntent = intent.getStringExtra("TYPE") ?: "notes"
+
+        if (hiveNumberFromIntent != -1) {
+            val isDataLoaded = loadHiveData(hiveNumberFromIntent, entryTypeFromIntent)
+            if (!isDataLoaded) {
+                return
+            }
+        } else if (entryTypeFromIntent == "general") {
+            currentHiveNumber = -1
+            currentHiveActualName = "Загальні записи"
+            currentEntryType = "general"
+        } else {
+            Toast.makeText(this, "Помилка завантаження даних про вулик.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+        drawerLayout = findViewById(R.id.drawer_layout)
+        val navView: NavigationView = findViewById(R.id.nav_view)
+        val drawerToggleButton: ImageButton = findViewById(R.id.drawer_toggle_button)
+
+        // ✅ ВИПРАВЛЕНО: Додано callback для оновлення нотаток
+        dataSynchronizer = DataSynchronizer(
+            this,
+            createBackupFileLauncher,
+            openBackupFileLauncher,
+            pickFolderLauncher
+        ) { loadNotes() }
+
+        drawerToggleButton.setOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_home -> {
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
+                    startActivity(intent)
+                }
+                R.id.nav_sync -> {
+                    dataSynchronizer.showSyncOptionsDialog()
+                }
+                R.id.nav_add_hive -> {
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
+                }
+            }
+            drawerLayout.closeDrawer(GravityCompat.START)
+            true
+        }
+
         noteViewCreator = NoteViewCreator(
             this,
             onEditNote = { noteId ->
@@ -78,23 +152,10 @@ class HiveInfoActivity : AppCompatActivity() {
         newNoteButton = findViewById(R.id.newNoteButton)
         queenBtn = findViewById(R.id.queenBtn)
         notesBtn = findViewById(R.id.notesBtn)
-        hiveInfoBtn = findViewById(R.id.hiveInfoBtn) // Ініціалізуємо hiveInfoBtn
+        hiveInfoBtn = findViewById(R.id.hiveInfoBtn)
 
-        val initialEntryType = intent.getStringExtra("TYPE") ?: "hive"
-        val titleFromIntent = intent.getStringExtra("TITLE")
-        currentHiveNumber = intent.getIntExtra("EXTRA_HIVE_NUMBER", 0)
-        Log.d(TAG, "HiveInfoActivity: В onCreate, отриманий hiveNumber: $currentHiveNumber")
-        currentQueenButtonColor = intent.getIntExtra(EXTRA_QUEEN_BUTTON_COLOR, R.color.nav_button_color)
-        currentNotesButtonColor = intent.getIntExtra(EXTRA_NOTES_BUTTON_COLOR, R.color.nav_button_color)
-        currentHiveActualName = intent.getStringExtra(EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveNumber"
-
-        if (titleFromIntent != null) {
-            infoTitle.text = titleFromIntent
-        } else {
-            infoTitle.text = currentHiveActualName
-        }
-
-        showInfo(initialEntryType)
+        infoTitle.text = currentHiveActualName
+        showInfo(currentEntryType)
 
         queenBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentQueenButtonColor))
         notesBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, currentNotesButtonColor))
@@ -103,8 +164,7 @@ class HiveInfoActivity : AppCompatActivity() {
         hiveInfoBtn.setOnClickListener { showInfo("hive") }
         notesBtn.setOnClickListener { openNotesInfo() }
 
-        val type = intent.getStringExtra("TYPE")
-        if (type == "general") {
+        if (currentEntryType == "general") {
             queenBtn.visibility = View.GONE
             notesBtn.visibility = View.GONE
             hiveInfoBtn.visibility = View.GONE
@@ -133,7 +193,7 @@ class HiveInfoActivity : AppCompatActivity() {
                 if (noteId != null && updatedNoteText != null) {
                     noteManager.updateNote(noteId, updatedNoteText) {
                         loadNotes()
-                        noteViewCreator.hideActionsAndResetBackground() // Скидаємо виділення
+                        noteViewCreator.hideActionsAndResetBackground()
                     }
                 }
             }
@@ -189,6 +249,37 @@ class HiveInfoActivity : AppCompatActivity() {
         }
     }
 
+    // ✅ НОВЕ: Метод onResume() для оновлення даних
+    override fun onResume() {
+        super.onResume()
+        loadNotes()
+    }
+
+    private val createBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                dataSynchronizer.writeBackupDataToFile(uri)
+            }
+        }
+    }
+
+    private val openBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                dataSynchronizer.readAndRestoreBackupDataFromFile(uri)
+                finish()
+            }
+        }
+    }
+
+    private val pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                dataSynchronizer.exportNotesToCsvFiles(uri)
+            }
+        }
+    }
+
     private fun setResultAndFinish() {
         val resultIntent = Intent().apply {
             putExtra(RESULT_QUEEN_BUTTON_COLOR, currentQueenButtonColor)
@@ -199,7 +290,30 @@ class HiveInfoActivity : AppCompatActivity() {
         setResult(Activity.RESULT_OK, resultIntent)
     }
 
+    private fun loadHiveData(hiveNumber: Int, entryType: String): Boolean {
+        val hives = hiveRepository.readHivesFromJson()
+        val foundHive = hives.find { it.number == hiveNumber }
+
+        if (foundHive != null) {
+            currentHiveActualName = foundHive.name
+            currentHiveNumber = foundHive.number
+            currentQueenButtonColor = foundHive.queenButtonColor
+            currentNotesButtonColor = foundHive.notesButtonColor
+            currentEntryType = entryType
+            return true
+        } else {
+            Toast.makeText(this, "Вулик не знайдено. Повернення на головний екран.", Toast.LENGTH_LONG).show()
+            finish()
+            return false
+        }
+    }
+
     private fun loadNotes() {
+        if (currentHiveNumber == -1 && currentEntryType != "general") {
+            notesDisplayArea.removeAllViews()
+            return
+        }
+
         val filteredNotes = noteManager.loadNotes(currentEntryType, currentHiveNumber)
         notesDisplayArea.removeAllViews()
 
@@ -223,14 +337,12 @@ class HiveInfoActivity : AppCompatActivity() {
             notesDisplayArea.addView(noNotesTextView)
         } else {
             for (note in filteredNotes) {
-                // ✅ Використовуємо новий клас для створення елементів
                 val noteItemView = noteViewCreator.createNoteItem(note)
                 notesDisplayArea.addView(noteItemView)
             }
         }
     }
 
-    // ✅ Новий приватний метод для запуску EditNoteActivity
     private fun openEditNoteActivity(noteId: String) {
         val note = noteManager.loadNotes(currentEntryType, currentHiveNumber).firstOrNull { it.id == noteId }
         if (note != null) {
@@ -245,9 +357,7 @@ class HiveInfoActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Новий приватний метод для видалення нотатки, що використовує NoteManager
     private fun deleteNote(noteId: String) {
-        // Ми більше не створюємо noteItem, тому що ця логіка тепер в NoteViewCreator.
         noteManager.deleteNote(noteId) {
             loadNotes()
             noteViewCreator.hideActionsAndResetBackground()
@@ -326,7 +436,7 @@ class HiveInfoActivity : AppCompatActivity() {
         currentEntryType = entryType
         val title: String = when (currentEntryType) {
             "queen" -> "Матка $currentHiveActualName"
-            "hive" -> "Вулик $currentHiveActualName"
+            "hive" -> " $currentHiveActualName"
             "notes" -> "Примітки $currentHiveActualName"
             else -> currentHiveActualName
         }

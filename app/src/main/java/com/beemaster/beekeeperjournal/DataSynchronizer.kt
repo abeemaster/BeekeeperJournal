@@ -8,13 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
-import com.beemaster.beekeeperjournal.MainActivity.Companion
 import com.google.android.material.card.MaterialCardView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -38,7 +35,8 @@ class DataSynchronizer(
     private val context: Context,
     private val createBackupFileLauncher: ActivityResultLauncher<Intent>,
     private val openBackupFileLauncher: ActivityResultLauncher<Intent>,
-    private val pickFolderLauncher: ActivityResultLauncher<Intent>
+    private val pickFolderLauncher: ActivityResultLauncher<Intent>,
+    private val loadHivesCallback: (() -> Unit)? = null // <-- Виправлений рядок
 ) {
 
     private val gson = Gson()
@@ -123,7 +121,8 @@ class DataSynchronizer(
 
     // У файлі DataSynchronizer.kt
 
-    fun readAndRestoreBackupDataFromFile(fileUri: Uri, loadHivesCallback: () -> Unit) {
+    // ✅ Оновлена функція, яка більше не вимагає аргументу-колбека
+    fun readAndRestoreBackupDataFromFile(fileUri: Uri) {
         try {
             context.contentResolver.openInputStream(fileUri)?.use { inputStream ->
                 BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8)).use { reader ->
@@ -135,15 +134,15 @@ class DataSynchronizer(
                     if (backupData != null) {
                         Log.d(TAG, "readAndRestoreBackupDataFromFile: Зчитано ${backupData.hiveList.size} вуликів і ${backupData.notes.size} нотаток з резервної копії.")
 
-                        // Повністю перезаписуємо дані про вулики
                         writeHivesToJson(backupData.hiveList)
                         Log.d(TAG, "readAndRestoreBackupDataFromFile: Викликано writeHivesToJson з ${backupData.hiveList.size} вуликами.")
 
-                        // Повністю перезаписуємо дані про нотатки
                         writeAllNotesToJson(backupData.notes)
                         Log.d(TAG, "readAndRestoreBackupDataFromFile: Викликано writeAllNotesToJson з ${backupData.notes.size} нотатками.")
 
-                        loadHivesCallback()
+                        // ✅ Тепер викликаємо колбек з конструктора, якщо він існує
+                        loadHivesCallback?.invoke()
+
                         Toast.makeText(context, "Дані успішно відновлено!", Toast.LENGTH_LONG).show()
                         Log.d(TAG, "readAndRestoreBackupDataFromFile: Відновлення завершено успішно.")
                     } else {
@@ -157,8 +156,6 @@ class DataSynchronizer(
             Toast.makeText(context, "Помилка при відновленні: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
-
-    // У файлі DataSynchronizer.kt
 
     fun readAllNotesFromJson(): MutableList<Note> {
         val file = File(context.filesDir, notesFileName)
@@ -184,10 +181,6 @@ class DataSynchronizer(
         }
     }
 
-    // У файлі DataSynchronizer.kt
-
-    // У файлі DataSynchronizer.kt
-// ...
     fun writeAllNotesToJson(notes: List<Note>) {
         val file = File(context.filesDir, notesFileName)
         try {
@@ -202,9 +195,6 @@ class DataSynchronizer(
             Log.e(TAG, "Помилка запису нотаток до файлу: ${e.message}", e)
         }
     }
-// ...
-
-// ...
 
     private fun formatNoteToCsvRow(note: Note): String {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
@@ -349,8 +339,4 @@ class DataSynchronizer(
             Log.e(TAG, "Помилка запису вуликів до файлу: ${e.message}", e)
         }
     }
-
-
-
-
 }
