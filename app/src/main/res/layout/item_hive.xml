@@ -31,21 +31,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!-- Блок котрий показує номери вуликів на кнопках "Вулик№" -->
-
-        <!-- <TextView
-            android:id="@+id/hiveNumber"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="1"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginStart="16dp"
-            app:layout_constraintStart_toEndOf="@+id/secondaryColorView"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" /> -->
-
-
         <TextView
             android:id="@+id/hiveName"
             android:layout_width="0dp"
