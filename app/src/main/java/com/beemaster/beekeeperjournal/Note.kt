@@ -14,7 +14,7 @@ package com.beemaster.beekeeperjournal
  * @param timestamp Мітка часу створення запису (для сортування).
  */
 data class Note(
-    val id: String, // Змінено на String для UUID, оскільки Room більше не генерує Long ID
+    val id: String,
     val date: String,
     val text: String,
     val type: String,

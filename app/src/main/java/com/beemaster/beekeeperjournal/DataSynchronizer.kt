@@ -8,13 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
-import com.beemaster.beekeeperjournal.MainActivity.Companion
 import com.google.android.material.card.MaterialCardView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -202,17 +199,22 @@ class DataSynchronizer(
             Log.e(TAG, "Помилка запису нотаток до файлу: ${e.message}", e)
         }
     }
-// ...
 
-// ...
+
 
     private fun formatNoteToCsvRow(note: Note): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        val dateString = dateFormat.format(Date(note.timestamp))
+        // ✅ Тепер ми просто беремо рядок дати з об'єкта note.
+        // SimpleDateFormat більше не потрібен!
+        val dateString = note.date
+
         val escapedText = note.text.replace("\"", "\"\"").replace("\n", " ").trim()
         val hiveNumber = note.hiveNumber
-        return "${note.id},\"$dateString\",\"$escapedText\",\"${note.type}\",\"$hiveNumber\",\"${note.timestamp}\""
+
+        // ✅ Виправлений рядок CSV:
+        // Порядок полів: Дата, Текст, Тип, Номер Вулика, Мітка Часу, ID
+        return "\"$dateString\",\"$escapedText\",\"${note.type}\",\"$hiveNumber\",\"${note.timestamp}\",\"${note.id}\""
     }
+
 
     private fun openFolderPicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
@@ -239,7 +241,7 @@ class DataSynchronizer(
         }
 
         var totalExportedNotes = 0
-        val csvHeader = "ID,Дата,Текст,Тип,Номер Вулика,Мітка Часу\n"
+        val csvHeader = "Дата,Текст,Тип,Номер Вулика,Мітка Часу,ID\n"
         val hiveList = readHivesFromJson()
         val hiveNumberToNameMap = hiveList.associate { it.number to it.name }
         val notesGroupedByTargetPath = mutableMapOf<Pair<String, String>, MutableList<Note>>()
@@ -292,12 +294,20 @@ class DataSynchronizer(
                     Toast.makeText(context, "Не вдалося створити підпапку: $subfolderName", Toast.LENGTH_SHORT).show()
                     return@forEach
                 }
+
+                val existingFile = targetSubFolder.findFile(fileName)
+                if (existingFile != null && existingFile.exists()) {
+                    existingFile.delete()
+                    Log.d(TAG, "exportNotesToCsvFiles: Видалено старий файл: $fileName")
+                }
+
                 val csvFile = targetSubFolder.createFile("text/csv", fileName)
                 if (csvFile == null) {
                     Log.e(TAG, "exportNotesToCsvFiles: Не вдалося створити файл: $fileName у $subfolderName")
                     Toast.makeText(context, "Не вдалося створити файл: $fileName", Toast.LENGTH_SHORT).show()
                     return@forEach
                 }
+
                 context.contentResolver.openOutputStream(csvFile.uri, "w")?.use { outputStream ->
                     OutputStreamWriter(outputStream, StandardCharsets.UTF_8).use { writer ->
                         writer.write(csvHeader)
