@@ -11,6 +11,7 @@ import android.text.InputType
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,77 +27,84 @@ class MainActivity : AppCompatActivity() {
     private lateinit var hiveCountTextView: TextView
     private lateinit var dataSynchronizer: DataSynchronizer
 
-    private val pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data
-            if (uri != null) {
-                dataSynchronizer.exportNotesToCsvFiles(uri)
-            }
-        }
-    }
-
-    private val createBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data
-            if (uri != null) {
-                dataSynchronizer.writeBackupDataToFile(uri)
-            }
-        }
-    }
-
-    private val openBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data
-            if (uri != null) {
-                // Додаємо callback, щоб оновити UI після відновлення
-                dataSynchronizer.readAndRestoreBackupDataFromFile(uri) { loadHives() }
-            }
-        }
-    }
-
-
-
+    // ✅ Оголошення лаунчерів. Вони тут лише оголошуються!
+    private lateinit var pickFolderLauncher: ActivityResultLauncher<Intent>
+    private lateinit var createBackupFileLauncher: ActivityResultLauncher<Intent>
+    private lateinit var openBackupFileLauncher: ActivityResultLauncher<Intent>
+    private lateinit var colorPickerLauncher: ActivityResultLauncher<Intent>
 
     companion object {
         const val EXTRA_HIVE_NUMBER_FOR_COLOR_UPDATE = "com.beemaster.beekeeperjournal.HIVE_NUMBER_FOR_COLOR_UPDATE"
     }
 
-    private val colorPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val selectedColor = result.data?.getIntExtra("selected_color", Color.TRANSPARENT)
-            val hiveNumber = result.data?.getIntExtra("hive_number", -1)
-            val colorType = result.data?.getStringExtra("color_type")
-
-            if (hiveNumber != -1 && selectedColor != null && colorType != null) {
-                val hives = hiveRepository.readHivesFromJson()
-                val hiveToUpdate = hives.find { it.number == hiveNumber }
-                if (hiveToUpdate != null) {
-                    when (colorType) {
-                        "primary" -> hiveToUpdate.color = selectedColor
-                        "secondary" -> hiveToUpdate.secondaryColor = selectedColor
-                    }
-                    hiveRepository.writeHivesToJson(hives)
-                    loadHives()
-                }
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // ✅ Підключаємо бічну панель за допомогою єдиного методу
-        DrawerManager.setupDrawer(this)
+        // ✅ КРОК 1: Ініціалізуємо усі лаунчери
+        pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri = result.data?.data
+                if (uri != null) {
+                    dataSynchronizer.exportNotesToCsvFiles(uri)
+                }
+            }
+        }
 
-        hiveRepository = HiveRepository(this)
+        createBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri = result.data?.data
+                if (uri != null) {
+                    dataSynchronizer.writeBackupDataToFile(uri)
+                }
+            }
+        }
 
+        openBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri = result.data?.data
+                if (uri != null) {
+                    dataSynchronizer.readAndRestoreBackupDataFromFile(uri) { loadHives() }
+                }
+            }
+        }
+
+        colorPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val selectedColor = result.data?.getIntExtra("selected_color", Color.TRANSPARENT)
+                val hiveNumber = result.data?.getIntExtra("hive_number", -1)
+                val colorType = result.data?.getStringExtra("color_type")
+
+                if (hiveNumber != -1 && selectedColor != null && colorType != null) {
+                    val hives = hiveRepository.readHivesFromJson()
+                    val hiveToUpdate = hives.find { it.number == hiveNumber }
+                    if (hiveToUpdate != null) {
+                        when (colorType) {
+                            "primary" -> hiveToUpdate.color = selectedColor
+                            "secondary" -> hiveToUpdate.secondaryColor = selectedColor
+                        }
+                        hiveRepository.writeHivesToJson(hives)
+                        loadHives()
+                    }
+                }
+            }
+        }
+
+        // ✅ КРОК 2: Тільки тепер ініціалізуємо DataSynchronizer, використовуючи лаунчери, що вже існують
         dataSynchronizer = DataSynchronizer(
             this,
             createBackupFileLauncher,
             openBackupFileLauncher,
             pickFolderLauncher
         )
+
+        // ✅ КРОК 3: Викликаємо setupDrawer лише один раз
+        DrawerManager.setupDrawer(this, dataSynchronizer)
+
+
+        hiveRepository = HiveRepository(this)
+
 
         hiveListRecyclerView = findViewById(R.id.hiveListRecyclerView)
         hiveCountTextView = findViewById(R.id.hiveCountTextView)
