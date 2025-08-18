@@ -9,25 +9,18 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var hiveRepository: HiveRepository
-    private lateinit var drawerLayout: DrawerLayout
     private lateinit var hiveListRecyclerView: RecyclerView
     private lateinit var hiveAdapter: HiveAdapter
     private lateinit var hiveCountTextView: TextView
@@ -64,8 +57,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_HIVE_NUMBER_FOR_COLOR_UPDATE = "com.beemaster.beekeeperjournal.HIVE_NUMBER_FOR_COLOR_UPDATE"
-        const val PREFS_NAME = "BeekeeperJournalPrefs"
-        const val KEY_HIVE_LIST = "hive_list"
     }
 
     private val colorPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->

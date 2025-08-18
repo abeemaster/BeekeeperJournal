@@ -63,6 +63,9 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
+        // ✅ Підключаємо бічну панель за допомогою єдиного методу
+        DrawerManager.setupDrawer(this)
+
         hiveRepository = HiveRepository(this) // ✅ ДОДАНО: Ініціалізація репозиторію
 
         searchQueryInput = findViewById(R.id.searchQueryInput)
