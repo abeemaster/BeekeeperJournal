@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var hiveListRecyclerView: RecyclerView
     private lateinit var hiveAdapter: HiveAdapter
     private lateinit var hiveCountTextView: TextView
+    private lateinit var dataSynchronizer: DataSynchronizer
 
     private val pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -53,7 +54,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private lateinit var dataSynchronizer: DataSynchronizer
+
+
 
     companion object {
         const val EXTRA_HIVE_NUMBER_FOR_COLOR_UPDATE = "com.beemaster.beekeeperjournal.HIVE_NUMBER_FOR_COLOR_UPDATE"
