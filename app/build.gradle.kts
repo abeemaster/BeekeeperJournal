@@ -12,7 +12,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.beemaster.beekeeperjournal"
+        applicationId = "com.beemaster.beekeeperjournal.dev"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
