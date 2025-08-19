@@ -33,7 +33,7 @@ class HiveInfoActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "HiveInfoActivity"
-
+        const val EXTRA_HIVE_NUMBER = "com.beemaster.beekeeperjournal.HIVE_NUMBER"
         const val EXTRA_QUEEN_BUTTON_COLOR = "com.beemaster.beekeeperjournal.QUEEN_BUTTON_COLOR"
         const val EXTRA_NOTES_BUTTON_COLOR = "com.beemaster.beekeeperjournal.NOTES_BUTTON_COLOR"
         const val RESULT_QUEEN_BUTTON_COLOR = "com.beemaster.beekeeperjournal.RESULT_QUEEN_BUTTON_COLOR"

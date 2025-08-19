@@ -1,3 +1,5 @@
+// SearchActivity.kt файл що відповідає за пошук
+
 package com.beemaster.beekeeperjournal
 
 import android.Manifest
@@ -74,18 +76,14 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView)
 
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this)
-        searchResultsAdapter = SearchResultsAdapter(mutableListOf()) { note, hiveName ->
-            val intent = Intent(this, EditNoteActivity::class.java).apply {
-                putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
-                putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
-                putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
-                putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
-                putExtra(EditNoteActivity.EXTRA_HIVE_NAME, hiveName)
+        // ✅ ЗМІНЮЄМО ІНІЦІАЛІЗАЦІЮ АДАПТЕРА
+        searchResultsAdapter = SearchResultsAdapter(
+            mutableListOf(),
+            onItemLongClick = { note ->
+                showOptionsDialog(note)
             }
-            startActivityForResult(intent, REQUEST_CODE_EDIT_NOTE_FROM_SEARCH)
-        }
+        )
         searchResultsRecyclerView.adapter = searchResultsAdapter
-
         microphoneBtnSearch.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.microphone_button_color))
 
         if (BeekeeperApplication.voskModel != null) {
@@ -120,6 +118,46 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(searchQueryInput, InputMethodManager.SHOW_IMPLICIT)
         }, 100)
+    }
+
+    // ✅ ДОДАЄМО НОВІ ФУНКЦІЇ ДЛЯ ДІАЛОГОВИХ ВІКОН ТА ПЕРЕХОДУ
+
+    private fun showOptionsDialog(note: Note) {
+        val options = arrayOf("Редагувати запис", "Перейти у вулик")
+
+        // Створення діалогового вікна
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle("Оберіть дію")
+        builder.setItems(options) { dialog, which ->
+            when (which) {
+                0 -> { // Редагувати запис
+                    val hiveName = hiveRepository.readHivesFromJson().find { it.number == note.hiveNumber }?.name ?: "Вулик №${note.hiveNumber}"
+                    showEditNoteDialog(note, hiveName)
+                }
+                1 -> { // Перейти у вулик
+                    navigateToHive(note)
+                }
+            }
+        }
+        builder.show()
+    }
+
+    private fun showEditNoteDialog(note: Note, hiveName: String) {
+        val intent = Intent(this, EditNoteActivity::class.java).apply {
+            putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
+            putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
+            putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
+            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
+            putExtra(EditNoteActivity.EXTRA_HIVE_NAME, hiveName)
+        }
+        startActivityForResult(intent, REQUEST_CODE_EDIT_NOTE_FROM_SEARCH)
+    }
+
+    private fun navigateToHive(note: Note) {
+        val intent = Intent(this, HiveInfoActivity::class.java).apply {
+            putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
+        }
+        startActivity(intent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -254,11 +292,6 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    // ✅ ВИДАЛЕНО: Цей метод більше не потрібен, оскільки ми використовуємо HiveRepository
-    // private fun loadHiveListForSearch(): List<HiveData> {
-    //     ...
-    // }
-
     private fun hideKeyboard() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(searchQueryInput.windowToken, 0)
@@ -268,7 +301,8 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
 // Клас для адаптера RecyclerView
 class SearchResultsAdapter(
     private val searchResults: MutableList<NoteSearchResult>,
-    private val onItemClick: (Note, String) -> Unit
+    // private val onItemClick: (Note, String) -> Unit,
+    private val onItemLongClick: (Note) -> Unit
 ) : RecyclerView.Adapter<SearchResultsAdapter.SearchResultViewHolder>() {
 
     class SearchResultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -302,8 +336,13 @@ class SearchResultsAdapter(
         }
         holder.noteTypeAndHive.text = "$typeText. $hiveName"
 
-        holder.itemView.setOnClickListener {
-            onItemClick(note, hiveName)
+        //holder.itemView.setOnClickListener {
+        //    onItemClick(note, hiveName)
+        //}
+        // ✅ ДОДАЄМО СЛУХАЧА ДОВГОГО НАТИСКАННЯ
+        holder.itemView.setOnLongClickListener {
+            onItemLongClick(note)
+            true // Повертаємо true, щоб вказати, що подія оброблена
         }
     }
 
