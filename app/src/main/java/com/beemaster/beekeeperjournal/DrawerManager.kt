@@ -13,6 +13,9 @@ import android.widget.Toast
 import android.view.MenuItem
 import android.view.Menu
 import android.view.View
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.view.size
+import androidx.core.view.get
 
 object DrawerManager {
 
@@ -72,11 +75,18 @@ object DrawerManager {
                 //}
                 R.id.nav_search -> {
                     drawerLayout.closeDrawer(GravityCompat.START)
-                        val intent = Intent(activity, SearchActivity::class.java)
-                        activity.startActivity(intent)
-                    activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
 
+                    val intent = Intent(activity, SearchActivity::class.java)
 
+                    // ✅ Створюємо набір опцій для анімації
+                    val options = ActivityOptionsCompat.makeCustomAnimation(
+                        activity,
+                        R.anim.slide_in_right,
+                        R.anim.slide_out_left
+                    )
+
+                    // ✅ Запускаємо активність з опціями анімації
+                    activity.startActivity(intent, options.toBundle())
                 }
                 R.id.nav_sync -> {
                     dataSynchronizer?.showSyncOptionsDialog() ?: Toast.makeText(activity, "Data Synchronizer is not available here.", Toast.LENGTH_SHORT).show()
@@ -94,8 +104,8 @@ object DrawerManager {
     // Додаємо нову функцію
     private fun deselectAllMenuItems(navView: NavigationView) {
         val menu: Menu = navView.menu
-        for (i in 0 until menu.size()) {
-            val menuItem: MenuItem = menu.getItem(i)
+        for (i in 0 until menu.size) {
+            val menuItem: MenuItem = menu[i]
             menuItem.isChecked = false
         }
     }
