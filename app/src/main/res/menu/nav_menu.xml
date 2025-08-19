@@ -8,10 +8,10 @@
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_home_icon"
             android:title="Головна" />
-        <item
+        <!-- <item
             android:id="@+id/nav_general_notes"
             android:icon="@drawable/ic_notes"
-            android:title="Загальні записи" />
+            android:title="Загальні записи" /> -->
         <item
             android:id="@+id/nav_search"
             android:icon="@drawable/ic_search"

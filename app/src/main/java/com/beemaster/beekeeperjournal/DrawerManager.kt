@@ -58,31 +58,33 @@ object DrawerManager {
                         activity.startActivity(intent)
                     }
                 }
-                R.id.nav_general_notes -> {
-                    if (activity is HiveInfoActivity && activity.intent.getStringExtra("TYPE") == "general") {
-                        drawerLayout.closeDrawer(GravityCompat.START)
-                    } else {
-                        val intent = Intent(activity, HiveInfoActivity::class.java).apply {
-                            putExtra("TYPE", "general")
-                            putExtra("TITLE", "Загальні записи")
-                            putExtra(HiveInfoActivity.EXTRA_HIVE_NAME, "Загальні записи")
-                        }
-                        activity.startActivity(intent)
-                    }
-                }
+                // R.id.nav_general_notes -> {
+                //    if (activity is HiveInfoActivity && activity.intent.getStringExtra("TYPE") == "general") {
+                //        drawerLayout.closeDrawer(GravityCompat.START)
+                //    } else {
+                //        val intent = Intent(activity, HiveInfoActivity::class.java).apply {
+                //            putExtra("TYPE", "general")
+                //            putExtra("TITLE", "Загальні записи")
+                //            putExtra(HiveInfoActivity.EXTRA_HIVE_NAME, "Загальні записи")
+                //        }
+                //        activity.startActivity(intent)
+                //    }
+                //}
                 R.id.nav_search -> {
-                    if (activity is SearchActivity) {
-                        drawerLayout.closeDrawer(GravityCompat.START)
-                    } else {
+                    drawerLayout.closeDrawer(GravityCompat.START)
                         val intent = Intent(activity, SearchActivity::class.java)
                         activity.startActivity(intent)
-                    }
+                    activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+
+
                 }
                 R.id.nav_sync -> {
                     dataSynchronizer?.showSyncOptionsDialog() ?: Toast.makeText(activity, "Data Synchronizer is not available here.", Toast.LENGTH_SHORT).show()
+                    drawerLayout.closeDrawer(GravityCompat.START)
                 }
                 R.id.nav_add_hive -> {
                     (activity as? MainActivity)?.showAddHiveDialog() ?: Toast.makeText(activity, "Cannot add hive from this screen.", Toast.LENGTH_SHORT).show()
+                    drawerLayout.closeDrawer(GravityCompat.START)
                 }
             }
             true
