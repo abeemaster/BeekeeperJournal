@@ -133,29 +133,15 @@ class HiveInfoActivity : AppCompatActivity() {
             }
         }
 
+        // У файлі HiveInfoActivity.kt
+
         editNoteActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val data = result.data
-                val noteId = data?.getStringExtra(EditNoteActivity.EXTRA_NOTE_ID)
-                val updatedNoteText = data?.getStringExtra(EditNoteActivity.EXTRA_UPDATED_NOTE_TEXT)
-                val updatedHiveName = data?.getStringExtra(EditNoteActivity.EXTRA_HIVE_NAME)
-
-                if (updatedHiveName != null) {
-                    currentHiveActualName = updatedHiveName
-                    if (currentEntryType == "hive") {
-                        infoTitle.text = currentHiveActualName
-                    }
-                }
-
-                if (noteId != null && updatedNoteText != null) {
-                    noteManager.updateNote(noteId, updatedNoteText) {
-                        loadNotes()
-                        noteViewCreator.hideActionsAndResetBackground() // Скидаємо виділення
-                    }
-                }
+                // ✅ ТЕПЕР МИ ПРОСТО ПЕРЕЗАВАНТАЖУЄМО НОТАТКИ, ОСКІЛЬКИ ВОНИ ВЖЕ ЗБЕРЕЖЕНІ
+                loadNotes()
+                noteViewCreator.hideActionsAndResetBackground()
             }
         }
-
         newNoteButton.setOnClickListener {
             val intent = Intent(this, NewNoteActivity::class.java).apply {
                 putExtra(NewNoteActivity.EXTRA_ENTRY_TYPE, currentEntryType)
@@ -343,7 +329,7 @@ class HiveInfoActivity : AppCompatActivity() {
         currentEntryType = entryType
         val title: String = when (currentEntryType) {
             "queen" -> "Матка $currentHiveActualName"
-            "hive" -> "Вулик $currentHiveActualName"
+            "hive" -> " $currentHiveActualName"
             "notes" -> "Примітки $currentHiveActualName"
             else -> currentHiveActualName
         }

@@ -17,6 +17,7 @@ class HiveRepository(private val context: Context) {
     private val gson = Gson()
     private val HIVE_DATA_FILE_NAME = "hives.json"
     private val NOTES_FILE_NAME = "notes.json"
+    private val notesFileName = "notes.json"
     private val tag = "HiveRepository"
 
     fun readHivesFromJson(): MutableList<HiveData> {
@@ -45,6 +46,7 @@ class HiveRepository(private val context: Context) {
             Log.e(tag, "Помилка запису вуликів до файлу: ${e.message}", e)
         }
     }
+
     fun readAllNotesFromJson(): MutableList<Note> {
         val file = File(context.filesDir, NOTES_FILE_NAME)
         if (!file.exists() || file.length() == 0L) {
@@ -58,6 +60,32 @@ class HiveRepository(private val context: Context) {
         } catch (e: Exception) {
             Log.e(tag, "Помилка читання записів з файлу: ${e.message}", e)
             mutableListOf()
+        }
+    }
+
+    // У файлі HiveRepository.kt
+
+    // ✅ 1. ФУНКЦІЯ ДЛЯ ОНОВЛЕННЯ НОТАТКИ
+    fun updateNoteInJson(updatedNote: Note) {
+        val allNotes = readAllNotesFromJson()
+        val noteIndexToUpdate = allNotes.indexOfFirst { it.id == updatedNote.id }
+        if (noteIndexToUpdate != -1) {
+            allNotes[noteIndexToUpdate] = updatedNote
+            writeNotesToJson(allNotes)
+        } else {
+            Log.e(tag, "Нотатка з ID ${updatedNote.id} не знайдена для оновлення.")
+        }
+    }
+
+    // ✅ 2. ПРИВАТНА ФУНКЦІЯ ДЛЯ ЗАПИСУ ВСІХ НОТАТОК
+    private fun writeNotesToJson(notes: List<Note>) {
+        val file = File(context.filesDir, notesFileName)
+        try {
+            FileWriter(file).use { writer ->
+                gson.toJson(notes, writer)
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "Помилка запису нотаток: ${e.message}", e)
         }
     }
 }

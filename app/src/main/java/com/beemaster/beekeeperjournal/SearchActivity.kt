@@ -112,11 +112,16 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             }
         }
 
+        // ✅ ДОДАЙТЕ ЦЕЙ НОВИЙ БЛОК ДЛЯ АВТОМАТИЧНОГО ПОКАЗУ КЛАВІАТУРИ
+        searchQueryInput.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            }
+        }
+        // ✅ Якщо ви хочете, щоб клавіатура з'являлася при старті активності,
+        // просто викличте requestFocus()
         searchQueryInput.requestFocus()
-        searchQueryInput.postDelayed({
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(searchQueryInput, InputMethodManager.SHOW_IMPLICIT)
-        }, 100)
     }
 
     // ✅ ДОДАЄМО НОВІ ФУНКЦІЇ ДЛЯ ДІАЛОГОВИХ ВІКОН ТА ПЕРЕХОДУ

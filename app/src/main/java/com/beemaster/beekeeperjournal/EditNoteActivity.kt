@@ -1,8 +1,9 @@
+// EditNoteActivity відкриває вікно редагування записів.
+
 package com.beemaster.beekeeperjournal
 
 import android.Manifest
 import android.app.Activity
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -14,17 +15,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.json.JSONObject
-import org.vosk.LibVosk
-import org.vosk.LogLevel
-import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import org.vosk.android.StorageService
 import android.content.Context
 import android.view.inputmethod.InputMethodManager
-import android.view.WindowManager // Додано імпорт WindowManager
-import com.google.android.material.button.MaterialButton // Додано імпорт MaterialButton
+import com.google.android.material.button.MaterialButton
 
 class EditNoteActivity : AppCompatActivity(), RecognitionListener {
 
@@ -48,7 +44,7 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
     private var currentEntryType: String = ""
     private var currentHiveNumber: Int = 0
     private lateinit var currentHiveActualName: String
-
+    private lateinit var hiveRepository: HiveRepository
     private var speechService: SpeechService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,8 +52,8 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
         setContentView(R.layout.activity_edit_note)
 
         // Встановлюємо режим adjustResize програмно, щоб переконатися, що клавіатура коректно піднімає вміст
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-
+        // window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        hiveRepository = HiveRepository(this)
         editNoteScreenTitle = findViewById(R.id.editNoteScreenTitle)
         editNoteContentInput = findViewById(R.id.editNoteContentInput)
         microphoneBtnEditNote = findViewById(R.id.microphoneBtnEditNote)
@@ -217,18 +213,30 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
         stopListening()
     }
 
+    // У файлі EditNoteActivity.kt
+
+    // У файлі EditNoteActivity.kt
+
     private fun saveEditedNote() {
         val updatedNoteText = editNoteContentInput.text.toString().trim()
+
         if (updatedNoteText.isNotEmpty()) {
-            // Prepare data to send back to HiveInfoActivity
-            val resultIntent = Intent().apply {
-                putExtra(EXTRA_NOTE_ID, noteId)
-                putExtra(EXTRA_UPDATED_NOTE_TEXT, updatedNoteText)
-                // Передаємо актуальну назву вулика назад, якщо вона була змінена
-                putExtra(EXTRA_HIVE_NAME, currentHiveActualName)
+            // ✅ 1. ЗЧИТУЄМО НОТАТКУ ЗА ID
+            val originalNote = hiveRepository.readAllNotesFromJson().find { it.id == noteId }
+
+            if (originalNote != null) {
+                // ✅ 2. СТВОРЮЄМО ОНОВЛЕНУ ВЕРСІЮ НОТАТКИ
+                val updatedNote = originalNote.copy(text = updatedNoteText)
+
+                // ✅ 3. ЗБЕРІГАЄМО ОНОВЛЕНУ НОТАТКУ ЧЕРЕЗ РЕПОЗИТОРІЙ
+                hiveRepository.updateNoteInJson(updatedNote)
+
+                // ✅ 4. ПОВІДОМЛЯЄМО, ЩО ВСЕ ДОБРЕ І ЗАКРИВАЄМО ВІКНО
+                setResult(Activity.RESULT_OK)
+                finish()
+            } else {
+                Toast.makeText(this, "Помилка: запис для редагування не знайдено.", Toast.LENGTH_SHORT).show()
             }
-            setResult(Activity.RESULT_OK, resultIntent)
-            finish()
         } else {
             Toast.makeText(this, "Запис не може бути порожнім.", Toast.LENGTH_SHORT).show()
         }
