@@ -9,11 +9,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -21,27 +19,17 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import java.io.File
-import java.io.FileReader
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import android.view.View
-import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 
 class SearchActivity : AppCompatActivity(), RecognitionListener {
 
     companion object {
         private const val TAG = "SearchActivity"
-        private const val NOTES_FILE_NAME = "notes.json"
         private const val RECORD_AUDIO_PERMISSION_CODE = 1
-        const val REQUEST_CODE_EDIT_NOTE_FROM_SEARCH = 1003
     }
 
     private lateinit var searchQueryInput: EditText
@@ -52,7 +40,16 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var hiveRepository: HiveRepository // ✅ ДОДАНО: Репозиторій для вуликів
 
     private var speechService: SpeechService? = null
-    private val gson = Gson()
+
+    // У файлі SearchActivity.kt
+    private val editNoteLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // Логіка, яка раніше була в onActivityResult
+            performSearch(searchQueryInput.text.toString())
+        }
+    }
 
     override fun onResume() {
         super.onResume()
@@ -64,6 +61,8 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
+
+
 
         // ✅ Підключаємо бічну панель за допомогою єдиного методу
         DrawerManager.setupDrawer(this)
@@ -128,7 +127,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         // Створення діалогового вікна
         val builder = android.app.AlertDialog.Builder(this)
         builder.setTitle("Оберіть дію")
-        builder.setItems(options) { dialog, which ->
+        builder.setItems(options) { _, which ->
             when (which) {
                 0 -> { // Редагувати запис
                     val hiveName = hiveRepository.readHivesFromJson().find { it.number == note.hiveNumber }?.name ?: "Вулик №${note.hiveNumber}"
@@ -150,7 +149,8 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
             putExtra(EditNoteActivity.EXTRA_HIVE_NAME, hiveName)
         }
-        startActivityForResult(intent, REQUEST_CODE_EDIT_NOTE_FROM_SEARCH)
+        // ✅ Використовуємо новий лаунчер
+        editNoteLauncher.launch(intent)
     }
 
     private fun navigateToHive(note: Note) {
@@ -160,12 +160,6 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         startActivity(intent)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_EDIT_NOTE_FROM_SEARCH && resultCode == Activity.RESULT_OK) {
-            performSearch(searchQueryInput.text.toString())
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -243,7 +237,8 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun performSearch(query: String) {
-        val allNotes = readAllNotesFromJson()
+
+        val allNotes = hiveRepository.readAllNotesFromJson()
         val allHives = hiveRepository.readHivesFromJson() // ✅ ВИПРАВЛЕНО: Завантажуємо вулики з репозиторію
 
         val filteredNotes = if (query.isBlank()) {
@@ -276,21 +271,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    private fun readAllNotesFromJson(): MutableList<Note> {
-        val file = File(filesDir, NOTES_FILE_NAME)
-        if (!file.exists() || file.length() == 0L) {
-            return mutableListOf()
-        }
-        return try {
-            FileReader(file).use { reader ->
-                val type = object : TypeToken<MutableList<Note>>() {}.type
-                gson.fromJson(reader, type) ?: mutableListOf()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Помилка читання записів з файлу: ${e.message}", e)
-            mutableListOf()
-        }
-    }
+
 
     private fun hideKeyboard() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -298,65 +279,3 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     }
 }
 
-// Клас для адаптера RecyclerView
-class SearchResultsAdapter(
-    private val searchResults: MutableList<NoteSearchResult>,
-    // private val onItemClick: (Note, String) -> Unit,
-    private val onItemLongClick: (Note) -> Unit
-) : RecyclerView.Adapter<SearchResultsAdapter.SearchResultViewHolder>() {
-
-    class SearchResultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val noteDate: TextView = itemView.findViewById(R.id.noteDate)
-        val noteText: TextView = itemView.findViewById(R.id.noteText)
-        val noteTypeAndHive: TextView = itemView.findViewById(R.id.noteTypeAndHive)
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchResultViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.note_item_search_result, parent, false)
-        return SearchResultViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: SearchResultViewHolder, position: Int) {
-        val result = searchResults[position]
-        val note = result.note
-        val hiveName = result.hiveName
-
-        val dateFormat = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
-        val formattedDate = dateFormat.format(Date(note.timestamp))
-
-        holder.noteDate.text = formattedDate
-        holder.noteText.text = note.text
-
-        val typeText = when (note.type) {
-            "general" -> "Загальні записи"
-            "hive" -> "Інформація"
-            "queen" -> "Матка"
-            "notes" -> "Примітки"
-            else -> note.type
-        }
-        holder.noteTypeAndHive.text = "$typeText. $hiveName"
-
-        //holder.itemView.setOnClickListener {
-        //    onItemClick(note, hiveName)
-        //}
-        // ✅ ДОДАЄМО СЛУХАЧА ДОВГОГО НАТИСКАННЯ
-        holder.itemView.setOnLongClickListener {
-            onItemLongClick(note)
-            true // Повертаємо true, щоб вказати, що подія оброблена
-        }
-    }
-
-    override fun getItemCount(): Int = searchResults.size
-
-    fun updateData(newResults: List<NoteSearchResult>) {
-        searchResults.clear()
-        searchResults.addAll(newResults)
-        notifyDataSetChanged()
-    }
-}
-
-// Клас даних для результату пошуку, що включає назву вулика
-data class NoteSearchResult(
-    val note: Note,
-    val hiveName: String
-)

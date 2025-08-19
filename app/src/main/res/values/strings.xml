@@ -39,6 +39,8 @@
 
     <string name="search_notes">Пошук записів</string>
 
+    <string name="note_type_and_hive_name">%1$s. %2$s</string>
+
 
 
 </resources>

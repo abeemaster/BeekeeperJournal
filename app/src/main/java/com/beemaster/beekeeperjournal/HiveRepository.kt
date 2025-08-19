@@ -16,7 +16,8 @@ class HiveRepository(private val context: Context) {
 
     private val gson = Gson()
     private val HIVE_DATA_FILE_NAME = "hives.json"
-    private val TAG = "HiveRepository"
+    private val NOTES_FILE_NAME = "notes.json"
+    private val tag = "HiveRepository"
 
     fun readHivesFromJson(): MutableList<HiveData> {
         val file = File(context.filesDir, HIVE_DATA_FILE_NAME)
@@ -29,7 +30,7 @@ class HiveRepository(private val context: Context) {
                 gson.fromJson(reader, type) ?: mutableListOf()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Помилка читання вуликів з файлу: ${e.message}", e)
+            Log.e(tag, "Помилка читання вуликів з файлу: ${e.message}", e)
             mutableListOf()
         }
     }
@@ -41,7 +42,22 @@ class HiveRepository(private val context: Context) {
                 gson.toJson(hives, writer)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Помилка запису вуликів до файлу: ${e.message}", e)
+            Log.e(tag, "Помилка запису вуликів до файлу: ${e.message}", e)
+        }
+    }
+    fun readAllNotesFromJson(): MutableList<Note> {
+        val file = File(context.filesDir, NOTES_FILE_NAME)
+        if (!file.exists() || file.length() == 0L) {
+            return mutableListOf()
+        }
+        return try {
+            FileReader(file).use { reader ->
+                val type = object : TypeToken<MutableList<Note>>() {}.type
+                gson.fromJson(reader, type) ?: mutableListOf()
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "Помилка читання записів з файлу: ${e.message}", e)
+            mutableListOf()
         }
     }
 }
