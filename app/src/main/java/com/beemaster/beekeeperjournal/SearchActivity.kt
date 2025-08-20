@@ -158,9 +158,20 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         editNoteLauncher.launch(intent)
     }
 
+    // У файлі SearchActivity.kt
+
+    // ✅ ВИПРАВЛЕНА ФУНКЦІЯ
     private fun navigateToHive(note: Note) {
+        if (note.type == "general") {
+            Toast.makeText(this, "Цей запис є загальним і не належить до конкретного вулика.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // ✅ Створюємо інтент, щоб перейти на HiveInfoActivity
         val intent = Intent(this, HiveInfoActivity::class.java).apply {
             putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
+            putExtra("TYPE", note.type)
+            putExtra("TITLE", "Вулик №${note.hiveNumber}")
         }
         startActivity(intent)
     }
