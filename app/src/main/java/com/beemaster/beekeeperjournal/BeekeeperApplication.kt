@@ -2,7 +2,6 @@ package com.beemaster.beekeeperjournal
 
 import android.app.Application
 import android.util.Log
-import android.widget.Toast
 import org.vosk.LibVosk
 import org.vosk.LogLevel
 import org.vosk.Model
@@ -12,7 +11,6 @@ class BeekeeperApplication : Application() {
 
     companion object {
         private const val TAG = "BeekeeperApplication"
-        @Volatile
         var voskModel: Model? = null
             private set
 

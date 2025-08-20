@@ -39,7 +39,6 @@ object DrawerManager {
             }
         })
 
-        // Додаємо слухача для закриття панелі
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
             override fun onDrawerOpened(drawerView: View) {}
@@ -101,7 +100,6 @@ object DrawerManager {
         }
     }
 
-    // Додаємо нову функцію
     private fun deselectAllMenuItems(navView: NavigationView) {
         val menu: Menu = navView.menu
         for (i in 0 until menu.size) {

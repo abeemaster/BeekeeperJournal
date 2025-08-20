@@ -26,8 +26,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var hiveAdapter: HiveAdapter
     private lateinit var hiveCountTextView: TextView
     private lateinit var dataSynchronizer: DataSynchronizer
-
-    // ✅ Оголошення лаунчерів. Вони тут лише оголошуються!
     private lateinit var pickFolderLauncher: ActivityResultLauncher<Intent>
     private lateinit var createBackupFileLauncher: ActivityResultLauncher<Intent>
     private lateinit var openBackupFileLauncher: ActivityResultLauncher<Intent>
@@ -37,12 +35,10 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_HIVE_NUMBER_FOR_COLOR_UPDATE = "com.beemaster.beekeeperjournal.HIVE_NUMBER_FOR_COLOR_UPDATE"
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // ✅ КРОК 1: Ініціалізуємо усі лаунчери
         pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
@@ -91,7 +87,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ КРОК 2: Тільки тепер ініціалізуємо DataSynchronizer, використовуючи лаунчери, що вже існують
         dataSynchronizer = DataSynchronizer(
             this,
             createBackupFileLauncher,
@@ -99,17 +94,12 @@ class MainActivity : AppCompatActivity() {
             pickFolderLauncher
         )
 
-        // ✅ КРОК 3: Викликаємо setupDrawer лише один раз
         DrawerManager.setupDrawer(this, dataSynchronizer)
 
-
         hiveRepository = HiveRepository(this)
-
-
         hiveListRecyclerView = findViewById(R.id.hiveListRecyclerView)
         hiveCountTextView = findViewById(R.id.hiveCountTextView)
         hiveListRecyclerView.layoutManager = LinearLayoutManager(this)
-
 
         val generalNotesBtn: MaterialButton = findViewById(R.id.generalNotesButton)
         loadHives()
@@ -122,9 +112,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
-
-    // ... Інші методи (showAddHiveDialog, loadHives, showHiveOptionsDialog, тощо)
-    // які не відносяться до синхронізації...
 
     fun showAddHiveDialog() {
         val builder = AlertDialog.Builder(this)
@@ -155,7 +142,6 @@ class MainActivity : AppCompatActivity() {
         builder.show()
     }
 
-    // ... інші методи, які не належать до синхронізації...
     private fun loadHives() {
         val hives = hiveRepository.readHivesFromJson()
 
@@ -255,8 +241,6 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("Скасувати") { dialog, _ -> dialog.cancel() }
             .show()
     }
-
-
 
     private fun openColorPicker(hiveNumber: Int, colorType: String) {
         val intent = Intent(this, ColorPickerActivity::class.java).apply {

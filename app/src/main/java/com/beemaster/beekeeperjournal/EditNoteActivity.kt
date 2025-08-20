@@ -28,7 +28,6 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
         private const val TAG = "EditNoteActivity"
         const val EXTRA_NOTE_ID = "com.beemaster.beekeeperjournal.NOTE_ID"
         const val EXTRA_ORIGINAL_NOTE_TEXT = "com.beemaster.beekeeperjournal.ORIGINAL_NOTE_TEXT"
-        const val EXTRA_UPDATED_NOTE_TEXT = "com.beemaster.beekeeperjournal.UPDATED_NOTE_TEXT"
         const val EXTRA_ENTRY_TYPE = "com.beemaster.beekeeperjournal.ENTRY_TYPE_EDIT"
         const val EXTRA_HIVE_NUMBER = "com.beemaster.beekeeperjournal.HIVE_NUMBER_EDIT"
         const val EXTRA_HIVE_NAME = "com.beemaster.beekeeperjournal.HIVE_NAME"

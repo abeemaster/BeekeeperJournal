@@ -1,6 +1,5 @@
 // SearchResultsAdapter.kt Цей файл відповідає за відображення списку результатів пошуку.
 
-
 package com.beemaster.beekeeperjournal
 
 import android.view.LayoutInflater
@@ -13,10 +12,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
 class SearchResultsAdapter(
     private val searchResults: MutableList<NoteSearchResult>,
-    // private val onItemClick: (Note, String) -> Unit,
     private val onItemLongClick: (Note) -> Unit
 ) : RecyclerView.Adapter<SearchResultsAdapter.SearchResultViewHolder>() {
 
@@ -55,10 +52,6 @@ class SearchResultsAdapter(
             hiveName
         )
 
-        //holder.itemView.setOnClickListener {
-        //    onItemClick(note, hiveName)
-        //}
-        // ✅ ДОДАЄМО СЛУХАЧА ДОВГОГО НАТИСКАННЯ
         holder.itemView.setOnLongClickListener {
             onItemLongClick(note)
             true // Повертаємо true, щоб вказати, що подія оброблена
@@ -74,7 +67,6 @@ class SearchResultsAdapter(
         searchResults.clear()
         searchResults.addAll(newResults)
 
-        // ✅ ВИКОРИСТОВУЄМО ОНОВЛЕННЯ ЧЕРЕЗ DIFFUTIL
         diffResult.dispatchUpdatesTo(this)
     }
 }

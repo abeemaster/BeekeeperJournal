@@ -90,9 +90,4 @@ class HiveAdapter(
 
     override fun getItemCount() = hiveList.size
 
-    fun updateData(newHives: List<HiveData>) {
-        hiveList.clear()
-        hiveList.addAll(newHives)
-        notifyDataSetChanged()
-    }
 }

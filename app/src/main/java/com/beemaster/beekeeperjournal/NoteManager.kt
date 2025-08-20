@@ -17,26 +17,6 @@ class NoteManager(private val context: Context, private val noteRepository: Note
     private val tag = "NoteManager"
 
     /**
-     * Оновлює існуючий запис.
-     */
-    fun updateNote(noteId: String, updatedNoteText: String, onUpdateComplete: () -> Unit) {
-        val allNotes = noteRepository.readAllNotesFromJson()
-        val noteIndex = allNotes.indexOfFirst { it.id == noteId }
-        if (noteIndex != -1) {
-            val updatedNote = allNotes[noteIndex].copy(
-                text = updatedNoteText,
-                timestamp = System.currentTimeMillis()
-            )
-            allNotes[noteIndex] = updatedNote
-            noteRepository.writeAllNotesToJson(allNotes)
-            Toast.makeText(context, "Запис оновлено!", Toast.LENGTH_SHORT).show()
-            onUpdateComplete()
-        } else {
-            Toast.makeText(context, "Помилка: Запис для оновлення не знайдено.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
      * Видаляє запис після підтвердження.
      */
     fun deleteNote(noteId: String, onDeleteComplete: () -> Unit) {

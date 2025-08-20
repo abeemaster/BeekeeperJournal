@@ -16,7 +16,7 @@ class NoteRepository(private val context: Context) {
     private val gson = Gson()
     private val NOTES_FILE_NAME = "notes.json"
 
-    fun getNotesFile(): File {
+    private fun getNotesFile(): File {
         return File(context.filesDir, NOTES_FILE_NAME)
     }
 

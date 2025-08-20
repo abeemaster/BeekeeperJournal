@@ -118,7 +118,6 @@ class DataSynchronizer(
         openBackupFileLauncher.launch(intent)
     }
 
-    // У файлі DataSynchronizer.kt
 
     fun readAndRestoreBackupDataFromFile(fileUri: Uri, loadHivesCallback: () -> Unit) {
         try {
@@ -155,7 +154,6 @@ class DataSynchronizer(
         }
     }
 
-    // У файлі DataSynchronizer.kt
 
     fun readAllNotesFromJson(): MutableList<Note> {
         val file = File(context.filesDir, notesFileName)
@@ -181,10 +179,6 @@ class DataSynchronizer(
         }
     }
 
-    // У файлі DataSynchronizer.kt
-
-    // У файлі DataSynchronizer.kt
-// ...
     fun writeAllNotesToJson(notes: List<Note>) {
         val file = File(context.filesDir, notesFileName)
         try {
@@ -199,7 +193,6 @@ class DataSynchronizer(
             Log.e(TAG, "Помилка запису нотаток до файлу: ${e.message}", e)
         }
     }
-
 
 
     private fun formatNoteToCsvRow(note: Note): String {
@@ -359,8 +352,5 @@ class DataSynchronizer(
             Log.e(TAG, "Помилка запису вуликів до файлу: ${e.message}", e)
         }
     }
-
-
-
 
 }

@@ -3,7 +3,7 @@
     <string name="app_name">Щоденник Пасічника</string>
 
     <string name="hive_info_title_default">Інформація Вулик №1</string>
-    <string name="new_note_hint">Введіть новий запис...</string>
+    <string name="new_note_hint">Введіть новий запис</string>
     <string name="voice_input_description">Голосовий ввід</string>
     <string name="add_note_button_text">Додати запис</string>
     <string name="add_record_button_text">Зберегти запис</string>
@@ -41,6 +41,11 @@
 
     <string name="note_type_and_hive_name">%1$s. %2$s</string>
 
+    <string name="menu_home">Головна</string>
+    <string name="menu_search">Пошук</string>
+    <string name="menu_add_hive">Додати вулик</string>
+    <string name="menu_synchronization">Синхронізація</string>
+    <string name="menu_settings">Налаштування</string>
 
 
 </resources>

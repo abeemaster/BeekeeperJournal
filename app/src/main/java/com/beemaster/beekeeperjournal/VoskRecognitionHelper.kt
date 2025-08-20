@@ -35,26 +35,21 @@ class VoskRecognitionHelper(
     private val voskModel: Model?
         get() = BeekeeperApplication.voskModel
 
-    // Метод-хелпер для перевірки стану
     fun isVoskListening(): Boolean = isVoskListening
 
     fun setupVoskAndStartListening() {
         Log.d(TAG, "setupVoskAndStartListening() called")
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            // Запитуємо дозвіл, якщо його немає
             ActivityCompat.requestPermissions(context as NewNoteActivity, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
             return
         }
 
-        // Якщо Vosk модель завантажена, запускаємо з затримкою
         if (voskModel != null) {
-            // Додаємо невелику затримку в 300 мс
             android.os.Handler(Looper.getMainLooper()).postDelayed({
                 startListening()
             }, 300)
         } else {
-            // Якщо модель ще не завантажена, чекаємо
             Toast.makeText(context, "Vosk модель завантажується, зачекайте...", Toast.LENGTH_LONG).show()
             BeekeeperApplication.addVoskModelReadyListener {
                 // Також додаємо затримку після завантаження моделі
@@ -117,7 +112,6 @@ class VoskRecognitionHelper(
         }
     }
 
-    // Методи RecognitionListener (Vosk)
     override fun onResult(hypothesis: String) {
         try {
             val voskResult = JSONObject(hypothesis).getString("text")

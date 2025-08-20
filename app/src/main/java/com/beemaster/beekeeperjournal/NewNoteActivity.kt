@@ -113,7 +113,6 @@ class NewNoteActivity : AppCompatActivity() {
         voskHelper.onRequestPermissionsResult(requestCode, grantResults)
     }
 
-
     // Методи для роботи з клавіатурою
     private fun showKeyboard(editText: EditText) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
