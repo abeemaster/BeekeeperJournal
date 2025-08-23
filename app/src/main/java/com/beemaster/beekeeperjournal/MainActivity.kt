@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import android.widget.EditText
@@ -14,22 +15,30 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import db.HiveEntity
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var hiveRepository: HiveRepository
     private lateinit var hiveListRecyclerView: RecyclerView
     private lateinit var hiveAdapter: HiveAdapter
     private lateinit var hiveCountTextView: TextView
     private lateinit var dataSynchronizer: DataSynchronizer
-    private lateinit var pickFolderLauncher: ActivityResultLauncher<Intent>
+    private lateinit var pickFolderLauncher: ActivityResultLauncher<Uri?>
+
     private lateinit var createBackupFileLauncher: ActivityResultLauncher<Intent>
     private lateinit var openBackupFileLauncher: ActivityResultLauncher<Intent>
+
     private lateinit var colorPickerLauncher: ActivityResultLauncher<Intent>
+
+    private val hiveRepository: HiveRepository by lazy {
+        (application as BeekeeperApplication).hiveRepository
+    }
 
     companion object {
         const val EXTRA_HIVE_NUMBER_FOR_COLOR_UPDATE = "com.beemaster.beekeeperjournal.HIVE_NUMBER_FOR_COLOR_UPDATE"
@@ -39,20 +48,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        pickFolderLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val uri = result.data?.data
-                if (uri != null) {
-                    dataSynchronizer.exportNotesToCsvFiles(uri)
-                }
+
+        pickFolderLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            if (uri != null) { // ✅ ДОДАНО: Перевірка на null
+               //ataSynchronizer.exportNotesToCsvFiles(uri)
             }
         }
+
+
+
 
         createBackupFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
                 if (uri != null) {
-                    dataSynchronizer.writeBackupDataToFile(uri)
+                    lifecycleScope.launch {
+                        dataSynchronizer.writeBackupDataToFile(uri)
+                    }
                 }
             }
         }
@@ -61,7 +73,10 @@ class MainActivity : AppCompatActivity() {
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
                 if (uri != null) {
-                    dataSynchronizer.readAndRestoreBackupDataFromFile(uri) { loadHives() }
+                    lifecycleScope.launch {
+                        dataSynchronizer.readAndRestoreBackupDataFromFile(uri) { loadHives() }
+                        loadHives()
+                    }
                 }
             }
         }
@@ -73,15 +88,17 @@ class MainActivity : AppCompatActivity() {
                 val colorType = result.data?.getStringExtra("color_type")
 
                 if (hiveNumber != -1 && selectedColor != null && colorType != null) {
-                    val hives = hiveRepository.readHivesFromJson()
-                    val hiveToUpdate = hives.find { it.number == hiveNumber }
-                    if (hiveToUpdate != null) {
-                        when (colorType) {
-                            "primary" -> hiveToUpdate.color = selectedColor
-                            "secondary" -> hiveToUpdate.secondaryColor = selectedColor
+                    lifecycleScope.launch {
+                        val hiveToUpdate = hiveRepository.getHiveByNumber(hiveNumber!!)
+                        if (hiveToUpdate != null) {
+                            val updatedHive = when (colorType) {
+                                "primary" -> hiveToUpdate.copy(color = selectedColor)
+                                "secondary" -> hiveToUpdate.copy(secondaryColor = selectedColor)
+                                else -> hiveToUpdate
+                            }
+                            hiveRepository.updateHive(updatedHive)
+                            loadHives()
                         }
-                        hiveRepository.writeHivesToJson(hives)
-                        loadHives()
                     }
                 }
             }
@@ -93,10 +110,10 @@ class MainActivity : AppCompatActivity() {
             openBackupFileLauncher,
             pickFolderLauncher
         )
+        { loadHives() }
 
         DrawerManager.setupDrawer(this, dataSynchronizer)
 
-        hiveRepository = HiveRepository(this)
         hiveListRecyclerView = findViewById(R.id.hiveListRecyclerView)
         hiveCountTextView = findViewById(R.id.hiveCountTextView)
         hiveListRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -121,19 +138,18 @@ class MainActivity : AppCompatActivity() {
         builder.setPositiveButton("Додати") { dialog, _ ->
             val hiveName = input.text.toString().trim()
             if (hiveName.isNotEmpty()) {
-                val hives = hiveRepository.readHivesFromJson()
-                val newHiveNumber = (hives.maxByOrNull { it.number }?.number ?: 0) + 1
-                hives.add(HiveData(
-                    number = newHiveNumber,
-                    name = hiveName,
-                    color = R.color.hive_button_color,
-                    queenButtonColor = R.color.nav_button_color,
-                    notesButtonColor = R.color.nav_button_color,
-                    secondaryColor = android.R.color.transparent
-                ))
-                hiveRepository.writeHivesToJson(hives)
-                loadHives()
-                dialog.dismiss()
+                lifecycleScope.launch {
+                    val hives = hiveRepository.getAllHives()
+                    val newHiveNumber = (hives.maxByOrNull { it.hiveNumber }?.hiveNumber ?: 0) + 1
+
+                    val newHive = HiveEntity(
+                        hiveNumber = newHiveNumber,
+                        name = hiveName,
+                    )
+                    hiveRepository.insertHive(newHive)
+                    loadHives()
+                    dialog.dismiss()
+                }
             } else {
                 Toast.makeText(this, "Назва вулика не може бути порожньою", Toast.LENGTH_SHORT).show()
             }
@@ -143,31 +159,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadHives() {
-        val hives = hiveRepository.readHivesFromJson()
+        lifecycleScope.launch {
+            var hives = hiveRepository.getAllHives().toMutableList()
 
-        if (hives.isEmpty()) {
-            for (i in 1..30) {
-                hives.add(HiveData(
-                    number = i,
-                    name = "Вулик №$i",
-                    color = R.color.hive_button_color,
-                    queenButtonColor = R.color.nav_button_color,
-                    notesButtonColor = R.color.nav_button_color,
-                    secondaryColor = android.R.color.transparent
-                ))
+            if (hives.isEmpty()) {
+                for (i in 1..30) {
+                    val newHive = HiveEntity(hiveNumber = i, name = "Вулик №$i")
+                    hiveRepository.insertHive(newHive)
+                }
+                hives = hiveRepository.getAllHives().toMutableList()
             }
-            hiveRepository.writeHivesToJson(hives)
-        }
 
-        hiveCountTextView.text = getString(R.string.hive_count, hives.size)
+            hiveCountTextView.text = getString(R.string.hive_count, hives.size)
 
-        hiveAdapter = HiveAdapter(hives, this) { position ->
-            showHiveOptionsDialog(hives[position])
+            hiveAdapter = HiveAdapter(hives.toMutableList(), this@MainActivity) { position ->
+                showHiveOptionsDialog(hives[position])
+            }
+            hiveListRecyclerView.adapter = hiveAdapter
         }
-        hiveListRecyclerView.adapter = hiveAdapter
     }
 
-    private fun showHiveOptionsDialog(hive: HiveData) {
+    private fun showHiveOptionsDialog(hive: HiveEntity) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_hive_options, null)
         val dialogTitleTextView: TextView = dialogView.findViewById(R.id.dialogTitle)
         val editNameCard: MaterialCardView = dialogView.findViewById(R.id.editNameCard)
@@ -187,11 +199,11 @@ class MainActivity : AppCompatActivity() {
         }
         selectPrimaryColorCard.setOnClickListener {
             dialog.dismiss()
-            openColorPicker(hive.number, "primary")
+            openColorPicker(hive.hiveNumber, "primary")
         }
         selectSecondaryColorCard.setOnClickListener {
             dialog.dismiss()
-            openColorPicker(hive.number, "secondary")
+            openColorPicker(hive.hiveNumber, "secondary")
         }
         deleteHiveCard.setOnClickListener {
             dialog.dismiss()
@@ -201,7 +213,7 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun showEditHiveNameDialog(hive: HiveData) {
+    private fun showEditHiveNameDialog(hive: HiveEntity) {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Редагувати назву вулика")
         val input = EditText(this).apply {
@@ -212,10 +224,11 @@ class MainActivity : AppCompatActivity() {
         builder.setPositiveButton("Зберегти") { dialog, _ ->
             val newName = input.text.toString().trim()
             if (newName.isNotEmpty() && newName != hive.name) {
-                val hives = hiveRepository.readHivesFromJson()
-                hives.find { it.number == hive.number }?.name = newName
-                hiveRepository.writeHivesToJson(hives)
-                loadHives()
+                lifecycleScope.launch {
+                    val updatedHive = hive.copy(name = newName)
+                    hiveRepository.updateHive(updatedHive)
+                    loadHives()
+                }
             } else {
                 Toast.makeText(this, "Назва не може бути порожньою", Toast.LENGTH_SHORT).show()
             }
@@ -225,18 +238,22 @@ class MainActivity : AppCompatActivity() {
         builder.show()
     }
 
-    private fun showDeleteHiveDialog(hive: HiveData) {
+    private fun showDeleteHiveDialog(hive: HiveEntity) {
         AlertDialog.Builder(this)
             .setTitle("Видалити вулик")
-            .setMessage("Ви впевнені, що хочете видалити вулик №${hive.number} (${hive.name})? Всі пов'язані з ним записи також будуть видалені.")
+            .setMessage("Ви впевнені, що хочете видалити вулик №${hive.hiveNumber} (${hive.name})? Всі пов'язані з ним записи також будуть видалені.")
             .setPositiveButton("Видалити") { dialog, _ ->
-                val hives = hiveRepository.readHivesFromJson().filter { it.number != hive.number }.toMutableList()
-                hiveRepository.writeHivesToJson(hives)
-                loadHives()
-                val notes = dataSynchronizer.readAllNotesFromJson().filter { it.hiveNumber != hive.number }.toMutableList()
-                dataSynchronizer.writeAllNotesToJson(notes)
-                Toast.makeText(this, "Вулик ${hive.name} видалено.", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
+                lifecycleScope.launch {
+                    // Видаляємо вулик
+                    hiveRepository.deleteHive(hive.hiveNumber)
+                    // Видаляємо всі нотатки, пов'язані з цим вуликом
+                    hiveRepository.getNotesByHiveNumber(hive.hiveNumber).forEach { note ->
+                        hiveRepository.deleteNote(note.id)
+                    }
+                    loadHives()
+                    Toast.makeText(this@MainActivity, "Вулик ${hive.name} видалено.", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
             }
             .setNegativeButton("Скасувати") { dialog, _ -> dialog.cancel() }
             .show()

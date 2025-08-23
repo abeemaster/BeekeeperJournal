@@ -1,49 +1,45 @@
 // NoteRepository.kt
 // Сюди винесено всю логіку роботи з файлами нотаток.
 
+// NoteRepository.kt
+// NoteRepository.kt
+
 package com.beemaster.beekeeperjournal
 
-import android.content.Context
-import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.io.File
-import java.io.FileReader
-import java.io.FileWriter
+import androidx.lifecycle.liveData
+import androidx.lifecycle.LiveData
+import db.NoteEntity
+import kotlinx.coroutines.Dispatchers
+import db.NoteDao // ✅ Додаємо імпорт db.NoteDao
 
-class NoteRepository(private val context: Context) {
+class NoteRepository(private val noteDao: NoteDao) { // ✅ ВИПРАВЛЕНО: тепер noteDao має правильний тип
 
-    private val gson = Gson()
-    private val NOTES_FILE_NAME = "notes.json"
-
-    private fun getNotesFile(): File {
-        return File(context.filesDir, NOTES_FILE_NAME)
+    val allNotes: LiveData<List<NoteEntity>> = liveData(Dispatchers.IO) {
+        val notes = noteDao.getAllNotes_suspend()
+        emit(notes)
     }
 
-    fun readAllNotesFromJson(): MutableList<Note> {
-        val file = getNotesFile()
-        if (!file.exists() || file.length() == 0L) {
-            return mutableListOf()
-        }
-        return try {
-            FileReader(file).use { reader ->
-                val type = object : TypeToken<MutableList<Note>>() {}.type
-                gson.fromJson(reader, type) ?: mutableListOf()
-            }
-        } catch (e: Exception) {
-            Log.e("NoteRepository", "Помилка читання записів з файлу: ${e.message}", e)
-            mutableListOf()
-        }
+    suspend fun insert(note: NoteEntity) {
+        noteDao.insert(note)
     }
 
-    fun writeAllNotesToJson(notes: List<Note>) {
-        val file = getNotesFile()
-        try {
-            FileWriter(file).use { writer ->
-                gson.toJson(notes, writer)
-            }
-        } catch (e: Exception) {
-            Log.e("NoteRepository", "Помилка запису записів до файлу: ${e.message}", e)
-        }
+    suspend fun update(note: NoteEntity) {
+        noteDao.update(note)
+    }
+
+    suspend fun deleteNoteById(noteId: String) {
+        noteDao.deleteNoteById(noteId)
+    }
+
+    fun findNoteById(id: String): LiveData<NoteEntity?> {
+        return noteDao.findNoteById(id)
+    }
+
+    fun getNotesByTypeAndHive(entryType: String, hiveNumber: Int): List<NoteEntity> {
+        return noteDao.getNotesByTypeAndHive(entryType, hiveNumber)
+    }
+
+    fun getNoteByIdBlocking(noteId: String): NoteEntity? {
+        return noteDao.findNoteById_blocking(noteId)
     }
 }

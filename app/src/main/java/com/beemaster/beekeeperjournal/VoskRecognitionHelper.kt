@@ -112,33 +112,42 @@ class VoskRecognitionHelper(
         }
     }
 
-    override fun onResult(hypothesis: String) {
-        try {
-            val voskResult = JSONObject(hypothesis).getString("text")
-            noteContentInput.append(" $voskResult")
-            noteContentInput.setSelection(noteContentInput.text.length)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error parsing Vosk JSON result: ${e.message}", e)
-        }
-    }
+
 
     override fun onPartialResult(hypothesis: String) {
         Log.d(TAG, "onPartialResult: $hypothesis")
+    }
+
+    override fun onResult(hypothesis: String?) {
+        // Логіка для обробки кінцевого результату.
+        if (hypothesis != null) {
+            try {
+                val jsonResult = org.json.JSONObject(hypothesis)
+                val text = jsonResult.optString("text", "")
+                if (text.isNotEmpty()) {
+                    noteContentInput.append("$text ")
+                }
+            } catch (e: Exception) {
+                Log.e("VoskHelper", "Error parsing Vosk JSON result: ${e.message}", e)
+            }
+        }
     }
 
     override fun onFinalResult(hypothesis: String) {
         Log.d(TAG, "onFinalResult: $hypothesis")
     }
 
-    override fun onError(exception: Exception) {
-        Log.e(TAG, "onError: ${exception.message}", exception)
-        Toast.makeText(context, "Помилка голосового вводу: ${exception.message}", Toast.LENGTH_LONG).show()
-        stopListening()
+    override fun onError(exception: Exception?) {
+        // Логіка для обробки помилок розпізнавання.
+        if (exception != null) {
+            Log.e("VoskHelper", "Vosk recognition error: ${exception.message}", exception)
+            Toast.makeText(context, "Помилка голосового вводу: ${exception.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onTimeout() {
-        Log.d(TAG, "onTimeout: Recognition timeout. Stopping recording.")
-        Toast.makeText(context, "Тайм-аут голосового вводу. Запис зупинено.", Toast.LENGTH_SHORT).show()
-        stopListening()
+        // Логіка для обробки тайм-ауту.
+        Log.d("VoskHelper", "Vosk recognition timeout.")
+        Toast.makeText(context, "Тайм-аут голосового вводу.", Toast.LENGTH_SHORT).show()
     }
 }

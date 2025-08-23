@@ -19,11 +19,14 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
-import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import db.NoteEntity
 
 class SearchActivity : AppCompatActivity(), RecognitionListener {
 
@@ -37,37 +40,44 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var searchExecuteButton: MaterialButton
     private lateinit var searchResultsRecyclerView: RecyclerView
     private lateinit var searchResultsAdapter: SearchResultsAdapter
-    private lateinit var hiveRepository: HiveRepository // ✅ ДОДАНО: Репозиторій для вуликів
-
+    private lateinit var hiveRepository: HiveRepository
+    private lateinit var noteRepository: NoteRepository
     private var speechService: SpeechService? = null
-
-    // У файлі SearchActivity.kt
     private val editNoteLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            // Логіка, яка раніше була в onActivityResult
             performSearch(searchQueryInput.text.toString())
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // При поверненні на екран пошуку, оновлюємо результати.
         performSearch(searchQueryInput.text.toString())
         Log.d(TAG, "SearchActivity: onResume called. Re-performing search to ensure updated hive names in results.")
+    }
+
+    override fun onResult(hypothesis: String) {
+        try {
+            val jsonResult = org.json.JSONObject(hypothesis)
+            val text = jsonResult.optString("text", "")
+            if (text.isNotEmpty()) {
+                searchQueryInput.append("$text ")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing Vosk JSON result: ${e.message}", e)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
-
-
-        // ✅ Підключаємо бічну панель за допомогою єдиного методу
         DrawerManager.setupDrawer(this)
 
-        hiveRepository = HiveRepository(this) // ✅ ДОДАНО: Ініціалізація репозиторію
+        val appDatabase = (application as BeekeeperApplication).database
+        hiveRepository = HiveRepository(appDatabase.noteDao(), appDatabase.hiveDao())
+        noteRepository = NoteRepository(appDatabase.noteDao())
 
         searchQueryInput = findViewById(R.id.searchQueryInput)
         microphoneBtnSearch = findViewById(R.id.microphoneBtnSearch)
@@ -75,7 +85,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView)
 
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this)
-        // ✅ ЗМІНЮЄМО ІНІЦІАЛІЗАЦІЮ АДАПТЕРА
+
         searchResultsAdapter = SearchResultsAdapter(
             mutableListOf(),
             onItemLongClick = { note ->
@@ -83,7 +93,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             }
         )
         searchResultsRecyclerView.adapter = searchResultsAdapter
-        microphoneBtnSearch.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.microphone_button_color))
+        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_color)
 
         if (BeekeeperApplication.voskModel != null) {
             microphoneBtnSearch.isEnabled = true
@@ -94,7 +104,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
 
         searchExecuteButton.setOnClickListener {
             performSearch(searchQueryInput.text.toString())
-            hideKeyboard()
+            hideKeyboard() // ✅ ВИКЛИКАЄМО МЕТОД, ЯКИЙ ВИЩЕ ВІДСУТНІЙ
         }
 
         microphoneBtnSearch.setOnClickListener {
@@ -107,38 +117,34 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
                 } else {
                     startListening()
                     Toast.makeText(this, "Слухаю...", Toast.LENGTH_SHORT).show()
-                    microphoneBtnSearch.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.microphone_button_active_color))
+                    microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_active_color)
                 }
             }
         }
 
-        // ✅ ДОДАЙТЕ ЦЕЙ НОВИЙ БЛОК ДЛЯ АВТОМАТИЧНОГО ПОКАЗУ КЛАВІАТУРИ
         searchQueryInput.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
             }
         }
-        // ✅ Якщо ви хочете, щоб клавіатура з'являлася при старті активності,
-        // просто викличте requestFocus()
         searchQueryInput.requestFocus()
     }
 
-    // ✅ ДОДАЄМО НОВІ ФУНКЦІЇ ДЛЯ ДІАЛОГОВИХ ВІКОН ТА ПЕРЕХОДУ
-
     private fun showOptionsDialog(note: Note) {
         val options = arrayOf("Редагувати запис", "Перейти у вулик")
-
-        // Створення діалогового вікна
         val builder = android.app.AlertDialog.Builder(this)
         builder.setTitle("Оберіть дію")
         builder.setItems(options) { _, which ->
             when (which) {
-                0 -> { // Редагувати запис
-                    val hiveName = hiveRepository.readHivesFromJson().find { it.number == note.hiveNumber }?.name ?: "Вулик №${note.hiveNumber}"
-                    showEditNoteDialog(note, hiveName)
+                0 -> {
+                    lifecycleScope.launch {
+                        val hive = hiveRepository.getHiveByNumber(note.hiveNumber)
+                        val hiveName = hive?.name ?: "Вулик №${note.hiveNumber}"
+                        showEditNoteDialog(note, hiveName)
+                    }
                 }
-                1 -> { // Перейти у вулик
+                1 -> {
                     navigateToHive(note)
                 }
             }
@@ -154,20 +160,14 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
             putExtra(EditNoteActivity.EXTRA_HIVE_NAME, hiveName)
         }
-        // ✅ Використовуємо новий лаунчер
         editNoteLauncher.launch(intent)
     }
 
-    // У файлі SearchActivity.kt
-
-    // ✅ ВИПРАВЛЕНА ФУНКЦІЯ
     private fun navigateToHive(note: Note) {
         if (note.type == "general") {
             Toast.makeText(this, "Цей запис є загальним і не належить до конкретного вулика.", Toast.LENGTH_SHORT).show()
             return
         }
-
-        // ✅ Створюємо інтент, щоб перейти на HiveInfoActivity
         val intent = Intent(this, HiveInfoActivity::class.java).apply {
             putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
             putExtra("TYPE", note.type)
@@ -175,7 +175,6 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         }
         startActivity(intent)
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
@@ -190,7 +189,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startListening()
                 Toast.makeText(this, "Слухаю...", Toast.LENGTH_SHORT).show()
-                microphoneBtnSearch.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.microphone_button_active_color))
+                microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_active_color)
             } else {
                 Toast.makeText(this, "Дозвіл на запис аудіо відхилено. Голосовий ввід недоступний.", Toast.LENGTH_LONG).show()
             }
@@ -218,27 +217,12 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         speechService?.cancel()
         speechService?.shutdown()
         speechService = null
-        microphoneBtnSearch.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.microphone_button_color))
+        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_color)
     }
 
-    override fun onResult(hypothesis: String) {
-        try {
-            val jsonResult = JSONObject(hypothesis)
-            val text = jsonResult.optString("text", "")
-            if (text.isNotEmpty()) {
-                searchQueryInput.setText(text)
-                performSearch(text)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error parsing Vosk JSON result: ${e.message}", e)
-        }
-    }
+    override fun onPartialResult(hypothesis: String) {}
 
-    override fun onPartialResult(hypothesis: String) {
-    }
-
-    override fun onFinalResult(hypothesis: String) {
-    }
+    override fun onFinalResult(hypothesis: String) {}
 
     override fun onError(exception: Exception) {
         Log.e(TAG, "onError: ${exception.message}", exception)
@@ -252,46 +236,53 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         stopListening()
     }
 
+    // ✅ ВИПРАВЛЕНО: тепер ця функція правильно викликає логіку пошуку
     private fun performSearch(query: String) {
+        noteRepository.allNotes.observe(this, Observer { notes -> // notes є List<NoteEntity>
+            lifecycleScope.launch {
+                val allHives = hiveRepository.getAllHives()
 
-        val allNotes = hiveRepository.readAllNotesFromJson()
-        val allHives = hiveRepository.readHivesFromJson() // ✅ ВИПРАВЛЕНО: Завантажуємо вулики з репозиторію
+                val filteredNotes = if (query.isBlank()) {
+                    emptyList()
+                } else {
+                    notes.filter { noteEntity -> // ✅ Змінено назву, щоб не плутати з Note
+                        noteEntity.text.contains(query, ignoreCase = true) ||
+                                noteEntity.date.contains(query, ignoreCase = true) ||
+                                noteEntity.type.contains(query, ignoreCase = true) ||
+                                (noteEntity.hiveNumber.toString() == query && noteEntity.type != "general") ||
+                                (noteEntity.type == "hive" && allHives.find { it.hiveNumber == noteEntity.hiveNumber }?.name?.contains(query, ignoreCase = true) == true)
+                    }.sortedByDescending { it.timestamp }
+                }
 
-        val filteredNotes = if (query.isBlank()) {
-            emptyList()
-        } else {
-            allNotes.filter { note ->
-                note.text.contains(query, ignoreCase = true) ||
-                        note.date.contains(query, ignoreCase = true) ||
-                        note.type.contains(query, ignoreCase = true) ||
-                        (note.hiveNumber.toString() == query && note.type != "general") ||
-                        (note.type == "hive" && allHives.find { it.number == note.hiveNumber }?.name?.contains(query, ignoreCase = true) == true)
-            }.sortedByDescending { it.timestamp }
-        }
+                // ✅ ВИПРАВЛЕНО: Перетворення NoteEntity на Note для адаптера
+                val searchResults = filteredNotes.map { noteEntity ->
+                    val hiveName = if (noteEntity.type == "general") {
+                        "Загальні записи"
+                    } else {
+                        val foundHive = allHives.find { it.hiveNumber == noteEntity.hiveNumber }
+                        foundHive?.name ?: "Вулик №${noteEntity.hiveNumber}"
+                    }
+                    NoteSearchResult(Note(
+                        id = noteEntity.id,
+                        text = noteEntity.text,
+                        type = noteEntity.type,
+                        hiveNumber = noteEntity.hiveNumber,
+                        timestamp = noteEntity.timestamp,
+                        date = noteEntity.date
+                    ), hiveName)
+                }
 
-        val searchResults = filteredNotes.map { note ->
-            val hiveName = if (note.type == "general") {
-                "Загальні записи"
-            } else {
-                val foundHive = allHives.find { it.number == note.hiveNumber }
-                foundHive?.name ?: "Вулик №${note.hiveNumber}"
+                searchResultsAdapter.updateData(searchResults)
+                if (searchResults.isEmpty() && query.isNotBlank()) {
+                    Toast.makeText(this@SearchActivity, "Записів за запитом \"$query\" не знайдено.", Toast.LENGTH_SHORT).show()
+                }
             }
-            Log.d(TAG, "Note ID: ${note.id}, Hive Name resolved: $hiveName, Original Hive Number: ${note.hiveNumber}")
-            NoteSearchResult(note, hiveName)
-        }
-
-        searchResultsAdapter.updateData(searchResults)
-
-        if (searchResults.isEmpty() && query.isNotBlank()) {
-            Toast.makeText(this, "Записів за запитом \"$query\" не знайдено.", Toast.LENGTH_SHORT).show()
-        }
+        })
     }
 
-
-
+    // ✅ ДОДАНО: відсутній метод для приховування клавіатури
     private fun hideKeyboard() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(searchQueryInput.windowToken, 0)
     }
 }
-

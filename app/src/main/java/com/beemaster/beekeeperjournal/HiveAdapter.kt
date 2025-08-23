@@ -4,7 +4,6 @@ package com.beemaster.beekeeperjournal
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -14,11 +13,12 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
+import db.HiveEntity
 
 class HiveAdapter(
-    private val hiveList: MutableList<HiveData>,
+    private val hives: List<HiveEntity>,
     private val context: Context,
-    private val onHiveOptionsClick: (Int) -> Unit
+    private val onHiveClick: (Int) -> Unit
 ) : RecyclerView.Adapter<HiveAdapter.HiveViewHolder>() {
 
     class HiveViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -34,60 +34,43 @@ class HiveAdapter(
     }
 
     override fun onBindViewHolder(holder: HiveViewHolder, position: Int) {
-        val currentHive = hiveList[position]
+        val currentHive = hives[position]
         holder.hiveName.text = currentHive.name
 
-        val resolvedColor = if (currentHive.color != 0) {
-            ContextCompat.getColor(context, currentHive.color)
-        } else {
-            ContextCompat.getColor(context, R.color.hive_button_color)
-        }
-
+        val resolvedColor = ContextCompat.getColor(context, R.color.hive_button_color)
         (ContextCompat.getDrawable(context, R.drawable.rounded_background) as? GradientDrawable)?.let {
             it.setColor(resolvedColor)
             holder.hiveCardView.background = it
         }
 
-        // Встановлення додаткового кольору
-        val secondaryResolvedColor = if (currentHive.secondaryColor != 0) {
-            ContextCompat.getColor(context, currentHive.secondaryColor)
-        } else {
-            ContextCompat.getColor(context, R.color.hive_button_color)
-        }
-
+        val secondaryResolvedColor = ContextCompat.getColor(context, R.color.hive_button_color)
         val secondaryColorDrawable = holder.secondaryColorView.background
         if (secondaryColorDrawable is GradientDrawable) {
             secondaryColorDrawable.setColor(secondaryResolvedColor)
-
-            // Встановлюємо товщину та колір обводки залежно від кольору заливки
-            if (currentHive.secondaryColor == R.color.transparent_color) {
-                secondaryColorDrawable.setStroke(0, Color.TRANSPARENT)
-            } else {
-                secondaryColorDrawable.setStroke(2, ContextCompat.getColor(context, R.color.black))
-            }
+            secondaryColorDrawable.setStroke(2, ContextCompat.getColor(context, R.color.black))
         }
 
-        // Логіка видимості
-        if (currentHive.secondaryColor != R.color.transparent_color) {
+        if (currentHive.secondaryColor != 0) {
             holder.secondaryColorView.visibility = View.VISIBLE
         } else {
             holder.secondaryColorView.visibility = View.INVISIBLE
         }
 
+
         holder.optionsButton.setOnClickListener {
-            onHiveOptionsClick(position)
+            onHiveClick(position) // ✅ ВИПРАВЛЕНО: ВИКОРИСТОВУЄМО onHiveClick
         }
 
         holder.itemView.setOnClickListener {
             val intent = Intent(context, HiveInfoActivity::class.java).apply {
                 putExtra("TYPE", "hive")
-                putExtra("EXTRA_HIVE_NUMBER", currentHive.number)
+                putExtra("EXTRA_HIVE_NUMBER", currentHive.hiveNumber)
                 putExtra(NewNoteActivity.EXTRA_HIVE_NAME, currentHive.name)
             }
             context.startActivity(intent)
         }
     }
 
-    override fun getItemCount() = hiveList.size
+    override fun getItemCount() = hives.size
 
 }

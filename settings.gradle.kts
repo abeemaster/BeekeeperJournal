@@ -7,7 +7,6 @@ pluginManagement {
         google()
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/public/p/kotlin/p/libraries")
-        // НОВЕ: Додаємо JitPack репозиторій для Vosk
         maven { url = uri("https://jitpack.io") }
     }
 }
@@ -19,7 +18,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/public/p/kotlin/p/libraries")
-        // НОВЕ: Додаємо JitPack репозиторій для Vosk
         maven { url = uri("https://jitpack.io") }
     }
 }

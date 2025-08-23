@@ -3,7 +3,6 @@
 package com.beemaster.beekeeperjournal
 
 import android.Manifest
-import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -11,16 +10,17 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import org.json.JSONObject
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 import android.content.Context
 import android.view.inputmethod.InputMethodManager
 import com.google.android.material.button.MaterialButton
+import db.NoteDatabase
 
 class EditNoteActivity : AppCompatActivity(), RecognitionListener {
 
@@ -38,21 +38,23 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var editNoteScreenTitle: TextView
     private lateinit var editNoteContentInput: EditText
     private lateinit var microphoneBtnEditNote: ImageButton
-
+    private lateinit var hiveRepository: HiveRepository
+    private lateinit var currentHiveActualName: String
     private var noteId: String? = null
     private var currentEntryType: String = ""
     private var currentHiveNumber: Int = 0
-    private lateinit var currentHiveActualName: String
-    private lateinit var hiveRepository: HiveRepository
     private var speechService: SpeechService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_note)
 
+        // ✅ Створюємо екземпляр бази даних
+        val database = NoteDatabase.getDatabase(this)
+        // ✅ Ініціалізуємо репозиторій, передаючи йому DAO
+        hiveRepository = HiveRepository(database.noteDao(), database.hiveDao())
         // Встановлюємо режим adjustResize програмно, щоб переконатися, що клавіатура коректно піднімає вміст
         // window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        hiveRepository = HiveRepository(this)
         editNoteScreenTitle = findViewById(R.id.editNoteScreenTitle)
         editNoteContentInput = findViewById(R.id.editNoteContentInput)
         microphoneBtnEditNote = findViewById(R.id.microphoneBtnEditNote)
@@ -219,25 +221,6 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
     private fun saveEditedNote() {
         val updatedNoteText = editNoteContentInput.text.toString().trim()
 
-        if (updatedNoteText.isNotEmpty()) {
-            // ✅ 1. ЗЧИТУЄМО НОТАТКУ ЗА ID
-            val originalNote = hiveRepository.readAllNotesFromJson().find { it.id == noteId }
 
-            if (originalNote != null) {
-                // ✅ 2. СТВОРЮЄМО ОНОВЛЕНУ ВЕРСІЮ НОТАТКИ
-                val updatedNote = originalNote.copy(text = updatedNoteText)
-
-                // ✅ 3. ЗБЕРІГАЄМО ОНОВЛЕНУ НОТАТКУ ЧЕРЕЗ РЕПОЗИТОРІЙ
-                hiveRepository.updateNoteInJson(updatedNote)
-
-                // ✅ 4. ПОВІДОМЛЯЄМО, ЩО ВСЕ ДОБРЕ І ЗАКРИВАЄМО ВІКНО
-                setResult(Activity.RESULT_OK)
-                finish()
-            } else {
-                Toast.makeText(this, "Помилка: запис для редагування не знайдено.", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(this, "Запис не може бути порожнім.", Toast.LENGTH_SHORT).show()
-        }
     }
 }

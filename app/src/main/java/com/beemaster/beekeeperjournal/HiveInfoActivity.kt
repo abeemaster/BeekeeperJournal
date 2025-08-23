@@ -27,7 +27,7 @@ import android.graphics.drawable.shapes.OvalShape
 import android.content.res.ColorStateList
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
-
+import db.toNote
 
 class HiveInfoActivity : AppCompatActivity() {
 
@@ -68,15 +68,18 @@ class HiveInfoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
 
+        // ✅ ВИПРАВЛЕНО: Створюємо NoteRepository з правильним db.NoteDao
+        val application = application as BeekeeperApplication
+        val noteDao = application.database.noteDao() // Отримуємо db.NoteDao з бази даних
+        noteRepository = NoteRepository(noteDao) // Передаємо db.NoteDao в NoteRepository
+        noteManager = NoteManager(this, noteRepository)
+
         // ✅ ДОДАНО: ініціалізація змінних для бічної панелі
         drawerLayout = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.nav_view)
         drawerToggleButton = findViewById(R.id.drawer_toggle_button)
 
         DrawerManager.setupDrawer(this)
-
-        noteRepository = NoteRepository(this)
-        noteManager = NoteManager(this, noteRepository)
 
         // ✅ Ініціалізація NoteViewCreator з колбеками
         noteViewCreator = NoteViewCreator(
@@ -85,7 +88,13 @@ class HiveInfoActivity : AppCompatActivity() {
                 openEditNoteActivity(noteId)
             },
             onDeleteNote = { noteId ->
-                deleteNote(noteId)
+                // ✅ ВИПРАВЛЕНО: тепер викликаємо метод з noteManager,
+                // і передаємо йому noteId
+                noteManager.deleteNote(noteId) {
+                    // ✅ Лямбда-вираз, який буде виконано після видалення.
+                    // Викликаємо loadNotes()
+                    loadNotes()
+                }
             }
         )
 
@@ -133,15 +142,14 @@ class HiveInfoActivity : AppCompatActivity() {
             }
         }
 
-        // У файлі HiveInfoActivity.kt
-
         editNoteActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                // ✅ ТЕПЕР МИ ПРОСТО ПЕРЕЗАВАНТАЖУЄМО НОТАТКИ, ОСКІЛЬКИ ВОНИ ВЖЕ ЗБЕРЕЖЕНІ
+                // ✅ ВИПРАВЛЕНО: просто викликаємо loadNotes()
                 loadNotes()
                 noteViewCreator.hideActionsAndResetBackground()
             }
         }
+
         newNoteButton.setOnClickListener {
             val intent = Intent(this, NewNoteActivity::class.java).apply {
                 putExtra(NewNoteActivity.EXTRA_ENTRY_TYPE, currentEntryType)
@@ -202,11 +210,14 @@ class HiveInfoActivity : AppCompatActivity() {
         setResult(Activity.RESULT_OK, resultIntent)
     }
 
+
+
     private fun loadNotes() {
-        val filteredNotes = noteManager.loadNotes(currentEntryType, currentHiveNumber)
+        // ✅ Отримуємо список NoteEntity з NoteManager
+        val filteredNoteEntities = noteManager.loadNotes(currentEntryType, currentHiveNumber)
         notesDisplayArea.removeAllViews()
 
-        if (filteredNotes.isEmpty()) {
+        if (filteredNoteEntities.isEmpty()) {
             val noNotesTextView = TextView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -225,8 +236,9 @@ class HiveInfoActivity : AppCompatActivity() {
             }
             notesDisplayArea.addView(noNotesTextView)
         } else {
-            for (note in filteredNotes) {
-                // ✅ Використовуємо новий клас для створення елементів
+            for (noteEntity in filteredNoteEntities) {
+                // ✅ Конвертуємо NoteEntity в Note перед використанням
+                val note = noteEntity.toNote()
                 val noteItemView = noteViewCreator.createNoteItem(note)
                 notesDisplayArea.addView(noteItemView)
             }
@@ -235,7 +247,7 @@ class HiveInfoActivity : AppCompatActivity() {
 
     // ✅ Новий приватний метод для запуску EditNoteActivity
     private fun openEditNoteActivity(noteId: String) {
-        val note = noteManager.loadNotes(currentEntryType, currentHiveNumber).firstOrNull { it.id == noteId }
+        val note = noteManager.getNoteById(noteId)
         if (note != null) {
             val intent = Intent(this, EditNoteActivity::class.java).apply {
                 putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)

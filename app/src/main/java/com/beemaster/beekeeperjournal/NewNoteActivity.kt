@@ -2,7 +2,6 @@
 
 package com.beemaster.beekeeperjournal
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.widget.Button
@@ -12,14 +11,14 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.UUID
+import android.app.Activity
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import db.NoteEntity
+import kotlinx.coroutines.launch
 
 class NewNoteActivity : AppCompatActivity() {
 
@@ -47,10 +46,15 @@ class NewNoteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_note)
 
-        noteRepository = NoteRepository(this)
+        // ✅ ВИПРАВЛЕНО: Створюємо NoteRepository з правильним db.NoteDao
+        val application = application as BeekeeperApplication
+        val noteDao = application.database.noteDao()
+        val noteRepository = NoteRepository(noteDao)
+
         // Ініціалізуємо ActivityResultLauncher
-        voiceInputLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
-        }
+        voiceInputLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
+            }
 
         // Зв'язуємо змінні з елементами XML
         newNoteRootLayout = findViewById(R.id.new_note_root_layout)
@@ -107,8 +111,44 @@ class NewNoteActivity : AppCompatActivity() {
         }
     }
 
+    private fun saveNote() {
+        // 1. Отримуємо текст з поля введення
+        val noteText = noteContentInput.text.toString().trim()
+
+        // 2. Перевіряємо, чи текст не порожній
+        if (noteText.isEmpty()) {
+            Toast.makeText(this, "Нотатка не може бути порожньою.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // 3. Створюємо новий об'єкт NoteEntity
+        val newNote = NoteEntity(
+            text = noteText,
+            type = currentEntryType,
+            hiveNumber = currentHiveNumber
+        )
+
+        // 4. Запускаємо корутину для збереження в базу даних
+        lifecycleScope.launch {
+            noteRepository.insert(newNote)
+
+            // 5. Повідомляємо користувача про успіх та завершуємо Activity
+            runOnUiThread {
+                Toast.makeText(this@NewNoteActivity, "Нотатку збережено.", Toast.LENGTH_SHORT)
+                    .show()
+                setResult(Activity.RESULT_OK)
+                finish()
+            }
+        }
+    }
+
+
     // Передаємо результат запиту дозволів у допоміжний клас
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         voskHelper.onRequestPermissionsResult(requestCode, grantResults)
     }
@@ -117,35 +157,5 @@ class NewNoteActivity : AppCompatActivity() {
     private fun showKeyboard(editText: EditText) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
-    }
-
-    // Методи для збереження запису
-    private fun saveNote() {
-        val noteText = noteContentInput.text.toString().trim()
-        if (noteText.isNotEmpty()) {
-            val dateFormat = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
-            val formattedDate = dateFormat.format(Date())
-            val timestamp = System.currentTimeMillis()
-            val newId = UUID.randomUUID().toString()
-
-            val newNote = Note(
-                id = newId,
-                date = formattedDate,
-                text = noteText,
-                type = currentEntryType,
-                hiveNumber = currentHiveNumber,
-                timestamp = timestamp
-            )
-
-            val allNotes = noteRepository.readAllNotesFromJson()
-            allNotes.add(newNote)
-            noteRepository.writeAllNotesToJson(allNotes)
-
-            Toast.makeText(this, "Запис додано!", Toast.LENGTH_SHORT).show()
-            setResult(Activity.RESULT_OK) // Повертаємо успішний результат
-            finish()
-        } else {
-            Toast.makeText(this, "Запис не може бути порожнім.", Toast.LENGTH_SHORT).show()
-        }
     }
 }

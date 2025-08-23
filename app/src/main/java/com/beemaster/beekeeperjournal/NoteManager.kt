@@ -6,7 +6,10 @@ import android.app.AlertDialog
 import android.content.Context
 import android.widget.Toast
 import android.util.Log
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import db.NoteEntity
 
 /**
  * Клас, що керує логікою збереження, оновлення, видалення та завантаження записів.
@@ -15,46 +18,41 @@ import android.util.Log
 class NoteManager(private val context: Context, private val noteRepository: NoteRepository) {
 
     private val tag = "NoteManager"
+    private val scope = CoroutineScope(Dispatchers.IO)
 
-    /**
-     * Видаляє запис після підтвердження.
-     */
-    fun deleteNote(noteId: String, onDeleteComplete: () -> Unit) {
-        AlertDialog.Builder(context)
-            .setTitle("Видалити запис")
-            .setMessage("Ви впевнені, що хочете видалити цей запис?")
-            .setPositiveButton("Видалити") { dialog, _ ->
-                val allNotes = noteRepository.readAllNotesFromJson()
-                val initialSize = allNotes.size
-                allNotes.removeIf { it.id == noteId }
-                if (allNotes.size < initialSize) {
-                    noteRepository.writeAllNotesToJson(allNotes)
-                    Toast.makeText(context, "Запис видалено!", Toast.LENGTH_SHORT).show()
-                    onDeleteComplete()
-                } else {
-                    Toast.makeText(context, "Помилка: Запис не знайдено.", Toast.LENGTH_SHORT).show()
-                }
-                dialog.dismiss()
-            }
-            .setNegativeButton("Скасувати") { dialog, _ ->
-                Toast.makeText(context, "Видалення скасовано.", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            }
-            .show()
+    // ✅ ДОДАЄМО МЕТОД ДЛЯ ЗАВАНТАЖЕННЯ НОТАТОК
+    fun loadNotes(entryType: String, hiveNumber: Int): List<NoteEntity> {
+        return noteRepository.getNotesByTypeAndHive(entryType, hiveNumber)
     }
 
-    /**
-     * Завантажує та фільтрує записи для відображення.
-     */
-    fun loadNotes(currentEntryType: String, currentHiveNumber: Int): List<Note> {
-        val allNotes = noteRepository.readAllNotesFromJson()
-        Log.d(tag, "NoteManager: Завантажено ${allNotes.size} нотаток з репозиторію.")
+    // ✅ ДОДАЄМО МЕТОД ДЛЯ ОТРИМАННЯ НОТАТКИ ЗА ID
+    fun getNoteById(noteId: String): NoteEntity? {
+        return noteRepository.getNoteByIdBlocking(noteId)
+    }
 
-        val filteredNotes = allNotes.filter { note ->
-            note.type == currentEntryType && note.hiveNumber == currentHiveNumber
-        }.sortedByDescending { it.timestamp }
-
-        Log.d(tag, "NoteManager: Знайдено ${filteredNotes.size} нотаток для hiveNumber: $currentHiveNumber і type: $currentEntryType")
-        return filteredNotes
+    // ✅ ІСНУЮЧИЙ МЕТОД ДЛЯ ВИДАЛЕННЯ НОТАТКИ
+    fun deleteNote(noteId: String, onComplete: () -> Unit) {
+        AlertDialog.Builder(context)
+            .setTitle("Видалити запис")
+            .setMessage("Ви впевнені, що хочете видалити цей запис? Цю дію не можна скасувати.")
+            .setPositiveButton("Видалити") { _, _ ->
+                scope.launch {
+                    try {
+                        noteRepository.deleteNoteById(noteId)
+                        Log.d(tag, "Запис з ID $noteId успішно видалено.")
+                        (context as? HiveInfoActivity)?.runOnUiThread {
+                            onComplete()
+                            Toast.makeText(context, "Запис видалено.", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        Log.e(tag, "Помилка при видаленні запису: ${e.message}", e)
+                        (context as? HiveInfoActivity)?.runOnUiThread {
+                            Toast.makeText(context, "Помилка при видаленні.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Скасувати", null)
+            .show()
     }
 }
