@@ -1,32 +1,20 @@
-// У файлі BeekeeperApplication.kt
+// BeekeeperApplication.kt Цей клас є точкою входу вашого додатка.
+// Він ініціалізує глобальні ресурси, доступні з будь-якої точки програми.
 
 package com.beemaster.beekeeperjournal
 
 import android.app.Application
 import android.util.Log
-import androidx.room.Room
-import db.AppDatabase
+import dagger.hilt.android.HiltAndroidApp
 import org.vosk.LibVosk
 import org.vosk.LogLevel
 import org.vosk.Model
 import org.vosk.android.StorageService
 
+// 1. Анотація @HiltAndroidApp дозволяє Hilt
+// розпочати генерацію коду для ін'єкції залежностей.
+@HiltAndroidApp
 class BeekeeperApplication : Application() {
-
-    // ✅ ІНІЦІАЛІЗАЦІЯ БАЗИ ДАНИХ
-    val database: AppDatabase by lazy {
-        Room.databaseBuilder(
-            this, // Використовуємо 'this' замість 'applicationContext'
-            AppDatabase::class.java,
-            "beekeeper_journal_database"
-        ).build()
-    }
-
-    // ✅ ІНІЦІАЛІЗАЦІЯ РЕПОЗИТОРІЮ
-    // Передаємо DAO в правильному порядку.
-    val hiveRepository: HiveRepository by lazy {
-        HiveRepository(database.noteDao(), database.hiveDao())
-    }
 
     companion object {
         private const val TAG = "BeekeeperApplication"
