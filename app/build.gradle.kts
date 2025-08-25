@@ -69,4 +69,5 @@ dependencies {
     ksp(libs.room.compiler)
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("com.github.yukuku:ambilwarna:2.0.1")
 }

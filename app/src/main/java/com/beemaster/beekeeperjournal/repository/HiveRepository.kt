@@ -40,4 +40,14 @@ class HiveRepository @Inject constructor(
     fun getAllHivesAsFlow(): Flow<List<HiveEntity>> {
         return hiveDao.getAllHives()
     }
+
+    // ✅ ДОДАНО: Метод для оновлення вулика
+    suspend fun updateHive(hive: HiveEntity) {
+        hiveDao.updateHive(hive)
+    }
+
+    // ✅ ДОДАНО: Метод для видалення вулика
+    suspend fun deleteHive(hive: HiveEntity) {
+        hiveDao.deleteHive(hive.id)
+    }
 }

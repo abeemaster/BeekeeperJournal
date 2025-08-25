@@ -32,11 +32,15 @@
     <color name="background_dark_green">#388E3C</color>
 
     <!-- НОВІ КОЛЬОРИ ДЛЯ ВИБОРУ ВУЛИКІВ -->
+    <color name="color_white">#FFFFFF</color>
     <color name="color_red">#F44336</color>
     <color name="color_blue">#2196F3</color>
     <color name="color_yellow">#FFEB3B</color>
     <color name="color_purple">#9C27B0</color>
     <color name="color_orange">#FF9800</color>
+    <color name="color_green">#4CAF50</color>
+    <color name="color_transparent">#00000000</color>
+
     <!-- НОВЕ: Колір, який використовується у note_item_background_selected.xml -->
     <color name="selected_note_background">#E0F7FA</color>
     <!-- Додайте ці кольори, якщо вони відсутні -->
@@ -61,5 +65,8 @@
     <color name="hive_color_11">#65A30D</color>
     <color name="hive_color_12">#CDDC39</color>
     <color name="transparent_color">#00000000</color>
+
+
+
 
 </resources>

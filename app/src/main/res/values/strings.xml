@@ -47,5 +47,14 @@
     <string name="menu_synchronization">Синхронізація</string>
     <string name="menu_settings">Налаштування</string>
 
+    <string name="edit_name_title">Редагувати назву</string>
+    <string name="delete_hive_title">Видалити вулик</string>
+    <string name="delete_hive_message">Ви впевнені, що хочете видалити %s? Цю дію неможливо скасувати.</string>
+    <string name="hive_name_hint">Введіть нову назву</string>
+    <string name="save">Зберегти</string>
+    <string name="delete">Видалити</string>
+    <string name="cancel">Скасувати</string>
+
+
 
 </resources>

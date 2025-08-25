@@ -18,7 +18,6 @@ class MainActivityViewModel @Inject constructor(
     private val hiveRepository: HiveRepository
 ) : ViewModel() {
 
-    // ✅ Використовуємо getAllHivesAsFlow(), який повертає Flow, щоб уникнути блокування
     private val _hives = hiveRepository.getAllHivesAsFlow()
         .stateIn(
             scope = viewModelScope,
@@ -31,6 +30,20 @@ class MainActivityViewModel @Inject constructor(
     fun addHive(hiveEntity: HiveEntity) {
         viewModelScope.launch {
             hiveRepository.insertHive(hiveEntity)
+        }
+    }
+
+    // ✅ ДОДАНО: Метод для оновлення вулика
+    fun updateHive(hiveEntity: HiveEntity) {
+        viewModelScope.launch {
+            hiveRepository.updateHive(hiveEntity)
+        }
+    }
+
+    // ✅ ДОДАНО: Метод для видалення вулика
+    fun deleteHive(hiveEntity: HiveEntity) {
+        viewModelScope.launch {
+            hiveRepository.deleteHive(hiveEntity)
         }
     }
 }

@@ -2,9 +2,11 @@
 
 package com.beemaster.beekeeperjournal.activities
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -18,8 +20,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.HiveAdapter
 import com.beemaster.beekeeperjournal.db.HiveEntity
+import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -41,14 +45,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        setupViews()
-        setupDrawerMenu()
+        initViews()
+        setupListeners()
         setupRecyclerView()
-        setupButtons()
         observeHives()
     }
 
-    private fun setupViews() {
+    private fun initViews() {
         drawerLayout = findViewById(R.id.drawer_layout)
         navigationView = findViewById(R.id.nav_view)
         drawerToggleButton = findViewById(R.id.drawer_toggle_button)
@@ -57,31 +60,75 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         hiveCountTextView = findViewById(R.id.hiveCountTextView)
     }
 
-    private fun setupDrawerMenu() {
-        navigationView.setNavigationItemSelectedListener(this)
+    private fun setupListeners() {
         drawerToggleButton.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
+        }
+        navigationView.setNavigationItemSelectedListener(this)
+        generalNotesButton.setOnClickListener {
+            val intent = Intent(this, HiveInfoActivity::class.java).apply {
+                putExtra("HIVE_NUMBER", 0)
+            }
+            startActivity(intent)
         }
     }
 
     private fun setupRecyclerView() {
         hiveRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        hiveAdapter = HiveAdapter { hive ->
-            val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                putExtra("HIVE_NUMBER", hive.hiveNumber)
+        hiveAdapter = HiveAdapter(
+            onClick = { hive ->
+                val intent = Intent(this, HiveInfoActivity::class.java).apply {
+                    putExtra("HIVE_NUMBER", hive.hiveNumber)
+                }
+                startActivity(intent)
+            },
+            onOptionsClick = { hive, view ->
+                DialogUtils.showHiveOptionsDialog(
+                    context = this,
+                    hive = hive,
+                    onEditName = {
+                        DialogUtils.showEditNameDialog(
+                            context = this,
+                            hive = hive,
+                            onSave = { newName ->
+                                val updatedHive = hive.copy(name = newName)
+                                viewModel.updateHive(updatedHive)
+                                Toast.makeText(this, "Назву вулика оновлено!", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
+                    onSelectPrimaryColor = {
+                        DialogUtils.showColorPickerDialog(
+                            context = this
+                        ) { newColor ->
+                            val updatedHive = hive.copy(color = newColor)
+                            viewModel.updateHive(updatedHive)
+                            Toast.makeText(this, "Основний колір оновлено!", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onSelectSecondaryColor = {
+                        DialogUtils.showColorPickerDialog(
+                            context = this
+                        ) { newColor ->
+                            val updatedHive = hive.copy(secondaryColor = newColor)
+                            viewModel.updateHive(updatedHive)
+                            Toast.makeText(this, "Додатковий колір оновлено!", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onDeleteHive = {
+                        DialogUtils.showDeleteHiveDialog(
+                            context = this,
+                            hive = hive,
+                            onDeleteConfirmed = {
+                                viewModel.deleteHive(hive)
+                                Toast.makeText(this, "Вулик видалено.", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
+                )
             }
-            startActivity(intent)
-        }
+        )
         hiveRecyclerView.adapter = hiveAdapter
-    }
-
-    private fun setupButtons() {
-        generalNotesButton.setOnClickListener {
-            val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                putExtra("HIVE_NUMBER", 0) // 0 for general notes
-            }
-            startActivity(intent)
-        }
     }
 
     private fun observeHives() {
@@ -105,7 +152,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.nav_add_hive -> {
                 addHive()
             }
-            // Додайте тут інші пункти меню
         }
         return true
     }
@@ -119,8 +165,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val newHive = HiveEntity(
                 hiveNumber = nextHiveNumber,
                 name = "Вулик $nextHiveNumber",
-                color = -12303292, // Example color
-                secondaryColor = -1
+                color = 0,
+                secondaryColor = 0
             )
             viewModel.addHive(newHive)
         }
