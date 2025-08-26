@@ -89,6 +89,11 @@ object DialogUtils {
             context.getColor(R.color.color_transparent)
         )
 
+        // Створюємо AlertDialog, але поки не показуємо його
+        val dialog = AlertDialog.Builder(context)
+            .setView(dialogView)
+            .create()
+
         colors.forEach { color ->
             val colorView = LayoutInflater.from(context).inflate(R.layout.color_grid_item, colorGrid, false)
             val colorCircle: View = colorView.findViewById(R.id.colorView)
@@ -96,17 +101,14 @@ object DialogUtils {
 
             colorCircle.setOnClickListener {
                 onColorSelected(color)
-                (dialogView.parent as? AlertDialog)?.dismiss()
+                dialog.dismiss() // ✅ Змінено: тепер ми закриваємо діалог
             }
             colorGrid.addView(colorView)
         }
 
-        AlertDialog.Builder(context)
-            .setView(dialogView)
-            .create()
-            .show()
+        // Показуємо діалог після того, як всі View були додані
+        dialog.show()
     }
-
     fun showDeleteHiveDialog(context: Context, hive: HiveEntity, onDeleteConfirmed: () -> Unit) {
         AlertDialog.Builder(context)
             .setTitle(context.getString(R.string.delete_hive_title))

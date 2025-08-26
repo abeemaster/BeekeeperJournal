@@ -46,4 +46,6 @@ class MainActivityViewModel @Inject constructor(
             hiveRepository.deleteHive(hiveEntity)
         }
     }
+
+
 }

@@ -46,6 +46,7 @@ class HiveRepository @Inject constructor(
         hiveDao.updateHive(hive)
     }
 
+
     // ✅ ДОДАНО: Метод для видалення вулика
     suspend fun deleteHive(hive: HiveEntity) {
         hiveDao.deleteHive(hive.id)

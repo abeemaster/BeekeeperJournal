@@ -43,9 +43,13 @@ class HiveAdapter(
             }
         }
 
+
         fun bind(hive: HiveEntity) {
             currentHive = hive
             hiveNameTextView.text = hive.name
+            // ✅ Змінено: Оновлення кольору елемента списку
+            val colorView: View = itemView.findViewById(R.id.item_hive_primary_color)
+            colorView.setBackgroundColor(hive.color)
         }
     }
 
@@ -66,7 +70,10 @@ class HiveAdapter(
         }
 
         override fun areContentsTheSame(oldItem: HiveEntity, newItem: HiveEntity): Boolean {
-            return oldItem == newItem
+            // ✅ Змінено: Перевірка вмісту тепер включає кольори
+            return oldItem.name == newItem.name &&
+                    oldItem.color == newItem.color &&
+                    oldItem.secondaryColor == newItem.secondaryColor
         }
     }
 }

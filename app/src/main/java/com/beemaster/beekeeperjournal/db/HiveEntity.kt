@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "hives")
 data class HiveEntity(
-    @PrimaryKey(autoGenerate = true) // ✅ Автоматична генерація для Int
+    @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val hiveNumber: Int,
     val name: String,
