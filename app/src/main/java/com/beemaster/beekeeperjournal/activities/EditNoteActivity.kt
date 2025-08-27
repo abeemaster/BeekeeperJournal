@@ -1,5 +1,7 @@
 // EditNoteActivity відкриває вікно редагування записів.
-// оновлено
+
+
+// У файлі EditNoteActivity.kt
 
 package com.beemaster.beekeeperjournal.activities
 
@@ -42,14 +44,14 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private lateinit var editNoteScreenTitle: TextView
-    private lateinit var editNoteContentInput: EditText // ✅ Виправлено: видалено дублювання 'var'
+    private lateinit var editNoteContentInput: EditText
     private lateinit var microphoneBtnEditNote: ImageButton
     private lateinit var saveEditedNoteButton: MaterialButton
     private var speechService: SpeechService? = null
 
     private var noteId: Int = 0
     private var currentEntryType: String = ""
-    private var currentHiveNumber: Int = 0
+    private var currentHiveNumber: Int = 0 // ✅ Змінено: тип Int
     private var currentHiveActualName: String = ""
 
     private val viewModel: EditNoteViewModel by viewModels()
@@ -79,7 +81,7 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
                 Log.d(TAG, "RECORD_AUDIO permission granted by user. Starting recognition.")
                 startListening()
                 Toast.makeText(this, "Слухаю...", Toast.LENGTH_SHORT).show()
-                microphoneBtnEditNote.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.microphone_button_active_color))
+                microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_active_color)
             } else {
                 Log.w(TAG, "RECORD_AUDIO permission denied by user.")
                 Toast.makeText(this, "Дозвіл на запис аудіо відхилено. Голосовий ввід недоступний.", Toast.LENGTH_LONG).show()
@@ -132,7 +134,7 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
         noteId = intent.getIntExtra(EXTRA_NOTE_ID, 0)
         val originalNoteText = intent.getStringExtra(EXTRA_ORIGINAL_NOTE_TEXT)
         currentEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "hive"
-        currentHiveNumber = intent.getIntExtra(EXTRA_HIVE_NUMBER, 0)
+        currentHiveNumber = intent.getIntExtra(EXTRA_HIVE_NUMBER, 0) // ✅ Отримуємо Int
         currentHiveActualName = intent.getStringExtra(EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveNumber"
         editNoteContentInput.setText(originalNoteText)
     }
@@ -233,7 +235,8 @@ class EditNoteActivity : AppCompatActivity(), RecognitionListener {
             type = currentEntryType,
             title = "Запис для вуликів",
             content = updatedNoteText,
-            imagePath = null
+            imagePath = null,
+            createdAt = System.currentTimeMillis() // ✅ Використовуємо createdAt
         )
 
         finish()

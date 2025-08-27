@@ -3,8 +3,9 @@
 
 package com.beemaster.beekeeperjournal.activities
 
+import android.Manifest
 import android.content.Context
-import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
@@ -14,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.beemaster.beekeeperjournal.BeekeeperApplication
 import com.beemaster.beekeeperjournal.R
@@ -24,9 +26,6 @@ import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
 
 @AndroidEntryPoint // ✅ Додаємо анотацію для Hilt
 class NewNoteActivity : AppCompatActivity(), RecognitionListener {
@@ -234,7 +233,8 @@ class NewNoteActivity : AppCompatActivity(), RecognitionListener {
             type = currentEntryType,
             title = "Запис для вуликів",
             content = updatedNoteText,
-            imagePath = null
+            imagePath = null,
+            createdAt = System.currentTimeMillis()
         )
 
         finish()

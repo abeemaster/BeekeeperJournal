@@ -2,11 +2,9 @@
 
 package com.beemaster.beekeeperjournal.activities
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
-import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -23,7 +21,6 @@ import com.beemaster.beekeeperjournal.db.HiveEntity
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -67,7 +64,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navigationView.setNavigationItemSelectedListener(this)
         generalNotesButton.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                putExtra("HIVE_NUMBER", 0)
+                putExtra("EXTRA_HIVE_NUMBER", 0)
             }
             startActivity(intent)
         }
@@ -78,11 +75,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         hiveAdapter = HiveAdapter(
             onClick = { hive ->
                 val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                    putExtra("HIVE_NUMBER", hive.hiveNumber)
+                    putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, hive.hiveNumber)
                 }
                 startActivity(intent)
             },
-            onOptionsClick = { hive, view ->
+            onOptionsClick = { hive, _ ->
                 DialogUtils.showHiveOptionsDialog(
                     context = this,
                     hive = hive,
@@ -145,7 +142,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.nav_general_notes -> {
                 val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                    putExtra("HIVE_NUMBER", 0)
+                    putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, "0")
                 }
                 startActivity(intent)
             }
@@ -161,14 +158,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (currentHives.size >= 100) {
             Toast.makeText(this, "Досягнуто максимальну кількість вуликів", Toast.LENGTH_SHORT).show()
         } else {
-            val nextHiveNumber = (currentHives.maxOfOrNull { it.hiveNumber } ?: 0) + 1
-            val newHive = HiveEntity(
-                hiveNumber = nextHiveNumber,
-                name = "Вулик $nextHiveNumber",
-                color = 0,
-                secondaryColor = 0
+            DialogUtils.showAddHiveDialog(this,
+                onHiveAdded = { hiveName, hiveNumber ->
+                    val newHive = HiveEntity(
+                        hiveNumber = hiveNumber, // Використовуємо номер, отриманий з діалогу
+                        name = hiveName,
+                        color = this.getColor(R.color.color_white), // Колір за замовчуванням
+                        secondaryColor = 0 // Додатковий колір за замовчуванням
+                    )
+                    viewModel.addHive(newHive)
+                }
             )
-            viewModel.addHive(newHive)
         }
     }
 }

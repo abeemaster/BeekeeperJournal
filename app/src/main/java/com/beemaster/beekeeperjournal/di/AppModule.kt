@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.room.Room
 import com.beemaster.beekeeperjournal.db.AppDatabase
 import com.beemaster.beekeeperjournal.db.HiveDao
+import com.beemaster.beekeeperjournal.db.MIGRATION_1_2
 import com.beemaster.beekeeperjournal.db.NoteDao
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
@@ -27,7 +28,9 @@ object AppModule {
             appContext,
             AppDatabase::class.java,
             "beekeeper_journal_database"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides

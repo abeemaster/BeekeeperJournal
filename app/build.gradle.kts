@@ -6,6 +6,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt") // Необхідний для генерації коду
+    id ("dagger.hilt.android.plugin")
 
 }
 
@@ -70,4 +71,6 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("com.github.yukuku:ambilwarna:2.0.1")
+
+
 }

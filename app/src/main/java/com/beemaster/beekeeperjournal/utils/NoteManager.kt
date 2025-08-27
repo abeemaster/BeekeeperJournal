@@ -14,7 +14,9 @@ import javax.inject.Singleton
  * Клас, що керує логікою збереження, оновлення, видалення та завантаження записів.
  * Він надається Hilt як Singleton, що гарантує єдиний екземпляр.
  */
-@Singleton // ✅ Оголошуємо як Singleton
+// У файлі NoteManager.kt
+
+@Singleton
 class NoteManager @Inject constructor(
     private val noteRepository: NoteRepository,
     private val hiveRepository: HiveRepository
@@ -31,6 +33,7 @@ class NoteManager @Inject constructor(
      * @param hiveId Ідентифікатор вулика.
      * @return Flow зі списком об'єктів NoteEntity.
      */
+    // ✅ Змінено: hiveId тепер Int
     fun loadNotes(entryType: String, hiveId: Int): Flow<List<NoteEntity>> {
         return noteRepository.getNotesByHiveAndType(hiveId, entryType)
     }

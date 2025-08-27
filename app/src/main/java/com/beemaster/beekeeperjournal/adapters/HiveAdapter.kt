@@ -2,6 +2,7 @@
 
 package com.beemaster.beekeeperjournal.adapters
 
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,43 +14,57 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.db.HiveEntity
 
+
 class HiveAdapter(
     private val onClick: (HiveEntity) -> Unit,
     private val onOptionsClick: (HiveEntity, View) -> Unit
 ) : ListAdapter<HiveEntity, HiveAdapter.HiveViewHolder>(HiveDiffCallback) {
+
 
     class HiveViewHolder(
         itemView: View,
         val onClick: (HiveEntity) -> Unit,
         val onOptionsClick: (HiveEntity, View) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
+
+        // ✅ Змінено: Тепер посилаємося на ConstraintLayout за його ID
+        private val hivePrimaryColorView: View = itemView.findViewById(R.id.item_hive_primary_color)
         private val hiveNameTextView: TextView = itemView.findViewById(R.id.item_hive_name)
         private val optionsButton: ImageButton = itemView.findViewById(R.id.optionsButton)
+
+        // ✅ Посилання на елемент для додаткового кольору
+        private val secondaryColorView: View = itemView.findViewById(R.id.secondaryColorView)
+
         private var currentHive: HiveEntity? = null
 
         init {
-            // ✅ Обробник для кліка на весь елемент
             itemView.setOnClickListener {
                 currentHive?.let {
                     onClick(it)
                 }
             }
-            // ✅ Обробник для кліка на кнопку параметрів
             optionsButton.setOnClickListener {
                 currentHive?.let { hive ->
-                    // Важливо: перевіряємо, що ми не передаємо весь itemView, а тільки кнопку
                     onOptionsClick(hive, it)
                 }
             }
         }
 
-
         fun bind(hive: HiveEntity) {
             currentHive = hive
             hiveNameTextView.text = hive.name
-            // ✅ Змінено: Оновлення кольору елемента списку
-            val colorView: View = itemView.findViewById(R.id.item_hive_primary_color)
-            colorView.setBackgroundColor(hive.color)
+
+            // ✅ Змінено: Встановлюємо основний колір лише для ConstraintLayout ("кнопки")
+            hivePrimaryColorView.setBackgroundColor(hive.color)
+
+            // ✅ Змінено: Логіка відображення додаткового кольору для кружечка
+            if (hive.secondaryColor != 0) {
+                val drawable = secondaryColorView.background.mutate() as GradientDrawable
+                drawable.setColor(hive.secondaryColor)
+                secondaryColorView.visibility = View.VISIBLE
+            } else {
+                secondaryColorView.visibility = View.INVISIBLE
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 // EditNoteViewModel
 
+// У файлі EditNoteViewModel.kt
 package com.beemaster.beekeeperjournal.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -15,39 +16,27 @@ class EditNoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository
 ) : ViewModel() {
 
+    // ✅ Оновлено: додано параметр createdAt
     fun saveNote(
-        noteId: Int?,
+        noteId: Int,
         hiveId: Int,
         type: String,
         title: String,
         content: String,
-        imagePath: String?
+        imagePath: String?,
+        createdAt: Long // ✅ Додано параметр createdAt
     ) {
         viewModelScope.launch {
-            if (noteId == null || noteId == 0) {
-                // Створюємо нову нотатку
-                val newNote = NoteEntity(
-                    hiveId = hiveId,
-                    type = type,
-                    title = title,
-                    content = content,
-                    createdAt = System.currentTimeMillis(), // ✅ Виправлено: використовуємо Long
-                    imagePath = imagePath
-                )
-                noteRepository.insertNote(newNote)
-            } else {
-                // Оновлюємо існуючу нотатку
-                val existingNote = noteRepository.getNoteById(noteId)
-                existingNote?.let {
-                    val updatedNote = it.copy(
-                        title = title,
-                        content = content,
-                        imagePath = imagePath,
-                        createdAt = it.createdAt
-                    )
-                    noteRepository.updateNote(updatedNote)
-                }
-            }
+            val note = NoteEntity(
+                id = noteId,
+                hiveId = hiveId,
+                type = type,
+                title = title,
+                content = content,
+                imagePath = imagePath,
+                createdAt = createdAt // ✅ Використовуємо передане значення
+            )
+            noteRepository.insertNote(note)
         }
     }
 }

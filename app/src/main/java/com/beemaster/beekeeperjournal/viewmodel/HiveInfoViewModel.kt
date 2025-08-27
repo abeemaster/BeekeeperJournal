@@ -1,4 +1,4 @@
-
+// У файлі HiveInfoViewModel.kt
 package com.beemaster.beekeeperjournal.viewmodel
 
 import androidx.lifecycle.ViewModel

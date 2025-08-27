@@ -5,10 +5,12 @@ package com.beemaster.beekeeperjournal.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beemaster.beekeeperjournal.db.HiveEntity
+import com.beemaster.beekeeperjournal.db.NaturalHiveNumberComparator
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,6 +21,10 @@ class MainActivityViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _hives = hiveRepository.getAllHivesAsFlow()
+        .map { hivesList ->
+            // ✅ Застосовуємо сортування перед тим, як оновити StateFlow
+            hivesList.sortedWith(compareBy(NaturalHiveNumberComparator) { it.hiveNumber })
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -46,6 +52,4 @@ class MainActivityViewModel @Inject constructor(
             hiveRepository.deleteHive(hiveEntity)
         }
     }
-
-
 }

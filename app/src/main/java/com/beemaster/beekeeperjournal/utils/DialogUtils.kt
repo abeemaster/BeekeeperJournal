@@ -119,4 +119,29 @@ object DialogUtils {
             .setNegativeButton(context.getString(R.string.cancel), null)
             .show()
     }
+
+    fun showAddHiveDialog(
+        context: Context,
+        onHiveAdded: (String, String) -> Unit
+    ) {
+        val dialogView = View.inflate(context, R.layout.dialog_add_hive, null)
+        val nameEditText: EditText = dialogView.findViewById(R.id.nameEditText)
+        val numberEditText: EditText = dialogView.findViewById(R.id.numberEditText)
+
+        AlertDialog.Builder(context)
+            .setTitle(context.getString(R.string.add_hive_title))
+            .setView(dialogView)
+            .setPositiveButton(context.getString(R.string.save)) { _, _ ->
+                val hiveName = nameEditText.text.toString()
+                val hiveNumber = numberEditText.text.toString()
+                if (hiveName.isNotBlank() && hiveNumber.isNotBlank()) {
+                    onHiveAdded(hiveName, hiveNumber)
+                } else {
+                    Toast.makeText(context, "Ім'я та номер вулика не можуть бути порожніми", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(context.getString(R.string.cancel), null)
+            .create()
+            .show()
+    }
 }

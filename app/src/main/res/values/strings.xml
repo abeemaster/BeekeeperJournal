@@ -54,7 +54,7 @@
     <string name="save">Зберегти</string>
     <string name="delete">Видалити</string>
     <string name="cancel">Скасувати</string>
-
+    <string name="add_hive_title">Додати новий вулик</string>
 
 
 </resources>

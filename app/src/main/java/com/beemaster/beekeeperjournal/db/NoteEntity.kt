@@ -13,7 +13,7 @@ import java.util.Date
 data class NoteEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val hiveId: Int, // ✅ Змінюємо на Int
+    val hiveId: Int,
     val type: String,
     val title: String,
     val content: String,

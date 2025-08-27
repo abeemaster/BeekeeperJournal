@@ -14,8 +14,8 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
         return noteDao.getAllNotes()
     }
 
-    fun getNotesByHiveAndType(hiveId: Int, type: String): Flow<List<NoteEntity>> {
-        return noteDao.getNotesByHiveAndType(hiveId, type)
+    fun getNotesByHiveAndType(hiveId: Int, noteType: String): Flow<List<NoteEntity>> {
+        return noteDao.getNotesByHiveAndType(hiveId, noteType)
     }
 
     suspend fun insertNote(note: NoteEntity) {
