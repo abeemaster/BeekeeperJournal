@@ -28,4 +28,13 @@ class HiveInfoViewModel @Inject constructor(
                 }
         }
     }
+
+    // ✅ Додаємо нову функцію для видалення нотатки
+    fun deleteNote(note: NoteEntity) {
+        viewModelScope.launch {
+            noteRepository.deleteNote(note.id)
+        }
+    }
+
+
 }

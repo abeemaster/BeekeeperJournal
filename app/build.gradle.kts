@@ -61,7 +61,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.androidx.drawerlayout)
 
-
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // ROOM залежності
     implementation(libs.androidx.lifecycle.livedata.ktx)

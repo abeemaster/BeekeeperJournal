@@ -1,10 +1,8 @@
 // HiveInfoActivity файл котрий спрацьовує при натисканні на кнопку "Вулик№"
 // оновлено
 
-// У файлі HiveInfoActivity.kt
 package com.beemaster.beekeeperjournal.activities
 
-// У файлі HiveInfoActivity.kt
 
 import android.content.Intent
 import android.os.Bundle
@@ -26,17 +24,22 @@ import android.graphics.Color
 import android.util.TypedValue
 import androidx.core.content.ContextCompat
 import com.beemaster.beekeeperjournal.activities.EditNoteActivity
-import com.beemaster.beekeeperjournal.activities.MainActivity // ✅ Додаємо імпорт для MainActivity
+import com.beemaster.beekeeperjournal.activities.MainActivity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.core.view.GravityCompat
-import com.google.android.material.navigation.NavigationView // ✅ Додаємо цей імпорт
-import android.view.MenuItem // ✅ Додаємо цей імпорт
+import com.google.android.material.navigation.NavigationView
+import android.view.MenuItem
+import android.view.View
+import androidx.appcompat.app.AlertDialog
+import android.content.DialogInterface
+import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.db.HiveEntity
 
 @AndroidEntryPoint
-class HiveInfoActivity : AppCompatActivity() {
+class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
         private const val TAG = "HiveInfoActivity"
@@ -45,7 +48,7 @@ class HiveInfoActivity : AppCompatActivity() {
 
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var drawerToggleBtn: ImageButton
-    private lateinit var navView: NavigationView // ✅ Додаємо змінну для NavigationView
+    private lateinit var navView: NavigationView
     private lateinit var infoTitle: TextView
     private lateinit var notesDisplayArea: LinearLayout
     private lateinit var newNoteButton: com.google.android.material.button.MaterialButton
@@ -66,38 +69,35 @@ class HiveInfoActivity : AppCompatActivity() {
 
         setupViews()
         setupListeners()
-        setupNavigationView() // ✅ Викликаємо нову функцію
+        setupNavigationView()
         loadInitialData()
         observeNotes()
     }
 
-    // ✅ Нова функція для налаштування бічної панелі
-    // У файлі HiveInfoActivity.kt
-
     private fun setupNavigationView() {
-        navView.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_home -> {
-                    val intent = Intent(this, MainActivity::class.java)
-                    startActivity(intent)
-                    // ✅ Додано анімацію переходу для плавного ефекту
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                    finish()
-                    true
-                }
-                // Тут можна додати інші елементи меню
-                else -> false
+        navView.setNavigationItemSelectedListener(this)
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        drawerLayout.closeDrawer(GravityCompat.START)
+        when (item.itemId) {
+            R.id.nav_home -> {
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                finish()
             }
-            // Закриваємо бічну панель після натискання
-            drawerLayout.closeDrawer(GravityCompat.START)
-            true
+            R.id.nav_general_notes -> {
+                Toast.makeText(this, "Ви вже у Загальних записах", Toast.LENGTH_SHORT).show()
+            }
         }
+        return true
     }
 
     private fun setupViews() {
         drawerLayout = findViewById(R.id.drawer_layout)
         drawerToggleBtn = findViewById(R.id.drawer_toggle_button)
-        navView = findViewById(R.id.nav_view) // ✅ Знаходимо NavigationView за його ID
+        navView = findViewById(R.id.nav_view)
         infoTitle = findViewById(R.id.infoTitle)
         notesDisplayArea = findViewById(R.id.notesDisplayArea)
         microphoneBtn = findViewById(R.id.microphoneBtn)
@@ -119,13 +119,21 @@ class HiveInfoActivity : AppCompatActivity() {
         }
     }
 
-    // ... решта вашого коду залишається без змін
     private fun loadInitialData() {
-        val receivedNumberString = intent.getStringExtra(EXTRA_HIVE_NUMBER)
-        currentHiveNumber = receivedNumberString?.toIntOrNull() ?: 0
+        currentHiveNumber = intent.getIntExtra(EXTRA_HIVE_NUMBER, 0)
         Log.d(TAG, "HiveInfoActivity: In onCreate, received hiveNumber: $currentHiveNumber")
-        currentHiveActualName = "Вулик №$currentHiveNumber"
-        showInfo("hive")
+
+        currentHiveActualName = if (currentHiveNumber == 0) "Загальні записи" else "Вулик №$currentHiveNumber"
+
+        // Встановлюємо початковий тип записів на основі номера вулика
+        currentEntryType = if (currentHiveNumber == 0) "general" else "hive"
+        Log.d(TAG, "Тип записів встановлено: $currentEntryType")
+
+        // ✅ Оновлюємо UI та завантажуємо дані лише один раз при завантаженні
+        updateUIAndLoadData(currentEntryType)
+
+        // ✅ Спостерігаємо за нотатками після початкового завантаження
+        observeNotes()
     }
 
     private fun observeNotes() {
@@ -133,7 +141,6 @@ class HiveInfoActivity : AppCompatActivity() {
             viewModel.notes.collect { notes ->
                 notesDisplayArea.removeAllViews()
                 if (notes.isEmpty()) {
-                    Log.d(TAG, "No notes found for hive $currentHiveNumber, type $currentEntryType")
                     val noNotesTextView = TextView(this@HiveInfoActivity).apply {
                         text = "Записів немає"
                         gravity = android.view.Gravity.CENTER
@@ -150,6 +157,11 @@ class HiveInfoActivity : AppCompatActivity() {
                             }
                             setBackgroundResource(R.drawable.note_item_background)
                             setPadding(16, 16, 16, 16)
+
+                            setOnLongClickListener {
+                                showNoteOptionsDialog(note)
+                                true
+                            }
                         }
 
                         val dateTextView = TextView(this@HiveInfoActivity).apply {
@@ -169,7 +181,6 @@ class HiveInfoActivity : AppCompatActivity() {
 
                         noteItemContainer.addView(dateTextView)
                         noteItemContainer.addView(contentTextView)
-
                         notesDisplayArea.addView(noteItemContainer)
                     }
                 }
@@ -177,16 +188,36 @@ class HiveInfoActivity : AppCompatActivity() {
         }
     }
 
-    private fun showInfo(entryType: String) {
+    // ✅ НОВА ФУНКЦІЯ: відповідає лише за оновлення UI та завантаження нотаток
+    private fun updateUIAndLoadData(entryType: String) {
         currentEntryType = entryType
-        val title: String = when (currentEntryType) {
-            "queen" -> "Матка $currentHiveActualName"
-            "hive" -> currentHiveActualName
-            "notes" -> "Примітки $currentHiveActualName"
+
+        val title: String = when {
+            currentHiveNumber == 0 -> "Загальні записи"
+            entryType == "queen" -> "Матка $currentHiveActualName"
+            entryType == "hive" -> "Інформація про $currentHiveActualName"
+            entryType == "notes" -> "Примітки $currentHiveActualName"
             else -> currentHiveActualName
         }
         infoTitle.text = title
+
+        // ✅ Визначаємо видимість кнопок тут
+        if (currentHiveNumber == 0) {
+            queenBtn.visibility = View.GONE
+            hiveInfoBtn.visibility = View.GONE
+            notesBtn.visibility = View.GONE
+        } else {
+            queenBtn.visibility = View.VISIBLE
+            hiveInfoBtn.visibility = View.VISIBLE
+            notesBtn.visibility = View.VISIBLE
+        }
+
         viewModel.getNotesForHive(currentHiveNumber, currentEntryType)
+    }
+
+    private fun showInfo(entryType: String) {
+        // ✅ Ця функція тепер просто викликає нову функцію
+        updateUIAndLoadData(entryType)
     }
 
     private fun openNewNoteActivity(startVoiceInput: Boolean = false) {
@@ -197,5 +228,40 @@ class HiveInfoActivity : AppCompatActivity() {
             putExtra(EditNoteActivity.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
         startActivity(intent)
+    }
+
+    private fun showNoteOptionsDialog(note: NoteEntity) {
+        val options = arrayOf("Редагувати", "Видалити")
+        AlertDialog.Builder(this)
+            .setTitle("Оберіть дію")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> { // Редагувати
+                        val intent = Intent(this, EditNoteActivity::class.java).apply {
+                            putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
+                            putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.content)
+                            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveId)
+                            putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
+                        }
+                        startActivity(intent)
+                    }
+                    1 -> { // Видалити
+                        showDeleteConfirmationDialog(note)
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun showDeleteConfirmationDialog(note: NoteEntity) {
+        AlertDialog.Builder(this)
+            .setTitle("Видалити запис?")
+            .setMessage("Ви впевнені, що хочете видалити цю нотатку? Цю дію неможливо буде скасувати.")
+            .setPositiveButton("Видалити") { dialog, which ->
+                viewModel.deleteNote(note)
+                Toast.makeText(this, "Запис видалено", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Скасувати", null)
+            .show()
     }
 }

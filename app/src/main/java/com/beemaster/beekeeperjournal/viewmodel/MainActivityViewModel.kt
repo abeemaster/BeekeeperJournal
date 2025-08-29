@@ -14,15 +14,17 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.repository.NoteRepository
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
-    private val hiveRepository: HiveRepository
+    private val hiveRepository: HiveRepository,
+    private val noteRepository: NoteRepository // ✅ Додано залежність NoteRepository
 ) : ViewModel() {
 
     private val _hives = hiveRepository.getAllHivesAsFlow()
         .map { hivesList ->
-            // ✅ Застосовуємо сортування перед тим, як оновити StateFlow
             hivesList.sortedWith(compareBy(NaturalHiveNumberComparator) { it.hiveNumber })
         }
         .stateIn(
@@ -39,17 +41,20 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
-    // ✅ ДОДАНО: Метод для оновлення вулика
     fun updateHive(hiveEntity: HiveEntity) {
         viewModelScope.launch {
             hiveRepository.updateHive(hiveEntity)
         }
     }
 
-    // ✅ ДОДАНО: Метод для видалення вулика
     fun deleteHive(hiveEntity: HiveEntity) {
         viewModelScope.launch {
             hiveRepository.deleteHive(hiveEntity)
         }
+    }
+
+    // ✅ Виправлено виклик, щоб використовувати ін'єктований noteRepository
+    fun addNote(note: NoteEntity) = viewModelScope.launch {
+        noteRepository.insertNote(note)
     }
 }
