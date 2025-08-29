@@ -67,6 +67,8 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
 
+        Log.d(TAG, "HiveInfoActivity: Активність onCreate() запущено.")
+
         setupViews()
         setupListeners()
         setupNavigationView()
@@ -121,6 +123,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
     private fun loadInitialData() {
         currentHiveNumber = intent.getIntExtra(EXTRA_HIVE_NUMBER, 0)
+        Log.d(TAG, "HiveInfoActivity: Отримано номер вулика: $currentHiveNumber")
         Log.d(TAG, "HiveInfoActivity: In onCreate, received hiveNumber: $currentHiveNumber")
 
         currentHiveActualName = if (currentHiveNumber == 0) "Загальні записи" else "Вулик №$currentHiveNumber"
@@ -211,7 +214,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             hiveInfoBtn.visibility = View.VISIBLE
             notesBtn.visibility = View.VISIBLE
         }
-
+        Log.d(TAG, "HiveInfoActivity: Запитуємо нотатки для номера: $currentHiveNumber і типу: $currentEntryType")
         viewModel.getNotesForHive(currentHiveNumber, currentEntryType)
     }
 

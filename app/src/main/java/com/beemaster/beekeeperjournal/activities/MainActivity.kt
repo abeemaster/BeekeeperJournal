@@ -148,7 +148,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
         navigationView.setNavigationItemSelectedListener(this)
 
-        // ✅ ВИПРАВЛЕНО: Кнопка "Загальні записи" тепер правильно передає 0
         generalNotesButton.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
                 putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, 0)
@@ -161,11 +160,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         hiveRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         hiveAdapter = HiveAdapter(
             onClick = { hive ->
-                // ✅ ВИПРАВЛЕНО: Цей рядок відповідає за перехід на сторінку вулика
                 Log.d("MainActivity", "Надсилаємо номер вулика: ${hive.hiveNumber}")
 
+                // ✅ ВИПРАВЛЕНО: Ми перетворюємо рядок на число лише для Intent
                 val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                    putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, hive.hiveNumber)
+                    putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, hive.hiveNumber.toInt())
                 }
                 startActivity(intent)
             },
