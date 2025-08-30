@@ -4,6 +4,7 @@
 package com.beemaster.beekeeperjournal.activities
 
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -35,6 +36,8 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import android.content.DialogInterface
+import android.os.Handler
+import android.os.Looper
 import com.beemaster.beekeeperjournal.db.NoteEntity
 import com.beemaster.beekeeperjournal.db.HiveEntity
 
@@ -115,7 +118,6 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         queenBtn.setOnClickListener { showInfo("queen") }
         hiveInfoBtn.setOnClickListener { showInfo("hive") }
         notesBtn.setOnClickListener { showInfo("notes") }
-
         drawerToggleBtn.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
         }
@@ -198,7 +200,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         val title: String = when {
             currentHiveNumber == 0 -> "Загальні записи"
             entryType == "queen" -> "Матка $currentHiveActualName"
-            entryType == "hive" -> "Інформація про $currentHiveActualName"
+            entryType == "hive" -> " $currentHiveActualName"
             entryType == "notes" -> "Примітки $currentHiveActualName"
             else -> currentHiveActualName
         }
@@ -223,6 +225,8 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         updateUIAndLoadData(entryType)
     }
 
+    // У файлі HiveInfoActivity.kt
+
     private fun openNewNoteActivity(startVoiceInput: Boolean = false) {
         val intent = Intent(this, EditNoteActivity::class.java).apply {
             putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, currentEntryType)
@@ -231,6 +235,15 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             putExtra(EditNoteActivity.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
         startActivity(intent)
+
+        // ✅ НОВЕ КРИТИЧНЕ РІШЕННЯ:
+        // Завершуємо поточну активність з невеликою затримкою.
+        // Це дасть Android час на стабілізацію перед закриттям вікна.
+        if (startVoiceInput) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                finish()
+            }, 500) // Затримка 500 мілісекунд (0.5 секунди)
+        }
     }
 
     private fun showNoteOptionsDialog(note: NoteEntity) {

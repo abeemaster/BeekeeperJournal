@@ -11,8 +11,9 @@ import org.vosk.LogLevel
 import org.vosk.Model
 import org.vosk.android.StorageService
 
-// 1. Анотація @HiltAndroidApp дозволяє Hilt
+// Анотація @HiltAndroidApp дозволяє Hilt
 // розпочати генерацію коду для ін'єкції залежностей.
+
 @HiltAndroidApp
 class BeekeeperApplication : Application() {
 

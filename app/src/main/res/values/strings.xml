@@ -46,6 +46,7 @@
     <string name="menu_add_hive">Додати вулик</string>
     <string name="menu_synchronization">Синхронізація</string>
     <string name="menu_settings">Налаштування</string>
+    <string name="menu_exit">Вихід</string>
 
     <string name="edit_name_title">Редагувати назву</string>
     <string name="delete_hive_title">Видалити вулик</string>
