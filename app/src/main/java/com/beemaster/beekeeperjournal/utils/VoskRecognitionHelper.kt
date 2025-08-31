@@ -56,7 +56,8 @@ class VoskRecognitionHelper(
         try {
             val rec = Recognizer(voskModel, 16000.0f)
             speechService = SpeechService(rec, 16000.0f)
-            speechService?.startListening(this)
+            // Використовуємо вбудований таймер, передаючи 10 секунд (10000 мс)
+            speechService?.startListening(this, 10000)
             microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(context, R.color.microphone_button_active_color)
             Toast.makeText(context, "Слухаю...", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
@@ -119,6 +120,9 @@ class VoskRecognitionHelper(
 
     override fun onTimeout() {
         Log.d(TAG, "Recognition timeout. Stopping recording.")
+        // ✅ Цей метод викликається автоматично, коли проходить 10 секунд тиші.
+        // ✅ Тут ми вимикаємо розпізнавання.
         stopListening()
+        Toast.makeText(context, "Голосовий ввід вимкнено через бездіяльність.", Toast.LENGTH_SHORT).show()
     }
 }

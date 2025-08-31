@@ -40,6 +40,7 @@ import android.os.Handler
 import android.os.Looper
 import com.beemaster.beekeeperjournal.db.NoteEntity
 import com.beemaster.beekeeperjournal.db.HiveEntity
+import kotlin.text.Typography.dagger
 
 @AndroidEntryPoint
 class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -113,8 +114,8 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     }
 
     private fun setupListeners() {
-        newNoteButton.setOnClickListener { openNewNoteActivity() }
-        microphoneBtn.setOnClickListener { openNewNoteActivity(startVoiceInput = true) }
+        newNoteButton.setOnClickListener { openNoteEditorActivity() }
+        microphoneBtn.setOnClickListener { openNoteEditorActivity(startVoiceInput = true) }
         queenBtn.setOnClickListener { showInfo("queen") }
         hiveInfoBtn.setOnClickListener { showInfo("hive") }
         notesBtn.setOnClickListener { showInfo("notes") }
@@ -227,7 +228,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
     // У файлі HiveInfoActivity.kt
 
-    private fun openNewNoteActivity(startVoiceInput: Boolean = false) {
+    private fun openNoteEditorActivity(startVoiceInput: Boolean = false) {
         val intent = Intent(this, EditNoteActivity::class.java).apply {
             putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, currentEntryType)
             putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, currentHiveNumber)
@@ -236,14 +237,8 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
         startActivity(intent)
 
-        // ✅ НОВЕ КРИТИЧНЕ РІШЕННЯ:
-        // Завершуємо поточну активність з невеликою затримкою.
-        // Це дасть Android час на стабілізацію перед закриттям вікна.
-        if (startVoiceInput) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                finish()
-            }, 500) // Затримка 500 мілісекунд (0.5 секунди)
-        }
+        // ✅ НІЯКОГО finish() та затримок тут.
+        // HiveInfoActivity просто запускає нову активність.
     }
 
     private fun showNoteOptionsDialog(note: NoteEntity) {

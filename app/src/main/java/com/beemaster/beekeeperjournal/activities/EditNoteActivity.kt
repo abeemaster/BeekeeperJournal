@@ -12,12 +12,17 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.beemaster.beekeeperjournal.BeekeeperApplication
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.utils.VoskRecognitionHelper
 import com.beemaster.beekeeperjournal.viewmodel.EditNoteViewModel
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
+import android.speech.RecognitionListener
+import android.speech.SpeechRecognizer
+import android.content.Intent
+import android.speech.RecognizerIntent
 
 @AndroidEntryPoint
 class EditNoteActivity : AppCompatActivity() {
@@ -37,13 +42,15 @@ class EditNoteActivity : AppCompatActivity() {
     private lateinit var editNoteContentInput: EditText
     private lateinit var microphoneBtnEditNote: ImageButton
     private lateinit var saveEditedNoteButton: MaterialButton
+    private lateinit var speechRecognizer: SpeechRecognizer
 
     private var noteId: Int = 0
     private var currentEntryType: String = ""
     private var currentHiveNumber: Int = 0
     private var currentHiveActualName: String = ""
-
+    private var isGoogleListening = false
     private val viewModel: EditNoteViewModel by viewModels()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,13 +60,93 @@ class EditNoteActivity : AppCompatActivity() {
         getIntentData()
         setupListeners()
         setupUI()
-        voskHelper = VoskRecognitionHelper(this, editNoteContentInput, microphoneBtnEditNote)
+
+        // Передаємо лише одну, правильну кнопку Vosk'у
+        voskHelper = VoskRecognitionHelper(
+            this,
+            editNoteContentInput,
+            microphoneBtnEditNote
+        )
+
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        speechRecognizer.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {
+                Log.d(TAG, "onReadyForSpeech")
+            }
+            override fun onBeginningOfSpeech() {
+                Log.d(TAG, "onBeginningOfSpeech")
+                Toast.makeText(this@EditNoteActivity, "Слухаю...", Toast.LENGTH_SHORT).show()
+                updateMicrophoneButtonState(true)
+            }
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {
+                Log.d(TAG, "onEndOfSpeech")
+                updateMicrophoneButtonState(false)
+            }
+            override fun onError(error: Int) {
+                Log.e(TAG, "Google recognition error: $error")
+                val errorMessage = when(error) {
+                    SpeechRecognizer.ERROR_AUDIO -> "Помилка аудіо"
+                    SpeechRecognizer.ERROR_CLIENT -> "Помилка клієнта"
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Недостатньо прав"
+                    SpeechRecognizer.ERROR_NETWORK -> "Помилка мережі"
+                    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Час очікування мережі вичерпано"
+                    SpeechRecognizer.ERROR_NO_MATCH -> "Не розпізнано"
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Розпізнавач зайнятий"
+                    SpeechRecognizer.ERROR_SERVER -> "Помилка сервера"
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Час очікування мовлення вичерпано"
+                    else -> "Невідома помилка"
+                }
+                Toast.makeText(this@EditNoteActivity, "Помилка: $errorMessage", Toast.LENGTH_LONG).show()
+                updateMicrophoneButtonState(false)
+            }
+            override fun onResults(results: Bundle?) {
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    val recognizedText = matches[0]
+                    editNoteContentInput.append("$recognizedText ")
+                    Log.d(TAG, "onResults: $recognizedText")
+                }
+            }
+            override fun onPartialResults(partialResults: Bundle?) {}
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: Releasing Vosk resources.")
         voskHelper.stopListening()
+        speechRecognizer.destroy()
+    }
+
+
+    private fun toggleListening() {
+        val sharedPref = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        val speechEngine = sharedPref.getString("speech_engine", "google")
+
+        if (speechEngine == "vosk") {
+            if (voskHelper.isVoskListening()) {
+                voskHelper.stopListening()
+                updateMicrophoneButtonState(false)
+            } else {
+                voskHelper.setupVoskAndStartListening()
+                updateMicrophoneButtonState(true)
+            }
+        } else {
+            if (isGoogleListening) {
+                speechRecognizer.stopListening()
+                updateMicrophoneButtonState(false)
+            } else {
+                val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, "uk-UA")
+                }
+                speechRecognizer.startListening(speechIntent)
+                updateMicrophoneButtonState(true)
+            }
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -88,8 +175,8 @@ class EditNoteActivity : AppCompatActivity() {
         microphoneBtnEditNote.setOnClickListener { toggleListening() }
     }
 
+
     private fun setupUI() {
-        // Ваш існуючий код для встановлення заголовка екрана та позиції курсора.
         editNoteContentInput.setSelection(editNoteContentInput.text.length)
         editNoteScreenTitle.text = when (currentEntryType) {
             "general" -> "Редагувати загальний запис"
@@ -99,37 +186,18 @@ class EditNoteActivity : AppCompatActivity() {
             else -> "Редагувати запис"
         }
 
-        // ✅ НОВА ЛОГІКА: Перевіряємо, чи потрібно одразу запускати голосовий ввід.
         val startVoiceInputImmediately = intent.getBooleanExtra(EXTRA_START_VOICE_INPUT, false)
         if (startVoiceInputImmediately) {
-            // Якщо true, запускаємо голосовий ввід.
-            toggleListening()
+            editNoteContentInput.post {
+                toggleListening()
+            }
         } else {
-            // Якщо false, фокусуємося на полі вводу і показуємо клавіатуру.
             editNoteContentInput.requestFocus()
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(editNoteContentInput, InputMethodManager.SHOW_IMPLICIT)
         }
-
     }
 
-    private fun toggleListening() {
-        val sharedPref = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val speechEngine = sharedPref.getString("speech_engine", "google")
-
-        if (speechEngine == "vosk") {
-            if (voskHelper.isVoskListening()) {
-                voskHelper.stopListening()
-            } else {
-                // ✅ Ось тут ми використовуємо ваш слухач!
-                BeekeeperApplication.addVoskModelReadyListener {
-                    voskHelper.setupVoskAndStartListening()
-                }
-            }
-        } else {
-            Toast.makeText(this, "Google Speech Recognition буде запущено тут.", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     private fun saveEditedNote() {
         val updatedNoteText = editNoteContentInput.text.toString().trim()
@@ -149,5 +217,15 @@ class EditNoteActivity : AppCompatActivity() {
         )
 
         finish()
+    }
+
+    private fun updateMicrophoneButtonState(isListening: Boolean) {
+        if (isListening) {
+            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_active_color)
+            isGoogleListening = true
+        } else {
+            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_color)
+            isGoogleListening = false
+        }
     }
 }
