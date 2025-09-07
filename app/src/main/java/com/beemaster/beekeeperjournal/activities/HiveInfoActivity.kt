@@ -1,7 +1,7 @@
 // HiveInfoActivity файл котрий спрацьовує при натисканні на кнопку "Вулик№"
 // оновлено
 // додаю коментар заради коміта
-
+// ще один коміт
 
 package com.beemaster.beekeeperjournal.activities
 
