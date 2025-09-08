@@ -6,7 +6,6 @@ import android.content.Context
 import androidx.room.Room
 import com.beemaster.beekeeperjournal.db.AppDatabase
 import com.beemaster.beekeeperjournal.db.HiveDao
-import com.beemaster.beekeeperjournal.db.MIGRATION_1_2
 import com.beemaster.beekeeperjournal.db.NoteDao
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
@@ -49,7 +48,7 @@ object AppModule {
     }
 
     @Provides
-    fun provideNoteRepository(noteDao: NoteDao): NoteRepository {
-        return NoteRepository(noteDao)
+    fun provideNoteRepository(noteDao: NoteDao, hiveDao: HiveDao): NoteRepository {
+        return NoteRepository(noteDao, hiveDao)
     }
 }

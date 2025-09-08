@@ -1,7 +1,5 @@
 // MainActivity Файл головної сторінки додатка
 
-// MainActivity Файл головної сторінки додатка
-
 package com.beemaster.beekeeperjournal.activities
 
 import android.annotation.SuppressLint
@@ -15,6 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -24,7 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.HiveAdapter
 import com.beemaster.beekeeperjournal.db.HiveEntity
-import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.models.BackupData
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
@@ -35,9 +34,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.InputStream
-import java.text.SimpleDateFormat
-import java.util.Locale
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -52,74 +50,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private val viewModel: MainActivityViewModel by viewModels()
 
-    private val selectJsonFile = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+    private val gson = Gson()
+
+    private val getExportFile = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri?.let {
-            importNotesFromJson(it)
+            lifecycleScope.launch { exportData(it) }
         }
     }
 
-    private fun startImport() {
-        selectJsonFile.launch("application/json")
-    }
-
-    private fun importNotesFromJson(uri: Uri) {
-        lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                try {
-                    val inputStream: InputStream? = contentResolver.openInputStream(uri)
-                    val jsonString = inputStream?.bufferedReader().use { it?.readText() }
-
-                    if (jsonString.isNullOrEmpty()) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@MainActivity, "Файл порожній або не вдалося прочитати.", Toast.LENGTH_LONG).show()
-                        }
-                        return@withContext
-                    }
-
-                    data class ImportedNote(
-                        val hiveNumber: Int,
-                        val text: String,
-                        val timestamp: Long? = null,
-                        val type: String,
-                        val date: String,
-                        val id: String? = null
-                    )
-                    data class DataBackup(
-                        val hiveList: List<Any>,
-                        val notes: List<ImportedNote>
-                    )
-
-                    val gson = Gson()
-                    val type = object : TypeToken<DataBackup>() {}.type
-                    val backupData: DataBackup = gson.fromJson(jsonString, type)
-
-                    val dateFormat = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
-
-                    backupData.notes.forEach { importedNote ->
-                        val dateString = importedNote.date
-                        val date = dateFormat.parse(dateString)
-                        val timestamp = date?.time ?: System.currentTimeMillis()
-
-                        val newNote = NoteEntity(
-                            hiveId = importedNote.hiveNumber,
-                            type = importedNote.type,
-                            title = "",
-                            content = importedNote.text,
-                            createdAt = timestamp,
-                            imagePath = null
-                        )
-                        viewModel.addNote(newNote)
-                    }
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@MainActivity, "Імпорт даних успішно завершено!", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@MainActivity, "Помилка імпорту: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-                    e.printStackTrace()
-                }
-            }
+    private val getImportFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let {
+            lifecycleScope.launch { importData(it) }
         }
     }
 
@@ -161,11 +102,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         hiveRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         hiveAdapter = HiveAdapter(
             onClick = { hive ->
-                Log.d("MainActivity", "Надсилаємо номер вулика: ${hive.hiveNumber}")
-
-                // ✅ ВИПРАВЛЕНО: Ми перетворюємо рядок на число лише для Intent
                 val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                    putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, hive.hiveNumber.toInt())
+                    putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, hive.hiveNumber)
                 }
                 startActivity(intent)
             },
@@ -219,6 +157,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun observeHives() {
+        // ✅ ВИПРАВЛЕНО: Використовуємо .collect для Flow
         lifecycleScope.launch {
             viewModel.hives.collect { hives ->
                 hiveAdapter.submitList(hives)
@@ -240,7 +179,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 addHive()
             }
             R.id.nav_sync -> {
-                startImport()
+                showSyncOptionsDialog()
             }
             R.id.nav_settings -> {
                 openSettingsActivity()
@@ -252,14 +191,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
-    private fun openSettingsActivity() {
-        val intent = Intent(this, SettingsActivity::class.java)
-        startActivity(intent)
-    }
     private fun openSearchActivity() {
         val intent = Intent(this, SearchActivity::class.java)
         startActivity(intent)
     }
+
     private fun addHive() {
         val currentHives = viewModel.hives.value
         if (currentHives.size >= 100) {
@@ -277,5 +213,75 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             )
         }
+    }
+
+    private fun showSyncOptionsDialog() {
+        val options = arrayOf("Створити резервну копію", "Відновити з резервної копії")
+        AlertDialog.Builder(this)
+            .setTitle("Оберіть дію")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> getExportFile.launch("beekeeper_backup.json")
+                    1 -> getImportFile.launch(arrayOf("application/json"))
+                }
+            }
+            .show()
+    }
+
+    private suspend fun exportData(uri: Uri) {
+        withContext(Dispatchers.IO) {
+            try {
+                val hives = viewModel.getAllHivesSuspend()
+                val notes = viewModel.getAllNotesSuspend()
+                val backupData = BackupData(hives, notes)
+                val json = gson.toJson(backupData)
+
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    OutputStreamWriter(outputStream).use { writer ->
+                        writer.write(json)
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Резервна копія створена успішно!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("Backup", "Помилка експорту даних", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Помилка при створенні резервної копії: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private suspend fun importData(uri: Uri) {
+        withContext(Dispatchers.IO) {
+            try {
+                val json = contentResolver.openInputStream(uri)?.use { inputStream ->
+                    InputStreamReader(inputStream).use { reader ->
+                        reader.readText()
+                    }
+                } ?: return@withContext
+
+                val backupDataType = object : TypeToken<BackupData>() {}.type
+                val backupData: BackupData = gson.fromJson(json, backupDataType)
+
+                viewModel.importHives(backupData.hives)
+                viewModel.importNotes(backupData.notes)
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Дані відновлено успішно!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("Backup", "Помилка імпорту даних", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Помилка при відновленні даних: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun openSettingsActivity() {
+        val intent = Intent(this, SettingsActivity::class.java)
+        startActivity(intent)
     }
 }

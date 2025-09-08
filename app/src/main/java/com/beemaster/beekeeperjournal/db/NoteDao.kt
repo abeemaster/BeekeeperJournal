@@ -29,4 +29,22 @@ interface NoteDao {
     // ✅ ДОДАНО: Метод для отримання всіх нотаток
     @Query("SELECT * FROM notes ORDER BY createdAt DESC")
     fun getAllNotes(): Flow<List<NoteEntity>>
+
+    // ✅ Додаємо метод для отримання всіх нотаток
+    @Query("SELECT * FROM notes")
+    suspend fun getAllNotesSuspend(): List<NoteEntity>
+
+    // ✅ Додаємо метод для заміни всіх нотаток
+    @Query("DELETE FROM notes")
+    suspend fun deleteAllNotes()
+
+    // ✅ Вставляємо всі нотатки. OnConflictStrategy.REPLACE замінить існуючі записи з тими ж первинними ключами
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllNotes(notes: List<NoteEntity>)
+
+    // ✅ Об'єднуємо операції очищення та вставки в одну транзакцію
+    suspend fun clearAndInsertNotes(notes: List<NoteEntity>) {
+        deleteAllNotes()
+        insertAllNotes(notes)
+    }
 }
