@@ -6,7 +6,6 @@ package com.beemaster.beekeeperjournal.db
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import java.util.Date
 
 @Entity(tableName = "notes")
 @TypeConverters(Converters::class)

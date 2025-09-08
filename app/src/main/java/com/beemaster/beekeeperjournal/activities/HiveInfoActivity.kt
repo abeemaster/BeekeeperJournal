@@ -6,43 +6,35 @@
 package com.beemaster.beekeeperjournal.activities
 
 
-import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
+import android.util.TypedValue
+import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.LinearLayout.LayoutParams
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import com.beemaster.beekeeperjournal.R
+import com.beemaster.beekeeperjournal.db.NoteEntity
 import com.beemaster.beekeeperjournal.viewmodel.HiveInfoViewModel
+import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import android.util.Log
-import android.widget.Toast
-import android.widget.LinearLayout.LayoutParams
-import android.graphics.Color
-import android.util.TypedValue
-import androidx.core.content.ContextCompat
-import com.beemaster.beekeeperjournal.activities.EditNoteActivity
-import com.beemaster.beekeeperjournal.activities.MainActivity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.core.view.GravityCompat
-import com.google.android.material.navigation.NavigationView
-import android.view.MenuItem
-import android.view.View
-import androidx.appcompat.app.AlertDialog
-import android.content.DialogInterface
-import android.os.Handler
-import android.os.Looper
-import com.beemaster.beekeeperjournal.db.NoteEntity
-import com.beemaster.beekeeperjournal.db.HiveEntity
-import kotlin.text.Typography.dagger
 
 @AndroidEntryPoint
 class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -50,6 +42,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     companion object {
         private const val TAG = "HiveInfoActivity"
         const val EXTRA_HIVE_NUMBER = "com.beemaster.beekeeperjournal.HIVE_NUMBER"
+        const val EXTRA_ENTRY_TYPE = "com.beemaster.beekeeperjournal.ENTRY_TYPE"
     }
 
     private lateinit var drawerLayout: DrawerLayout
@@ -131,10 +124,13 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         Log.d(TAG, "HiveInfoActivity: Отримано номер вулика: $currentHiveNumber")
         Log.d(TAG, "HiveInfoActivity: In onCreate, received hiveNumber: $currentHiveNumber")
 
+        // ✅ Читаємо тип запису з Intent. За замовчуванням "notes" або інший, якщо не передано.
+        val initialEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "notes"
+
         currentHiveActualName = if (currentHiveNumber == 0) "Загальні записи" else "Вулик №$currentHiveNumber"
 
-        // Встановлюємо початковий тип записів на основі номера вулика
-        currentEntryType = if (currentHiveNumber == 0) "general" else "hive"
+        // ✅ Встановлюємо початковий тип записів на основі номера вулика
+        currentEntryType = if (currentHiveNumber == 0) "general" else initialEntryType
         Log.d(TAG, "Тип записів встановлено: $currentEntryType")
 
         // ✅ Оновлюємо UI та завантажуємо дані лише один раз при завантаженні

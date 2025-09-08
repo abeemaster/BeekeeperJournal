@@ -234,7 +234,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Toast.makeText(this, "Головна сторінка", Toast.LENGTH_SHORT).show()
             }
             R.id.nav_search -> {
-                Toast.makeText(this, "Пошук", Toast.LENGTH_SHORT).show()
+                openSearchActivity()
             }
             R.id.nav_add_hive -> {
                 addHive()
@@ -243,9 +243,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 startImport()
             }
             R.id.nav_settings -> {
-                Toast.makeText(this, "Налаштування", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, SettingsActivity::class.java)
-                startActivity(intent)
+                openSettingsActivity()
             }
             R.id.nav_exit_button -> {
                 finishAffinity()
@@ -254,6 +252,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
+    private fun openSettingsActivity() {
+        val intent = Intent(this, SettingsActivity::class.java)
+        startActivity(intent)
+    }
+    private fun openSearchActivity() {
+        val intent = Intent(this, SearchActivity::class.java)
+        startActivity(intent)
+    }
     private fun addHive() {
         val currentHives = viewModel.hives.value
         if (currentHives.size >= 100) {

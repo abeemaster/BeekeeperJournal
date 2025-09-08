@@ -5,6 +5,7 @@ package com.beemaster.beekeeperjournal.activities
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +15,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -32,6 +34,12 @@ import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
+import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.models.Note
+import com.beemaster.beekeeperjournal.activities.HiveInfoActivity
+import com.beemaster.beekeeperjournal.activities.EditNoteActivity
+
+
 
 @AndroidEntryPoint // ✅ Додаємо анотацію Hilt
 class SearchActivity : AppCompatActivity(), RecognitionListener {
@@ -99,10 +107,43 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         searchResultsAdapter = SearchResultsAdapter(
             mutableListOf(),
             onItemLongClick = { note ->
-                // Логіка для long-click
+                showNoteOptionsDialog(note)
             }
         )
         searchResultsRecyclerView.adapter = searchResultsAdapter
+    }
+    private fun showNoteOptionsDialog(note: Note) {
+        val options = arrayOf("Перейти у вулик", "Редагувати запис")
+        AlertDialog.Builder(this)
+            .setTitle("Оберіть дію")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> { // Перейти у вулик
+                        val intent = Intent(this, HiveInfoActivity::class.java).apply {
+                            // ✅ Використовуємо note.hiveNumber
+                            putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
+                            // ✅ Додаємо передачу типу запису
+                            putExtra(HiveInfoActivity.EXTRA_ENTRY_TYPE, note.type)
+                        }
+                        startActivity(intent)
+                    }
+                    1 -> { // Редагувати запис
+                        val intent = Intent(this, EditNoteActivity::class.java).apply {
+                            // ✅ Використовуємо note.id
+                            putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
+                            // ✅ Використовуємо note.text
+                            putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
+                            // ✅ Використовуємо note.hiveNumber
+                            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
+                            // ✅ Використовуємо note.type
+                            putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
+                            // Передача назви вулика тут неможлива, бо адаптер її не передає
+                        }
+                        startActivity(intent)
+                    }
+                }
+            }
+            .show()
     }
 
     private fun observeViewModel() {
