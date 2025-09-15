@@ -5,7 +5,11 @@ package com.beemaster.beekeeperjournal.di
 import android.content.Context
 import androidx.room.Room
 import com.beemaster.beekeeperjournal.db.AppDatabase
+import com.beemaster.beekeeperjournal.db.ExpenseDao
 import com.beemaster.beekeeperjournal.db.HiveDao
+import com.beemaster.beekeeperjournal.db.IncomeDao
+import com.beemaster.beekeeperjournal.db.MIGRATION_1_2
+import com.beemaster.beekeeperjournal.db.MIGRATION_2_3
 import com.beemaster.beekeeperjournal.db.NoteDao
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
@@ -28,10 +32,10 @@ object AppModule {
             AppDatabase::class.java,
             "beekeeper_journal_database"
         )
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3) // ✅ Додаємо нову міграцію
             .fallbackToDestructiveMigration()
             .build()
     }
-
     @Provides
     fun provideHiveDao(database: AppDatabase): HiveDao {
         return database.hiveDao()
@@ -41,7 +45,16 @@ object AppModule {
     fun provideNoteDao(database: AppDatabase): NoteDao {
         return database.noteDao()
     }
+    // ✅ Додаємо провайдери для нових DAO
+    @Provides
+    fun provideExpenseDao(database: AppDatabase): ExpenseDao {
+        return database.expenseDao()
+    }
 
+    @Provides
+    fun provideIncomeDao(database: AppDatabase): IncomeDao {
+        return database.incomeDao()
+    }
     @Provides
     fun provideHiveRepository(noteDao: NoteDao, hiveDao: HiveDao): HiveRepository {
         return HiveRepository(noteDao, hiveDao)
@@ -52,3 +65,4 @@ object AppModule {
         return NoteRepository(noteDao, hiveDao)
     }
 }
+
