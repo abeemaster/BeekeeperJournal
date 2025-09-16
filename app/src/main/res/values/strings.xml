@@ -56,6 +56,19 @@
     <string name="delete">Видалити</string>
     <string name="cancel">Скасувати</string>
     <string name="add_hive_title">Додати новий вулик</string>
+    <string name="menu_profitability">Рентабельність</string>
+    <string name="total_incomes">Загальні прибутки</string>
+    <string name="total_expenses">Загальні витрати</string>
+    <string name="add_income_title">Додати прибуток</string>
+    <string name="add_expense_title">Додати витрату</string>
+    <string name="income_description_hint">Опис (наприклад, \"Продаж меду\")</string>
+    <string name="income_amount_hint">Кількість (наприклад, 20)</string>
+    <string name="income_unit_hint">Одиниця виміру (наприклад, \"кг\")</string>
+    <string name="income_price_per_unit_hint">Ціна за одиницю (наприклад, 250)</string>
+    <string name="date_hint">Дата (наприклад, 25.10.2025)</string>
+    <string name="expense_description_hint">Опис (наприклад, \"Цукор для підгодівлі\")</string>
+    <string name="expense_total_price_hint">Загальна сума витрат (наприклад, 500)</string>
+    <string name="color_picker_title">Оберіть колір</string>
 
 
 </resources>

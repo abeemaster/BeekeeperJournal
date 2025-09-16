@@ -24,6 +24,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        dataBinding = true
+        viewBinding = true // Рекомендується увімкнути й View Binding, якщо ще не ввімкнено
+    }
 
     buildTypes {
         release {

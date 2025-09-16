@@ -26,4 +26,8 @@
         <item name="materialButtonStyle">@style/YourCustomButtonStyle</item>
     </style>
 
+    <style name="Theme.BeekeeperJournal.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.BeekeeperJournal.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
 </resources>

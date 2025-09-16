@@ -68,6 +68,8 @@
     <color name="transparent_color">#00000000</color>
     <color name="color_black">#000000</color>
     <color name="card_background">#F0FDF4</color>
+    <color name="green_500">#4CAF50</color>
+    <color name="red_500">#F44336</color>
 
 
 

@@ -14,8 +14,8 @@ data class IncomeEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val date: Date,
-    val productName: String,
-    val quantity: Double,
-    val price: Double,
-    val totalAmount: Double
+    val productName: String, // (назва продукції)
+    val quantity: Double, // (кількість продукції)
+    val price: Double, // (ціна за одиницю)
+    val totalAmount: Double // (загальна сума, отримана з продажу)
 )

@@ -1,16 +1,24 @@
 package com.beemaster.beekeeperjournal.utils
 
 import android.app.AlertDialog
+import android.app.DatePickerDialog
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.beemaster.beekeeperjournal.R
+import com.beemaster.beekeeperjournal.db.ExpenseEntity
 import com.beemaster.beekeeperjournal.db.HiveEntity
+import com.beemaster.beekeeperjournal.db.IncomeEntity
+import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import com.google.android.material.card.MaterialCardView
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 object DialogUtils {
 
@@ -143,5 +151,113 @@ object DialogUtils {
             .setNegativeButton(context.getString(R.string.cancel), null)
             .create()
             .show()
+    }
+
+    fun showAddIncomeDialog(context: Context, viewModel: ProfitabilityViewModel, hiveId: Int?) {
+        val view = LayoutInflater.from(context).inflate(R.layout.income_dialog, null)
+        val descriptionEditText: EditText = view.findViewById(R.id.income_description_edit_text)
+        val amountEditText: EditText = view.findViewById(R.id.income_amount_edit_text)
+        val unitEditText: EditText = view.findViewById(R.id.income_unit_edit_text)
+        val pricePerUnitEditText: EditText = view.findViewById(R.id.income_price_per_unit_edit_text)
+        val dateEditText: EditText = view.findViewById(R.id.income_date_edit_text)
+        val saveButton: Button = view.findViewById(R.id.save_income_button)
+
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+        dateEditText.setText(dateFormat.format(calendar.time))
+
+        dateEditText.setOnClickListener {
+            val datePickerDialog = DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    calendar.set(year, month, dayOfMonth)
+                    dateEditText.setText(dateFormat.format(calendar.time))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+            datePickerDialog.show()
+        }
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(view)
+            .show()
+
+        saveButton.setOnClickListener {
+            // ✅ Використовуємо правильні назви полів з UI
+            val productName = descriptionEditText.text.toString().trim()
+            val quantity = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val price = pricePerUnitEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val date = calendar.time // ✅ Використовуємо об'єкт Date, а не Long
+
+            if (productName.isNotEmpty() && quantity > 0 && price > 0) {
+                // ✅ Створення IncomeEntity з правильними параметрами
+                val newIncome = IncomeEntity(
+                    productName = productName,
+                    quantity = quantity,
+                    price = price,
+                    totalAmount = quantity * price, // ✅ Обчислюємо totalAmount
+                    date = date,
+                    // hiveId = hiveId // Якщо це поле існує
+                )
+                viewModel.addIncome(newIncome)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(context, "Будь ласка, заповніть усі поля", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun showAddExpenseDialog(context: Context, viewModel: ProfitabilityViewModel) {
+        val view = LayoutInflater.from(context).inflate(R.layout.expense_dialog, null)
+        // ✅ Використовуємо правильні назви змінних
+        val nameEditText: EditText = view.findViewById(R.id.expense_name_edit_text)
+        val amountEditText: EditText = view.findViewById(R.id.expense_amount_edit_text)
+        val dateEditText: EditText = view.findViewById(R.id.expense_date_edit_text)
+        val saveButton: Button = view.findViewById(R.id.save_expense_button)
+
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+        dateEditText.setText(dateFormat.format(calendar.time))
+
+        dateEditText.setOnClickListener {
+            val datePickerDialog = DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    calendar.set(year, month, dayOfMonth)
+                    dateEditText.setText(dateFormat.format(calendar.time))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+            datePickerDialog.show()
+        }
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(view)
+            .show()
+
+        saveButton.setOnClickListener {
+            val name = nameEditText.text.toString().trim()
+            val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val date = calendar.time // ✅ Використовуємо об'єкт Date
+
+            if (name.isNotEmpty() && amount > 0) {
+                // ✅ Створюємо ExpenseEntity з правильними параметрами
+                val newExpense = ExpenseEntity(
+                    name = name,
+                    amount = amount,
+                    date = date
+                )
+                viewModel.addExpense(newExpense)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(context, "Будь ласка, заповніть усі поля", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

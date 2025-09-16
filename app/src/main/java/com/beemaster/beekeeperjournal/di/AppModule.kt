@@ -11,7 +11,9 @@ import com.beemaster.beekeeperjournal.db.IncomeDao
 import com.beemaster.beekeeperjournal.db.MIGRATION_1_2
 import com.beemaster.beekeeperjournal.db.MIGRATION_2_3
 import com.beemaster.beekeeperjournal.db.NoteDao
+import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
+import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import dagger.Module
 import dagger.Provides
@@ -32,7 +34,7 @@ object AppModule {
             AppDatabase::class.java,
             "beekeeper_journal_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3) // ✅ Додаємо нову міграцію
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -63,6 +65,15 @@ object AppModule {
     @Provides
     fun provideNoteRepository(noteDao: NoteDao, hiveDao: HiveDao): NoteRepository {
         return NoteRepository(noteDao, hiveDao)
+    }
+    @Provides
+    fun provideIncomeRepository(incomeDao: IncomeDao): IncomeRepository {
+        return IncomeRepository(incomeDao)
+    }
+
+    @Provides
+    fun provideExpenseRepository(expenseDao: ExpenseDao): ExpenseRepository {
+        return ExpenseRepository(expenseDao)
     }
 }
 

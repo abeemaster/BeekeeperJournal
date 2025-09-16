@@ -14,6 +14,20 @@ interface ExpenseDao {
     @Delete
     suspend fun deleteExpense(expense: ExpenseEntity)
 
+    @Query("DELETE FROM expenses WHERE id = :expenseId")
+    suspend fun deleteExpense(expenseId: Int)
+
     @Query("SELECT * FROM expenses ORDER BY date DESC")
     fun getAllExpenses(): Flow<List<ExpenseEntity>>
+
+    @Query("SELECT * FROM expenses WHERE id = :expenseId")
+    suspend fun getExpenseById(expenseId: Int): ExpenseEntity?
+
+    @Query("SELECT SUM(amount) FROM expenses")
+    fun getTotalExpenseFlow(): Flow<Double?>
+
+    @Query("SELECT SUM(amount) FROM expenses")
+    suspend fun getTotalExpenseSuspend(): Double?
+
+
 }
