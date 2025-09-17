@@ -1,7 +1,6 @@
 // /root/settings.gradle.kts
 
 pluginManagement {
-
     repositories {
         gradlePluginPortal()
         google()

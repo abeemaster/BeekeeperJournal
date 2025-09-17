@@ -1,19 +1,13 @@
 // /app/build.gradle.kts
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("com.google.devtools.ksp")
-    id("com.google.dagger.hilt.android")
-    id("kotlin-kapt") // Необхідний для генерації коду
-    id ("dagger.hilt.android.plugin")
-
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
-
 android {
     namespace = "com.beemaster.beekeeperjournal"
     compileSdk = 36
-
     defaultConfig {
         applicationId = "com.beemaster.beekeeperjournal.dev"
         minSdk = 24
@@ -23,12 +17,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
     buildFeatures {
         dataBinding = true
-        viewBinding = true // Рекомендується увімкнути й View Binding, якщо ще не ввімкнено
+        viewBinding = true
     }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -45,9 +37,7 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-
 }
-
 dependencies {
     // Стандартні залежності AndroidX
     implementation(libs.androidx.core.ktx)
@@ -65,17 +55,18 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.androidx.drawerlayout)
+    implementation(libs.google.gson)
 
-    implementation("com.google.code.gson:gson:2.10.1")
+    // Hilt залежності з KSP
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
 
     // ROOM залежності
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.room.compiler)
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
-    implementation("com.github.yukuku:ambilwarna:2.0.1")
-
-
+    implementation(libs.ambilwarna)
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.fragment)
 }
