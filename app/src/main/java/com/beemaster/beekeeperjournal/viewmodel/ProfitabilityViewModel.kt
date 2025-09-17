@@ -1,0 +1,70 @@
+// ProfitabilityViewModel.kt
+// ViewModel для керування даними про прибутки, витрати та рентабельність.
+
+// ProfitabilityViewModel.kt
+// Цей клас буде відповідати за бізнес-логіку екрана рентабельності,
+// взаємодіючи з репозиторіями для отримання та оновлення даних.
+
+package com.beemaster.beekeeperjournal.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.beemaster.beekeeperjournal.db.ExpenseEntity
+import com.beemaster.beekeeperjournal.db.IncomeEntity
+import com.beemaster.beekeeperjournal.repository.ExpenseRepository
+import com.beemaster.beekeeperjournal.repository.IncomeRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class ProfitabilityViewModel @Inject constructor(
+    private val incomeRepository: IncomeRepository,
+    private val expenseRepository: ExpenseRepository
+) : ViewModel() {
+
+    // Державні потоки для спостереження за даними
+    val incomes: StateFlow<List<IncomeEntity>> =
+        incomeRepository.getAllIncomes().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val expenses: StateFlow<List<ExpenseEntity>> =
+        expenseRepository.getAllExpenses().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val totalIncome: StateFlow<Double?> =
+        incomeRepository.getTotalIncomeFlow().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0.0
+        )
+
+    val totalExpense: StateFlow<Double?> =
+        expenseRepository.getTotalExpenseFlow().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0.0
+        )
+
+    fun addIncome(income: IncomeEntity) {
+        viewModelScope.launch {
+            incomeRepository.insertIncome(income)
+        }
+    }
+
+    fun addExpense(expense: ExpenseEntity) {
+        viewModelScope.launch {
+            expenseRepository.insertExpense(expense)
+        }
+    }
+}
