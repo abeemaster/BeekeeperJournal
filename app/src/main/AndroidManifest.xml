@@ -49,6 +49,13 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" /> <!-- ДОДАНО SearchActivity -->
         <activity
+            android:name=".activities.ProfitabilityActivity"
+            android:exported="false"
+            android:label="Рентабельність пасіки"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.HiveInfoActivity"/>
+        <activity
             android:name=".activities.SettingsActivity"
             android:label="Налаштування" />
         <activity android:name=".activities.ColorPickerActivity" />

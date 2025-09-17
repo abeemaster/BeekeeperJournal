@@ -181,6 +181,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.nav_sync -> {
                 showSyncOptionsDialog()
             }
+            R.id.nav_profitability -> {
+                openProfitabilityActivity()
+            }
             R.id.nav_settings -> {
                 openSettingsActivity()
             }
@@ -190,7 +193,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
         return true
     }
-
+    private fun openProfitabilityActivity() {
+        val intent = Intent(this, ProfitabilityActivity::class.java)
+        startActivity(intent)
+    }
     private fun openSearchActivity() {
         val intent = Intent(this, SearchActivity::class.java)
         startActivity(intent)

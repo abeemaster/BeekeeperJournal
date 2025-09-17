@@ -1,10 +1,7 @@
 // HiveInfoActivity файл котрий спрацьовує при натисканні на кнопку "Вулик№"
 // оновлено
-// додаю коментар заради коміта
-// ще один коміт
 
 package com.beemaster.beekeeperjournal.activities
-
 
 import android.content.Intent
 import android.graphics.Color
@@ -124,22 +121,17 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         Log.d(TAG, "HiveInfoActivity: Отримано номер вулика: $currentHiveNumber")
         Log.d(TAG, "HiveInfoActivity: In onCreate, received hiveNumber: $currentHiveNumber")
 
-        // ✅ Читаємо тип запису з Intent. За замовчуванням "notes" або інший, якщо не передано.
         val initialEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "notes"
 
         currentHiveActualName = if (currentHiveNumber == 0) "Загальні записи" else "Вулик №$currentHiveNumber"
 
-        // ✅ Встановлюємо початковий тип записів на основі номера вулика
         currentEntryType = if (currentHiveNumber == 0) "general" else initialEntryType
         Log.d(TAG, "Тип записів встановлено: $currentEntryType")
 
-        // ✅ Оновлюємо UI та завантажуємо дані лише один раз при завантаженні
         updateUIAndLoadData(currentEntryType)
 
-        // ✅ Спостерігаємо за нотатками після початкового завантаження
         observeNotes()
     }
-
     private fun observeNotes() {
         lifecycleScope.launch {
             viewModel.notes.collect { notes ->
@@ -205,7 +197,6 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
         infoTitle.text = title
 
-        // ✅ Визначаємо видимість кнопок тут
         if (currentHiveNumber == 0) {
             queenBtn.visibility = View.GONE
             hiveInfoBtn.visibility = View.GONE
@@ -220,12 +211,8 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     }
 
     private fun showInfo(entryType: String) {
-        // ✅ Ця функція тепер просто викликає нову функцію
         updateUIAndLoadData(entryType)
     }
-
-    // У файлі HiveInfoActivity.kt
-
     private fun openNoteEditorActivity(startVoiceInput: Boolean = false) {
         val intent = Intent(this, EditNoteActivity::class.java).apply {
             putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, currentEntryType)
@@ -234,9 +221,6 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             putExtra(EditNoteActivity.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
         startActivity(intent)
-
-        // ✅ НІЯКОГО finish() та затримок тут.
-        // HiveInfoActivity просто запускає нову активність.
     }
 
     private fun showNoteOptionsDialog(note: NoteEntity) {
@@ -261,7 +245,6 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             }
             .show()
     }
-
     private fun showDeleteConfirmationDialog(note: NoteEntity) {
         AlertDialog.Builder(this)
             .setTitle("Видалити запис?")
