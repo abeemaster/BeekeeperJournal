@@ -60,6 +60,7 @@ dependencies {
     // Hilt залежності з KSP
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    implementation(libs.hilt.navigation.fragment)
 
     // ROOM залежності
     implementation(libs.androidx.lifecycle.livedata.ktx)
@@ -67,6 +68,4 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.ambilwarna)
-    implementation(libs.hilt.android)
-    implementation(libs.hilt.navigation.fragment)
 }
