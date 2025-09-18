@@ -58,7 +58,8 @@
         <activity
             android:name=".activities.SettingsActivity"
             android:label="Налаштування" />
-        <activity android:name=".activities.ColorPickerActivity" />
+        <activity
+            android:name=".activities.ColorPickerActivity" />
 
     </application>
 

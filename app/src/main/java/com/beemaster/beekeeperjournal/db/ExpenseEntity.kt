@@ -14,6 +14,7 @@ data class ExpenseEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val date: Date,
-    val name: String,
-    val amount: Double
+    val name: String, // (назва витрати)
+    // val quantity: Double, // (кількість продукції)
+    val amount: Double // (загальна сума)
 )

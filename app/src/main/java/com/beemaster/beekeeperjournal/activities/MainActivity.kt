@@ -2,6 +2,7 @@
 
 package com.beemaster.beekeeperjournal.activities
 
+import android.R.attr.type
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
@@ -105,6 +106,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val intent = Intent(this, HiveInfoActivity::class.java).apply {
                     putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, hive.hiveNumber)
                 }
+                Log.d("MainActivity", "onClick: Передача номера вулика: ${hive.hiveNumber} тип: $type\"")
                 startActivity(intent)
             },
             onLongClick = { hive ->

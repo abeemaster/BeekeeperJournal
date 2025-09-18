@@ -1,7 +1,5 @@
 // HiveAdapter
-
-// HiveAdapter
-// HiveAdapter
+// Оновлено
 
 package com.beemaster.beekeeperjournal.adapters
 
@@ -17,43 +15,20 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.db.HiveEntity
 
-
 class HiveAdapter(
     private val onClick: (HiveEntity) -> Unit,
     private val onLongClick: (HiveEntity) -> Unit
 ) : ListAdapter<HiveEntity, HiveAdapter.HiveViewHolder>(HiveDiffCallback) {
 
-
     class HiveViewHolder(
-        itemView: View,
-        val onClick: (HiveEntity) -> Unit,
-        val onLongClick: (HiveEntity) -> Unit
+        itemView: View
     ) : RecyclerView.ViewHolder(itemView) {
-
         private val hivePrimaryColorView: View = itemView.findViewById(R.id.item_hive_primary_color)
         private val hiveNameTextView: TextView = itemView.findViewById(R.id.item_hive_name)
         private val secondaryColorView: View = itemView.findViewById(R.id.secondaryColorView)
 
-        private var currentHive: HiveEntity? = null
-
-        init {
-            itemView.setOnClickListener {
-                currentHive?.let {
-                    onClick(it)
-                }
-            }
-            itemView.setOnLongClickListener {
-                currentHive?.let { hive ->
-                    onLongClick(hive)
-                }
-                true
-            }
-        }
-
-        fun bind(hive: HiveEntity) {
-            currentHive = hive
+        fun bind(hive: HiveEntity, onClick: (HiveEntity) -> Unit, onLongClick: (HiveEntity) -> Unit) {
             hiveNameTextView.text = hive.name
-
             hivePrimaryColorView.setBackgroundColor(hive.color)
 
             if (hive.secondaryColor != 0) {
@@ -63,20 +38,30 @@ class HiveAdapter(
             } else {
                 secondaryColorView.visibility = View.INVISIBLE
             }
+
             val optionsButton: ImageButton = itemView.findViewById(R.id.optionsButton)
             optionsButton.visibility = View.GONE
+
+            // ✅ ЗМІНА: Клік-слухач додано в bind(), щоб гарантувати, що він працює з правильним об'єктом.
+            itemView.setOnClickListener {
+                onClick(hive)
+            }
+            itemView.setOnLongClickListener {
+                onLongClick(hive)
+                true
+            }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HiveViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_hive, parent, false)
-        return HiveViewHolder(view, onClick, onLongClick)
+        return HiveViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: HiveViewHolder, position: Int) {
         val hive = getItem(position)
-        holder.bind(hive)
+        holder.bind(hive, onClick, onLongClick)
     }
 
     object HiveDiffCallback : DiffUtil.ItemCallback<HiveEntity>() {

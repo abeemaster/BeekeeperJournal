@@ -38,8 +38,13 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
     companion object {
         private const val TAG = "HiveInfoActivity"
+        const val EXTRA_HIVE_ID = "com.beemaster.beekeeperjournal.HIVE_ID"
         const val EXTRA_HIVE_NUMBER = "com.beemaster.beekeeperjournal.HIVE_NUMBER"
+        const val EXTRA_HIVE_NAME = "com.beemaster.beekeeperjournal.HIVE_NAME"
+        const val EXTRA_HIVE_COLOR = "com.beemaster.beekeeperjournal.HIVE_COLOR"
+        const val EXTRA_HIVE_SECONDARY_COLOR = "com.beemaster.beekeeperjournal.HIVE_SECONDARY_COLOR"
         const val EXTRA_ENTRY_TYPE = "com.beemaster.beekeeperjournal.ENTRY_TYPE"
+
     }
 
     private lateinit var drawerLayout: DrawerLayout
@@ -54,9 +59,8 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private lateinit var notesBtn: Button
     private lateinit var currentHiveActualName: String
 
-    private var currentHiveNumber: Int = 0
+    private var currentHiveNumber: String? = null
     private var currentEntryType: String = ""
-
     private val viewModel: HiveInfoViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,15 +121,15 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     }
 
     private fun loadInitialData() {
-        currentHiveNumber = intent.getIntExtra(EXTRA_HIVE_NUMBER, 0)
+        currentHiveNumber = intent.getStringExtra(EXTRA_HIVE_NUMBER)
         Log.d(TAG, "HiveInfoActivity: Отримано номер вулика: $currentHiveNumber")
         Log.d(TAG, "HiveInfoActivity: In onCreate, received hiveNumber: $currentHiveNumber")
 
-        val initialEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "notes"
+        val initialEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "hive"
 
-        currentHiveActualName = if (currentHiveNumber == 0) "Загальні записи" else "Вулик №$currentHiveNumber"
+        currentHiveActualName = if (currentHiveNumber.isNullOrEmpty()) "Загальні записи" else "Вулик №$currentHiveNumber"
 
-        currentEntryType = if (currentHiveNumber == 0) "general" else initialEntryType
+        currentEntryType = if (currentHiveNumber.isNullOrEmpty()) "general" else initialEntryType
         Log.d(TAG, "Тип записів встановлено: $currentEntryType")
 
         updateUIAndLoadData(currentEntryType)
@@ -184,12 +188,11 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
     }
 
-    // ✅ НОВА ФУНКЦІЯ: відповідає лише за оновлення UI та завантаження нотаток
     private fun updateUIAndLoadData(entryType: String) {
         currentEntryType = entryType
 
         val title: String = when {
-            currentHiveNumber == 0 -> "Загальні записи"
+            currentHiveNumber.isNullOrEmpty() -> "Загальні записи"
             entryType == "queen" -> "Матка $currentHiveActualName"
             entryType == "hive" -> " $currentHiveActualName"
             entryType == "notes" -> "Примітки $currentHiveActualName"
@@ -197,7 +200,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
         infoTitle.text = title
 
-        if (currentHiveNumber == 0) {
+        if (currentHiveNumber.isNullOrEmpty()) {
             queenBtn.visibility = View.GONE
             hiveInfoBtn.visibility = View.GONE
             notesBtn.visibility = View.GONE
@@ -206,8 +209,8 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             hiveInfoBtn.visibility = View.VISIBLE
             notesBtn.visibility = View.VISIBLE
         }
-        Log.d(TAG, "HiveInfoActivity: Запитуємо нотатки для номера: $currentHiveNumber і типу: $currentEntryType")
-        viewModel.getNotesForHive(currentHiveNumber, currentEntryType)
+        Log.d(TAG, "HiveInfoActivity: Запитуємо нотатки для номера: ${currentHiveNumber?.toIntOrNull() ?: 0} і типу: $currentEntryType")
+        viewModel.getNotesForHive(currentHiveNumber?.toIntOrNull() ?: 0, currentEntryType)
     }
 
     private fun showInfo(entryType: String) {
@@ -233,7 +236,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                         val intent = Intent(this, EditNoteActivity::class.java).apply {
                             putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
                             putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.content)
-                            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveId)
+                            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveId.toString())
                             putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
                         }
                         startActivity(intent)

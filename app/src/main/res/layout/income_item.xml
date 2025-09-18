@@ -11,6 +11,7 @@
         android:paddingEnd="16dp"
         android:paddingBottom="8dp">
 
+
         <TextView
             android:id="@+id/tvDescription"
             android:layout_width="wrap_content"
