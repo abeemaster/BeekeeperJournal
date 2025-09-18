@@ -121,14 +121,25 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     }
 
     private fun loadInitialData() {
+        // Отримуємо номер вулика
         currentHiveNumber = intent.getStringExtra(EXTRA_HIVE_NUMBER)
+        // Отримуємо ім'я вулика
+        val hiveNameFromIntent = intent.getStringExtra(EXTRA_HIVE_NAME)
+
+        // Встановлюємо фактичне ім'я вулика, якщо воно було передано
+        currentHiveActualName = if (!hiveNameFromIntent.isNullOrEmpty()) {
+            hiveNameFromIntent
+        } else if (!currentHiveNumber.isNullOrEmpty()) {
+            "Вулик №$currentHiveNumber"
+        } else {
+            "Загальні записи"
+        }
+
         Log.d(TAG, "HiveInfoActivity: Отримано номер вулика: $currentHiveNumber")
-        Log.d(TAG, "HiveInfoActivity: In onCreate, received hiveNumber: $currentHiveNumber")
+        Log.d(TAG, "HiveInfoActivity: In onCreate, received hiveName: $currentHiveActualName")
+
 
         val initialEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "hive"
-
-        currentHiveActualName = if (currentHiveNumber.isNullOrEmpty()) "Загальні записи" else "Вулик №$currentHiveNumber"
-
         currentEntryType = if (currentHiveNumber.isNullOrEmpty()) "general" else initialEntryType
         Log.d(TAG, "Тип записів встановлено: $currentEntryType")
 
