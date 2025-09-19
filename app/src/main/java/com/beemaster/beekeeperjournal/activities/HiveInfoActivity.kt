@@ -230,7 +230,9 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private fun openNoteEditorActivity(startVoiceInput: Boolean = false) {
         val intent = Intent(this, EditNoteActivity::class.java).apply {
             putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, currentEntryType)
-            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, currentHiveNumber)
+            // ✅ Використовуємо toIntOrNull() для безпечного перетворення на Int.
+            // Це забезпечує, що EditNoteActivity отримає правильний тип даних.
+            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, currentHiveNumber?.toIntOrNull() ?: 0)
             putExtra(EditNoteActivity.EXTRA_HIVE_NAME, currentHiveActualName)
             putExtra(EditNoteActivity.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
@@ -247,7 +249,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                         val intent = Intent(this, EditNoteActivity::class.java).apply {
                             putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
                             putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.content)
-                            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveId.toString())
+                            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveId)
                             putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
                         }
                         startActivity(intent)
