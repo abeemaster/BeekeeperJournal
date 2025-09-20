@@ -6,7 +6,7 @@ package com.beemaster.beekeeperjournal.adapters
 
 import androidx.recyclerview.widget.DiffUtil
 
-class NoteDiffCallback(
+class NoteAdapter(
     private val oldList: List<NoteSearchResult>,
     private val newList: List<NoteSearchResult>
 ) : DiffUtil.Callback() {

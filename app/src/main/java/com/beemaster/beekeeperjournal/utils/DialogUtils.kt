@@ -8,12 +8,11 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.GridLayout
-import android.widget.TextView
 import android.widget.Toast
 import com.beemaster.beekeeperjournal.R
-import com.beemaster.beekeeperjournal.db.ExpenseEntity
-import com.beemaster.beekeeperjournal.db.HiveEntity
-import com.beemaster.beekeeperjournal.db.IncomeEntity
+import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
+import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat

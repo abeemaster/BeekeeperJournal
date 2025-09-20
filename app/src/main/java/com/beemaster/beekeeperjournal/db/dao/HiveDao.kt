@@ -1,19 +1,17 @@
-// HiveDao.kt у вашому пакеті Цей DAO буде відповідати за всі операції з таблицею hives.
-// Ці інтерфейси міститимуть методи для взаємодії з таблицями.
-
-package com.beemaster.beekeeperjournal.db
+package com.beemaster.beekeeperjournal.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HiveDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertHive(hive: HiveEntity)
 
     @Update
@@ -40,11 +38,17 @@ interface HiveDao {
     @Query("DELETE FROM hives")
     suspend fun deleteAllHives()
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertAllHives(hives: List<HiveEntity>)
 
     suspend fun clearAndInsertHives(hives: List<HiveEntity>) {
         deleteAllHives()
         insertAllHives(hives)
     }
+    // ✅ Додано: метод для отримання всіх вуликів
+
+
+    // ✅ Додано: метод для імпорту списку вуликів
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHives(hives: List<HiveEntity>)
 }

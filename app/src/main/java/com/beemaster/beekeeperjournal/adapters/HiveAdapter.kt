@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.activities.HiveInfoActivity
-import com.beemaster.beekeeperjournal.db.HiveEntity
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 
 
 class HiveAdapter(

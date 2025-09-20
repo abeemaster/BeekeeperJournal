@@ -4,10 +4,14 @@ package com.beemaster.beekeeperjournal.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.beemaster.beekeeperjournal.db.HiveEntity
-import com.beemaster.beekeeperjournal.db.NaturalHiveNumberComparator
-import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
+import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
+import com.beemaster.beekeeperjournal.db.entity.NaturalHiveNumberComparator
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
+import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
+import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -21,8 +25,9 @@ import javax.inject.Inject
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
     private val hiveRepository: HiveRepository,
-    private val noteRepository: NoteRepository, // ✅ Додано залежність NoteRepository
-    private val repository: NoteRepository
+    private val noteRepository: NoteRepository,
+    private val expenseRepository: ExpenseRepository,
+    private val incomeRepository: IncomeRepository
 ) : ViewModel() {
 
     private val _hives = hiveRepository.getAllHivesAsFlow()
@@ -54,26 +59,40 @@ class MainActivityViewModel @Inject constructor(
             hiveRepository.deleteHive(hiveEntity)
         }
     }
-    // ✅ Виправлено виклик, щоб використовувати ін'єктований noteRepository
+
     fun addNote(note: NoteEntity) = viewModelScope.launch {
         noteRepository.insertNote(note)
     }
 
-    // ✅ Додаємо методи для експорту даних
     suspend fun getAllHivesSuspend(): List<HiveEntity> {
-        return repository.getAllHivesSuspend()
+        return hiveRepository.getAllHivesSuspend()
     }
 
     suspend fun getAllNotesSuspend(): List<NoteEntity> {
-        return repository.getAllNotesSuspend()
+        return noteRepository.getAllNotesSuspend()
     }
 
-    // ✅ Додаємо методи для імпорту даних
+    suspend fun getAllExpensesSuspend(): List<ExpenseEntity> {
+        return expenseRepository.getAllExpensesSuspend()
+    }
+
+    suspend fun getAllIncomesSuspend(): List<IncomeEntity> {
+        return incomeRepository.getAllIncomesSuspend()
+    }
+
     fun importHives(hives: List<HiveEntity>) = viewModelScope.launch(Dispatchers.IO) {
-        repository.importHives(hives)
+        hiveRepository.importHives(hives)
     }
 
     fun importNotes(notes: List<NoteEntity>) = viewModelScope.launch(Dispatchers.IO) {
-        repository.importNotes(notes)
+        noteRepository.importNotes(notes)
+    }
+
+    fun importExpenses(expenses: List<ExpenseEntity>) = viewModelScope.launch(Dispatchers.IO) {
+        expenseRepository.importExpenses(expenses)
+    }
+
+    fun importIncomes(incomes: List<IncomeEntity>) = viewModelScope.launch(Dispatchers.IO) {
+        incomeRepository.importIncomes(incomes)
     }
 }

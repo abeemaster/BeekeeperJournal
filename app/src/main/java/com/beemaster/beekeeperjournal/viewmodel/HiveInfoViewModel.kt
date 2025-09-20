@@ -3,7 +3,7 @@ package com.beemaster.beekeeperjournal.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

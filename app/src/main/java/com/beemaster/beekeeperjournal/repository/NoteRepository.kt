@@ -5,10 +5,10 @@ package com.beemaster.beekeeperjournal.repository
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
-import com.beemaster.beekeeperjournal.db.HiveDao
-import com.beemaster.beekeeperjournal.db.HiveEntity
-import com.beemaster.beekeeperjournal.db.NoteDao
-import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.db.dao.HiveDao
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
+import com.beemaster.beekeeperjournal.db.dao.NoteDao
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow

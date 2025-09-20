@@ -34,7 +34,7 @@ import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.activities.HiveInfoActivity
 import com.beemaster.beekeeperjournal.activities.EditNoteActivity

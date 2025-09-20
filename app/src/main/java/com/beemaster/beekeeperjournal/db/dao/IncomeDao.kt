@@ -1,11 +1,17 @@
-package com.beemaster.beekeeperjournal.db
+package com.beemaster.beekeeperjournal.db.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface IncomeDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertIncome(income: IncomeEntity)
 
     @Update
@@ -29,4 +35,15 @@ interface IncomeDao {
     @Query("SELECT * FROM incomes WHERE id = :incomeId")
     suspend fun getIncomeById(incomeId: Int): IncomeEntity?
 
+    // ✅ Додано: метод для отримання всіх прибутків для бекапу
+    @Query("SELECT * FROM incomes")
+    suspend fun getAllIncomesSuspend(): List<IncomeEntity>
+
+    // ✅ Додано: метод для імпорту списку прибутків
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertIncomes(incomes: List<IncomeEntity>)
+
+    // ✅ Додано: метод для очищення та імпорту
+    @Query("DELETE FROM incomes")
+    suspend fun deleteAllIncomes()
 }

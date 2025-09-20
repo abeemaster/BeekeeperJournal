@@ -1,17 +1,16 @@
-// db.NoteDao DAO — це інтерфейс, який містить методи для виконання запитів до бази даних, наприклад, insert, update, delete та query.
-
-package com.beemaster.beekeeperjournal.db
+package com.beemaster.beekeeperjournal.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertNote(note: NoteEntity)
 
     @Update
@@ -39,7 +38,7 @@ interface NoteDao {
     suspend fun deleteAllNotes()
 
     // ✅ Вставляємо всі нотатки. OnConflictStrategy.REPLACE замінить існуючі записи з тими ж первинними ключами
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertAllNotes(notes: List<NoteEntity>)
 
     // ✅ Об'єднуємо операції очищення та вставки в одну транзакцію

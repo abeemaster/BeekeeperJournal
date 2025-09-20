@@ -63,7 +63,7 @@ class SearchResultsAdapter(
     override fun getItemCount(): Int = searchResults.size
 
     fun updateData(newResults: List<NoteSearchResult>) {
-        val diffCallback = NoteDiffCallback(searchResults, newResults)
+        val diffCallback = NoteAdapter(searchResults, newResults)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
 
         searchResults.clear()

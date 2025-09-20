@@ -7,6 +7,14 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.beemaster.beekeeperjournal.db.dao.ExpenseDao
+import com.beemaster.beekeeperjournal.db.dao.HiveDao
+import com.beemaster.beekeeperjournal.db.dao.IncomeDao
+import com.beemaster.beekeeperjournal.db.dao.NoteDao
+import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
+import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 
 @Database(entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)

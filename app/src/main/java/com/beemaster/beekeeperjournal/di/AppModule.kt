@@ -5,12 +5,12 @@ package com.beemaster.beekeeperjournal.di
 import android.content.Context
 import androidx.room.Room
 import com.beemaster.beekeeperjournal.db.AppDatabase
-import com.beemaster.beekeeperjournal.db.ExpenseDao
-import com.beemaster.beekeeperjournal.db.HiveDao
-import com.beemaster.beekeeperjournal.db.IncomeDao
+import com.beemaster.beekeeperjournal.db.dao.ExpenseDao
+import com.beemaster.beekeeperjournal.db.dao.HiveDao
+import com.beemaster.beekeeperjournal.db.dao.IncomeDao
 import com.beemaster.beekeeperjournal.db.MIGRATION_1_2
 import com.beemaster.beekeeperjournal.db.MIGRATION_2_3
-import com.beemaster.beekeeperjournal.db.NoteDao
+import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository

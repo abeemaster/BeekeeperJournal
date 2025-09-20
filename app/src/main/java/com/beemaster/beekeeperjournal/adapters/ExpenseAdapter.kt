@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
-import com.beemaster.beekeeperjournal.db.ExpenseEntity
+import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
 import java.text.SimpleDateFormat
 import java.util.Locale
 

@@ -10,6 +10,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.beemaster.beekeeperjournal.db.dao.HiveDao
+import com.beemaster.beekeeperjournal.db.dao.NoteDao
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 
 @Database(entities = [NoteEntity::class, HiveEntity::class], version = 1, exportSchema = false)
 abstract class NoteDatabase : RoomDatabase() {

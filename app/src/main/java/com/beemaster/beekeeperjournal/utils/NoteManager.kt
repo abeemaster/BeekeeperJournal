@@ -3,7 +3,7 @@
 package com.beemaster.beekeeperjournal.utils
 
 import android.util.Log
-import com.beemaster.beekeeperjournal.db.NoteEntity
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import kotlinx.coroutines.flow.Flow

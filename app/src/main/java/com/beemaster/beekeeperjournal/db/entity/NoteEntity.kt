@@ -1,11 +1,9 @@
-// NoteEntity сутність, яку Room буде зберігати в базі даних. Зберігатиме дані про вулики.
-// Цей клас описуватиме кожну нотатку.
-
-package com.beemaster.beekeeperjournal.db
+package com.beemaster.beekeeperjournal.db.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import com.beemaster.beekeeperjournal.db.Converters
 
 @Entity(tableName = "notes")
 @TypeConverters(Converters::class)

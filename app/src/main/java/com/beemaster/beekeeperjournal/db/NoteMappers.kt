@@ -2,6 +2,7 @@
 
 package com.beemaster.beekeeperjournal.db
 
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.models.Note
 import java.text.SimpleDateFormat
 import java.util.*

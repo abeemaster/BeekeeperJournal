@@ -3,8 +3,8 @@
 
 package com.beemaster.beekeeperjournal.repository
 
-import com.beemaster.beekeeperjournal.db.ExpenseDao
-import com.beemaster.beekeeperjournal.db.ExpenseEntity
+import com.beemaster.beekeeperjournal.db.dao.ExpenseDao
+import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -36,5 +36,13 @@ class ExpenseRepository @Inject constructor(
 
     suspend fun getExpenseById(expenseId: Int): ExpenseEntity? {
         return expenseDao.getExpenseById(expenseId)
+    }
+
+    suspend fun getAllExpensesSuspend(): List<ExpenseEntity> {
+        return expenseDao.getAllExpensesSuspend()
+    }
+
+    suspend fun importExpenses(expenses: List<ExpenseEntity>) {
+        return expenseDao.insertExpenses(expenses)
     }
 }

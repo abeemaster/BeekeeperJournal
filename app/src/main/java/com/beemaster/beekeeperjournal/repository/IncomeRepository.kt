@@ -3,8 +3,8 @@
 
 package com.beemaster.beekeeperjournal.repository
 
-import com.beemaster.beekeeperjournal.db.IncomeDao
-import com.beemaster.beekeeperjournal.db.IncomeEntity
+import com.beemaster.beekeeperjournal.db.dao.IncomeDao
+import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -38,4 +38,11 @@ class IncomeRepository @Inject constructor(
         return incomeDao.getIncomeById(incomeId)
     }
 
+    suspend fun getAllIncomesSuspend(): List<IncomeEntity> {
+        return incomeDao.getAllIncomesSuspend()
+    }
+
+    suspend fun importIncomes(incomes: List<IncomeEntity>) {
+        return incomeDao.insertIncomes(incomes)
+    }
 }

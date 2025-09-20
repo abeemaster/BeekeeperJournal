@@ -9,8 +9,8 @@ package com.beemaster.beekeeperjournal.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.beemaster.beekeeperjournal.db.ExpenseEntity
-import com.beemaster.beekeeperjournal.db.IncomeEntity
+import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
+import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

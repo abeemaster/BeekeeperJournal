@@ -1,7 +1,7 @@
 // HiveEntity сутність, яку Room буде зберігати в базі даних. Зберігатиме дані про кожен вулик.
 // Цей клас описуватиме кожен вулик.
 
-package com.beemaster.beekeeperjournal.db
+package com.beemaster.beekeeperjournal.db.entity
 import java.util.Comparator
 
 import androidx.room.Entity

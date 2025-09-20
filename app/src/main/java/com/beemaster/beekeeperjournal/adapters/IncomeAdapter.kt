@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.databinding.IncomeItemBinding
-import com.beemaster.beekeeperjournal.db.IncomeEntity
+import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import java.text.SimpleDateFormat
 import java.util.Locale
 

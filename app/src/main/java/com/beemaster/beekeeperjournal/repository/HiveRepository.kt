@@ -6,9 +6,9 @@
 
 package com.beemaster.beekeeperjournal.repository
 
-import com.beemaster.beekeeperjournal.db.HiveDao
-import com.beemaster.beekeeperjournal.db.NoteDao
-import com.beemaster.beekeeperjournal.db.HiveEntity
+import com.beemaster.beekeeperjournal.db.dao.HiveDao
+import com.beemaster.beekeeperjournal.db.dao.NoteDao
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -50,5 +50,15 @@ class HiveRepository @Inject constructor(
     // ✅ ДОДАНО: Метод для видалення вулика
     suspend fun deleteHive(hive: HiveEntity) {
         hiveDao.deleteHive(hive.id)
+    }
+
+    // ✅ Додано: метод для отримання всіх вуликів
+    suspend fun getAllHivesSuspend(): List<HiveEntity> {
+        return hiveDao.getAllHivesSuspend()
+    }
+
+    // ✅ Додано: метод для імпорту вуликів
+    suspend fun importHives(hives: List<HiveEntity>) {
+        hiveDao.insertHives(hives)
     }
 }
