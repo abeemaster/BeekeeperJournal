@@ -213,6 +213,7 @@ object DialogUtils {
         val view = LayoutInflater.from(context).inflate(R.layout.expense_dialog, null)
         // ✅ Використовуємо правильні назви змінних
         val nameEditText: EditText = view.findViewById(R.id.expense_name_edit_text)
+        val quantityEditText: EditText = view.findViewById(R.id.expense_quantity)
         val amountEditText: EditText = view.findViewById(R.id.expense_amount_edit_text)
         val dateEditText: EditText = view.findViewById(R.id.expense_date_edit_text)
         val saveButton: Button = view.findViewById(R.id.save_expense_button)
@@ -242,6 +243,7 @@ object DialogUtils {
 
         saveButton.setOnClickListener {
             val name = nameEditText.text.toString().trim()
+            val quantityUnits = quantityEditText.text.toString().toDoubleOrNull() ?: 0.0
             val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
             val date = calendar.time // ✅ Використовуємо об'єкт Date
 
@@ -250,7 +252,8 @@ object DialogUtils {
                 val newExpense = ExpenseEntity(
                     name = name,
                     amount = amount,
-                    date = date
+                    date = date,
+                    quantityUnits = quantityUnits
                 )
                 viewModel.addExpense(newExpense)
                 dialog.dismiss()

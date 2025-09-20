@@ -16,6 +16,6 @@ data class ExpenseEntity(
     val id: Int = 0,
     val date: Date,
     val name: String, // (назва витрати)
-    // val quantity: Double, // (кількість продукції)
+    val quantityUnits: Double, // (кількість продукції)
     val amount: Double // (загальна сума)
 )

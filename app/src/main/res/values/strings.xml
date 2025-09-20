@@ -69,6 +69,7 @@
     <string name="expense_description_hint">Опис (наприклад, \"Цукор для підгодівлі\")</string>
     <string name="expense_total_price_hint">Загальна сума витрат (наприклад, 500)</string>
     <string name="color_picker_title">Оберіть колір</string>
+    <string name="expense_quantity_hint">Кількість</string>
 
 
 </resources>
