@@ -17,6 +17,7 @@ data class IncomeEntity(
     val date: Date,
     val productName: String, // (назва продукції)
     val quantity: Double, // (кількість продукції)
+    val unitName: String, // (одиниця виміру)
     val price: Double, // (ціна за одиницю)
     val totalAmount: Double // (загальна сума, отримана з продажу)
 )

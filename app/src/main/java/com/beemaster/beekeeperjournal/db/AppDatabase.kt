@@ -16,7 +16,7 @@ import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 
-@Database(entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class], version = 5, exportSchema = false)
+@Database(entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class], version = 6, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun hiveDao(): HiveDao
@@ -26,22 +26,22 @@ abstract class AppDatabase : RoomDatabase() {
 }
 
 val MIGRATION_1_2: Migration = object : Migration(1, 2) {
-    override fun migrate(database: SupportSQLiteDatabase) {
+    override fun migrate(db: SupportSQLiteDatabase) {
 // SQL-запит для зміни стовпця hiveNumber з INT на TEXT
-        database.execSQL("ALTER TABLE hives RENAME COLUMN hiveNumber TO hiveNumber_temp;")
-        database.execSQL("ALTER TABLE hives ADD COLUMN hiveNumber TEXT;")
-        database.execSQL("UPDATE hives SET hiveNumber = hiveNumber_temp;")
-        database.execSQL("ALTER TABLE hives DROP COLUMN hiveNumber_temp;")
+        db.execSQL("ALTER TABLE hives RENAME COLUMN hiveNumber TO hiveNumber_temp;")
+        db.execSQL("ALTER TABLE hives ADD COLUMN hiveNumber TEXT;")
+        db.execSQL("UPDATE hives SET hiveNumber = hiveNumber_temp;")
+        db.execSQL("ALTER TABLE hives DROP COLUMN hiveNumber_temp;")
     }
 }
 
 // ✅ Оновлено: Об'єкт міграції. Створюємо нові таблиці.
 val MIGRATION_2_3: Migration = object : Migration(2, 3) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL(
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
             "CREATE TABLE IF NOT EXISTS `expenses` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` INTEGER NOT NULL, `name` TEXT NOT NULL, `amount` REAL NOT NULL)"
         )
-        database.execSQL(
+        db.execSQL(
             "CREATE TABLE IF NOT EXISTS `incomes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` INTEGER NOT NULL, `productName` TEXT NOT NULL, `quantity` REAL NOT NULL, `price` REAL NOT NULL, `totalAmount` REAL NOT NULL)"
         )
     }
@@ -49,17 +49,25 @@ val MIGRATION_2_3: Migration = object : Migration(2, 3) {
 
 // ✅ Нова міграція для додавання поля quantityUnits
 val MIGRATION_3_4: Migration = object : Migration(3, 4) {
-    override fun migrate(database: SupportSQLiteDatabase) {
+    override fun migrate(db: SupportSQLiteDatabase) {
         // SQL-запит для додавання нового стовпця 'quantityUnits' до таблиці expenses
-        database.execSQL("ALTER TABLE expenses ADD COLUMN quantityUnits REAL NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE expenses ADD COLUMN quantityUnits REAL NOT NULL DEFAULT ''")
     }
 
 }
 // ✅ Нова міграція для додавання поля nameQuantity
 val MIGRATION_4_5: Migration = object : Migration(4, 5) {
-    override fun migrate(database: SupportSQLiteDatabase) {
+    override fun migrate(db: SupportSQLiteDatabase) {
         // SQL-запит для додавання нового стовпця 'nameQuantity' до таблиці expenses
-        database.execSQL("ALTER TABLE expenses ADD COLUMN nameQuantity TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE expenses ADD COLUMN nameQuantity TEXT NOT NULL DEFAULT ''")
+    }
+
+}
+// ✅ Нова міграція для додавання поля unitName
+val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // SQL-запит для додавання нового стовпця 'unitName' до таблиці expenses
+        db.execSQL("ALTER TABLE incomes ADD COLUMN unitName TEXT NOT NULL DEFAULT ''")
     }
 
 }

@@ -187,6 +187,7 @@ object DialogUtils {
         saveButton.setOnClickListener {
             // ✅ Використовуємо правильні назви полів з UI
             val productName = descriptionEditText.text.toString().trim()
+            val unitName = unitEditText.text.toString().trim()
             val quantity = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
             val price = pricePerUnitEditText.text.toString().toDoubleOrNull() ?: 0.0
             val date = calendar.time // ✅ Використовуємо об'єкт Date, а не Long
@@ -197,9 +198,9 @@ object DialogUtils {
                     productName = productName,
                     quantity = quantity,
                     price = price,
+                    unitName = unitName,
                     totalAmount = quantity * price, // ✅ Обчислюємо totalAmount
                     date = date,
-                    // hiveId = hiveId // Якщо це поле існує
                 )
                 viewModel.addIncome(newIncome)
                 dialog.dismiss()

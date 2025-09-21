@@ -12,6 +12,7 @@ import com.beemaster.beekeeperjournal.db.MIGRATION_1_2
 import com.beemaster.beekeeperjournal.db.MIGRATION_2_3
 import com.beemaster.beekeeperjournal.db.MIGRATION_3_4
 import com.beemaster.beekeeperjournal.db.MIGRATION_4_5
+import com.beemaster.beekeeperjournal.db.MIGRATION_5_6
 import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
@@ -36,8 +37,7 @@ object AppModule {
             AppDatabase::class.java,
             "beekeeper_journal_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
     }
     @Provides
