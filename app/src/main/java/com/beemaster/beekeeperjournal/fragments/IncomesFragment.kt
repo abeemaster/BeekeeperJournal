@@ -18,6 +18,7 @@ import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @AndroidEntryPoint
 class IncomesFragment : Fragment() {
@@ -40,15 +41,14 @@ class IncomesFragment : Fragment() {
 
         setupRecyclerView()
         observeIncomes()
+        observeTotalIncome()
 
-        // ✅ ПОМИЛКА ВИПРАВЛЕНА: Передаємо hiveId = 0 для загальних прибутків
         binding.fabAddIncome.setOnClickListener {
             DialogUtils.showAddIncomeDialog(requireContext(), viewModel, 0)
         }
     }
 
     private fun setupRecyclerView() {
-        // ✅ ПОМИЛКА ВИПРАВЛЕНА: Конструктор адаптера більше не потребує списку
         incomeAdapter = IncomeAdapter { incomeEntity ->
             // Обробник натискання на елемент списку
         }
@@ -61,8 +61,17 @@ class IncomesFragment : Fragment() {
     private fun observeIncomes() {
         lifecycleScope.launch {
             viewModel.incomes.collect { incomes ->
-                // ✅ ПОМИЛКА ВИПРАВЛЕНА: Використовуємо submitList для оновлення даних в адаптері
                 incomeAdapter.submitList(incomes)
+            }
+        }
+    }
+
+    // ✅ Новий метод для спостереження за загальним прибутком
+    private fun observeTotalIncome() {
+        lifecycleScope.launch {
+            viewModel.totalIncome.collect { totalIncome ->
+                val formattedTotal = String.format(Locale.getDefault(),"%.2f грн", totalIncome ?: 0.0)
+                binding.totalIncomeTextView.text = getString(R.string.total_income_text, formattedTotal)
             }
         }
     }

@@ -71,6 +71,7 @@
     <string name="color_picker_title">Оберіть колір</string>
     <string name="expense_quantity_hint">Кількість</string>
     <string name="expense_units_hint">Одиниці виміру</string>
+    <string name="total_income_text">Загальний прибуток: %1$s</string>
 
 
 </resources>
