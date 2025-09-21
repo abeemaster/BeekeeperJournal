@@ -30,7 +30,7 @@ class ExpenseAdapter(private var expenses: List<ExpenseEntity>) :
 
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = expenses[position]
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd.MM.yy", Locale.getDefault())
         holder.date.text = dateFormat.format(expense.date)
         holder.description.text = expense.name
         holder.totalPrice.text = String.format(Locale.getDefault(), "-%.2f грн", expense.amount)

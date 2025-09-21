@@ -29,7 +29,7 @@ class IncomeAdapter(private val onClick: (IncomeEntity) -> Unit) :
     class IncomeViewHolder(private val binding: IncomeItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        private val dateFormat = SimpleDateFormat("dd.MM.yy", Locale.getDefault())
 
         fun bind(income: IncomeEntity, onClick: (IncomeEntity) -> Unit) {
             binding.tvDescription.text = income.productName

@@ -17,5 +17,6 @@ data class ExpenseEntity(
     val date: Date,
     val name: String, // (назва витрати)
     val quantityUnits: Double, // (кількість продукції)
+    val nameQuantity: String, // (одиниця виміру продукції)
     val amount: Double // (загальна сума)
 )

@@ -70,6 +70,7 @@
     <string name="expense_total_price_hint">Загальна сума витрат (наприклад, 500)</string>
     <string name="color_picker_title">Оберіть колір</string>
     <string name="expense_quantity_hint">Кількість</string>
+    <string name="expense_units_hint">Одиниці виміру</string>
 
 
 </resources>

@@ -16,7 +16,7 @@ import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 
-@Database(entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class], version = 3, exportSchema = false)
+@Database(entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class], version = 5, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun hiveDao(): HiveDao
@@ -45,4 +45,21 @@ val MIGRATION_2_3: Migration = object : Migration(2, 3) {
             "CREATE TABLE IF NOT EXISTS `incomes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` INTEGER NOT NULL, `productName` TEXT NOT NULL, `quantity` REAL NOT NULL, `price` REAL NOT NULL, `totalAmount` REAL NOT NULL)"
         )
     }
+}
+
+// ✅ Нова міграція для додавання поля quantityUnits
+val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // SQL-запит для додавання нового стовпця 'quantityUnits' до таблиці expenses
+        database.execSQL("ALTER TABLE expenses ADD COLUMN quantityUnits REAL NOT NULL DEFAULT ''")
+    }
+
+}
+// ✅ Нова міграція для додавання поля nameQuantity
+val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // SQL-запит для додавання нового стовпця 'nameQuantity' до таблиці expenses
+        database.execSQL("ALTER TABLE expenses ADD COLUMN nameQuantity TEXT NOT NULL DEFAULT ''")
+    }
+
 }

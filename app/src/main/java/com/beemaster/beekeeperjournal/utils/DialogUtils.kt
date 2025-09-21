@@ -214,6 +214,7 @@ object DialogUtils {
         // ✅ Використовуємо правильні назви змінних
         val nameEditText: EditText = view.findViewById(R.id.expense_name_edit_text)
         val quantityEditText: EditText = view.findViewById(R.id.expense_quantity)
+        val quantityUnitsEditText: EditText = view.findViewById(R.id.expense_quantity_units)
         val amountEditText: EditText = view.findViewById(R.id.expense_amount_edit_text)
         val dateEditText: EditText = view.findViewById(R.id.expense_date_edit_text)
         val saveButton: Button = view.findViewById(R.id.save_expense_button)
@@ -244,6 +245,7 @@ object DialogUtils {
         saveButton.setOnClickListener {
             val name = nameEditText.text.toString().trim()
             val quantityUnits = quantityEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val nameQuantity = quantityUnitsEditText.text.toString().trim()
             val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
             val date = calendar.time // ✅ Використовуємо об'єкт Date
 
@@ -253,7 +255,8 @@ object DialogUtils {
                     name = name,
                     amount = amount,
                     date = date,
-                    quantityUnits = quantityUnits
+                    quantityUnits = quantityUnits,
+                    nameQuantity = nameQuantity
                 )
                 viewModel.addExpense(newExpense)
                 dialog.dismiss()
