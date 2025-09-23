@@ -23,11 +23,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.HiveAdapter
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
+import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
-import com.beemaster.beekeeperjournal.utils.BackupManager // ✅ Імпорт нового класу
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -66,6 +66,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setupListeners()
         setupRecyclerView()
         observeHives()
+
+        // ✅ Додано: Перевірка та створення вулика за замовчуванням
+        lifecycleScope.launch {
+            // ✅ Виправлено: перевіряємо, чи існує вулик з номером "1" перед створенням
+            val existingHive = viewModel.getHiveByNumber("1")
+            if (existingHive == null) {
+                val defaultHive = HiveEntity(
+                    hiveNumber = "1",
+                    name = "Вулик 1",
+                    color = this@MainActivity.getColor(R.color.color_white),
+                    secondaryColor = 0
+                )
+                viewModel.addHive(defaultHive)
+            }
+        }
 
         backupManager = BackupManager(this, viewModel) // ✅ Ініціалізуємо BackupManager
     }
@@ -107,6 +122,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 DialogUtils.showHiveOptionsDialog(
                     context = this,
                     hive = hive,
+                    onEditNumber = {
+                        DialogUtils.showEditHiveNumberDialog(
+                            context = this,
+                            currentNumber = hive.hiveNumber,
+                            onSave = { newNumber ->
+                                val updatedHive = hive.copy(hiveNumber = newNumber)
+                                viewModel.updateHive(updatedHive)
+                                Toast.makeText(this, "Номер вулика оновлено!", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
                     onEditName = {
                         DialogUtils.showEditNameDialog(
                             context = this,

@@ -52,6 +52,7 @@
     <string name="delete_hive_title">Видалити вулик</string>
     <string name="delete_hive_message">Ви впевнені, що хочете видалити %s? Цю дію неможливо скасувати.</string>
     <string name="hive_name_hint">Введіть нову назву</string>
+    <string name="hive_number_hint">Введіть новий номер</string>
     <string name="save">Зберегти</string>
     <string name="delete">Видалити</string>
     <string name="cancel">Скасувати</string>
@@ -72,6 +73,8 @@
     <string name="expense_quantity_hint">Кількість</string>
     <string name="expense_units_hint">Одиниці виміру</string>
     <string name="total_income_text">Загальний прибуток: %1$s</string>
+    <string name="total_expenses_text">Загальні витрати: %s</string>
+    <string name="edit_hive_number_title">Змінити номер вулика</string>
 
 
 </resources>

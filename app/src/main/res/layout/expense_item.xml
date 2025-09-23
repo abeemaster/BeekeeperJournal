@@ -6,14 +6,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="16dp"
-    android:background="?android:attr/selectableItemBackground">
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/note_item_background">
 
     <TextView
         android:id="@+id/expense_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:text="11.09.2023" />
@@ -26,15 +28,16 @@
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/expense_date"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/expense_quantity"
+        app:layout_constraintEnd_toStartOf="@id/expense_total_price"
         tools:text="Цукор для підгодівлі" />
 
     <TextView
         android:id="@+id/expense_quantity"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="2dp"
-        android:textSize="16sp"
+        android:textSize="14sp"
+        android:gravity="end"
         app:layout_constraintTop_toTopOf="@id/expense_description"
         app:layout_constraintStart_toEndOf="@id/expense_description"
         app:layout_constraintEnd_toStartOf="@id/expense_quantity_units"
@@ -44,12 +47,12 @@
         android:id="@+id/expense_quantity_units"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textStyle="bold"
         android:layout_marginStart="2dp"
         app:layout_constraintTop_toTopOf="@id/expense_description"
         app:layout_constraintStart_toEndOf="@id/expense_quantity"
-        app:layout_constraintEnd_toStartOf="@id/expense_total_price"
+        app:layout_constraintEnd_toEndOf="parent"
         tools:text="кг" />
 
     <TextView
@@ -59,7 +62,8 @@
         android:layout_marginStart="8dp"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="@id/expense_description"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/expense_description"
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="-1500 грн" />
 

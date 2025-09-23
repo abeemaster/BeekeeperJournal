@@ -7,7 +7,6 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SectionsPagerAdapter
 import com.beemaster.beekeeperjournal.databinding.ActivityProfitabilityBinding
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel

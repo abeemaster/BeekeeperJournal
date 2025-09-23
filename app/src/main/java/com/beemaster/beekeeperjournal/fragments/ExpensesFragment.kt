@@ -11,12 +11,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.ExpenseAdapter
 import com.beemaster.beekeeperjournal.databinding.FragmentExpensesBinding
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @AndroidEntryPoint
 class ExpensesFragment : Fragment() {
@@ -39,9 +41,10 @@ class ExpensesFragment : Fragment() {
 
         setupRecyclerView()
         observeExpenses()
+        observeTotalExpense()
 
         binding.fabAddExpense.setOnClickListener {
-            DialogUtils.showAddExpenseDialog(requireContext(), viewModel)
+            DialogUtils.showAddExpenseDialog(requireContext(), viewModel, 0)
         }
     }
 
@@ -57,6 +60,15 @@ class ExpensesFragment : Fragment() {
         lifecycleScope.launch {
             viewModel.expenses.collect { expenses ->
                 expenseAdapter.updateData(expenses)
+            }
+        }
+    }
+
+    private fun observeTotalExpense() {
+        lifecycleScope.launch {
+            viewModel.totalExpense.collect { totalExpense ->
+                val formattedTotal = String.format(Locale.getDefault(),"%.2f грн", totalExpense ?: 0.0)
+                binding.totalExpensesTextView.text = getString(R.string.total_expenses_text, formattedTotal)
             }
         }
     }

@@ -72,6 +72,7 @@
             android:elevation="2dp"
             tools:listitem="@layout/item_hive"/>
 
+
         <TextView
             android:id="@+id/hiveCountTextView"
             android:layout_width="wrap_content"

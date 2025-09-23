@@ -16,7 +16,7 @@ import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 
-@Database(entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class], version = 6, exportSchema = false)
+@Database(entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class], version = 7, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun hiveDao(): HiveDao
@@ -68,6 +68,15 @@ val MIGRATION_5_6: Migration = object : Migration(5, 6) {
     override fun migrate(db: SupportSQLiteDatabase) {
         // SQL-запит для додавання нового стовпця 'unitName' до таблиці expenses
         db.execSQL("ALTER TABLE incomes ADD COLUMN unitName TEXT NOT NULL DEFAULT ''")
+    }
+
+}
+// ✅ Нова міграція для додавання поля unitName
+val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // SQL-запит для додавання нового стовпця 'unitName' до таблиці expenses
+        db.execSQL("ALTER TABLE incomes ADD COLUMN hiveId INTEGER NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE expenses ADD COLUMN hiveId INTEGER NOT NULL DEFAULT ''")
     }
 
 }

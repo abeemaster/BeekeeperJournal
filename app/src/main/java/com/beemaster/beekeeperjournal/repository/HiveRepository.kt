@@ -7,14 +7,12 @@
 package com.beemaster.beekeeperjournal.repository
 
 import com.beemaster.beekeeperjournal.db.dao.HiveDao
-import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class HiveRepository @Inject constructor(
-    private val noteDao: NoteDao,
     private val hiveDao: HiveDao
 ) {
     suspend fun insertHive(hive: HiveEntity) {
@@ -46,6 +44,10 @@ class HiveRepository @Inject constructor(
         hiveDao.updateHive(hive)
     }
 
+    // ✅ Оновлено: Репозиторій містить метод для отримання вулика за номером.
+    suspend fun getHiveByNumber(hiveNumber: String): HiveEntity? {
+        return hiveDao.getHiveByNumber(hiveNumber)
+    }
 
     // ✅ ДОДАНО: Метод для видалення вулика
     suspend fun deleteHive(hive: HiveEntity) {

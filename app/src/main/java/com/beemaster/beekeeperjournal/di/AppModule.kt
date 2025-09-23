@@ -1,5 +1,7 @@
 // Цей об'єктний клас буде відповідати за надання (провайдінг) залежностей, таких як база даних та DAO.
 
+// Цей об'єктний клас буде відповідати за надання (провайдінг) залежностей, таких як база даних та DAO.
+
 package com.beemaster.beekeeperjournal.di
 
 import android.content.Context
@@ -13,6 +15,7 @@ import com.beemaster.beekeeperjournal.db.MIGRATION_2_3
 import com.beemaster.beekeeperjournal.db.MIGRATION_3_4
 import com.beemaster.beekeeperjournal.db.MIGRATION_4_5
 import com.beemaster.beekeeperjournal.db.MIGRATION_5_6
+import com.beemaster.beekeeperjournal.db.MIGRATION_6_7
 import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
@@ -37,9 +40,10 @@ object AppModule {
             AppDatabase::class.java,
             "beekeeper_journal_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
             .build()
     }
+
     @Provides
     fun provideHiveDao(database: AppDatabase): HiveDao {
         return database.hiveDao()
@@ -49,7 +53,7 @@ object AppModule {
     fun provideNoteDao(database: AppDatabase): NoteDao {
         return database.noteDao()
     }
-    // ✅ Додаємо провайдери для нових DAO
+
     @Provides
     fun provideExpenseDao(database: AppDatabase): ExpenseDao {
         return database.expenseDao()
@@ -59,15 +63,17 @@ object AppModule {
     fun provideIncomeDao(database: AppDatabase): IncomeDao {
         return database.incomeDao()
     }
+
     @Provides
-    fun provideHiveRepository(noteDao: NoteDao, hiveDao: HiveDao): HiveRepository {
-        return HiveRepository(noteDao, hiveDao)
+    fun provideHiveRepository(hiveDao: HiveDao): HiveRepository {
+        return HiveRepository(hiveDao)
     }
 
     @Provides
-    fun provideNoteRepository(noteDao: NoteDao, hiveDao: HiveDao): NoteRepository {
-        return NoteRepository(noteDao, hiveDao)
+    fun provideNoteRepository(noteDao: NoteDao): NoteRepository {
+        return NoteRepository(noteDao)
     }
+
     @Provides
     fun provideIncomeRepository(incomeDao: IncomeDao): IncomeRepository {
         return IncomeRepository(incomeDao)
@@ -78,4 +84,3 @@ object AppModule {
         return ExpenseRepository(expenseDao)
     }
 }
-

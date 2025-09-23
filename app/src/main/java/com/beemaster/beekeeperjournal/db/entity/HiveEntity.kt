@@ -2,8 +2,8 @@
 // Цей клас описуватиме кожен вулик.
 
 package com.beemaster.beekeeperjournal.db.entity
-import java.util.Comparator
 
+import java.util.Comparator
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 

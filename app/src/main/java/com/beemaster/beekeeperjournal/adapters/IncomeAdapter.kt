@@ -33,8 +33,11 @@ class IncomeAdapter(private val onClick: (IncomeEntity) -> Unit) :
 
         fun bind(income: IncomeEntity, onClick: (IncomeEntity) -> Unit) {
             binding.tvDescription.text = income.productName
-            binding.tvPricePerUnit.text = String.format(Locale.getDefault(), "+%.2f грн", income.price)
-            binding.tvQuantity.text = String.format(Locale.getDefault(), "%.2f кг", income.quantity)
+            // ✅ Виправлено: тепер відображається загальна сума
+            binding.tvPricePerUnit.text = String.format(Locale.getDefault(), "+%.2f грн", income.totalAmount)
+            // binding.tvQuantity.text = String.format(Locale.getDefault(), "%.2f кг", income.quantity)
+            binding.tvQuantity.text = String.format(Locale.getDefault(), "%.2f %s по %.2f грн/%s",
+                income.quantity, income.unitName, income.price, income.unitName)
             binding.tvDate.text = dateFormat.format(income.date)
 
             itemView.setOnClickListener {

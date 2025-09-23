@@ -27,7 +27,7 @@ interface HiveDao {
     fun getHivesCount(): Flow<Int> // ✅ Додаємо getHivesCount()
 
     @Query("SELECT * FROM hives WHERE hiveNumber = :number")
-    suspend fun getHiveByNumber(number: Int): HiveEntity? // ✅ Додаємо getHiveByNumber()
+    suspend fun getHiveByNumber(number: String): HiveEntity? // ✅ Додаємо getHiveByNumber()
 
     @Query("SELECT * FROM hives WHERE id = :hiveId")
     suspend fun getHiveById(hiveId: Int): HiveEntity?

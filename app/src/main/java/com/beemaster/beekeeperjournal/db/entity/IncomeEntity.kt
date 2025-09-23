@@ -14,6 +14,7 @@ import java.util.Date
 data class IncomeEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val hiveId: Int,
     val date: Date,
     val productName: String, // (назва продукції)
     val quantity: Double, // (кількість продукції)

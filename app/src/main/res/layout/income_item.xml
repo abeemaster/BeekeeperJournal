@@ -10,48 +10,57 @@
         android:paddingTop="8dp"
         android:paddingEnd="16dp"
         android:paddingBottom="8dp"
-        android:background="?android:attr/selectableItemBackground">
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/note_item_background">
 
 
-    <TextView
+        <TextView
             android:id="@+id/tvDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="14sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="20.08.2023" />
 
         <TextView
-            android:id="@+id/tvQuantity"
+                android:id="@+id/tvPricePerUnit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="24dp"
+            android:textColor="@color/green_500"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@+id/tvQuantity"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="2 кг по 250 грн/кг" />
+            tools:text="+500 грн" />
 
         <TextView
             android:id="@+id/tvDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:textSize="16sp"
             android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/tvPricePerUnit"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvDate"
             tools:text="Продаж меду" />
 
         <TextView
-            android:id="@+id/tvPricePerUnit"
-            android:layout_width="wrap_content"
+            android:id="@+id/tvQuantity"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="@color/green_500"
-            android:textStyle="bold"
+            android:textSize="14sp"
+            android:gravity="end"
+            app:layout_constraintTop_toBottomOf="@id/tvDescription"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvQuantity"
-            tools:text="+500 грн" />
+            tools:text="2 кг по 250 грн/кг" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

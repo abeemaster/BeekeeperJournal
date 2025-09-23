@@ -20,6 +20,8 @@ class ExpenseAdapter(private var expenses: List<ExpenseEntity>) :
         val date: TextView = view.findViewById(R.id.expense_date)
         val description: TextView = view.findViewById(R.id.expense_description)
         val totalPrice: TextView = view.findViewById(R.id.expense_total_price)
+        val quantity: TextView = view.findViewById(R.id.expense_quantity)
+        val quantityUnits: TextView = view.findViewById(R.id.expense_quantity_units)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
@@ -34,6 +36,8 @@ class ExpenseAdapter(private var expenses: List<ExpenseEntity>) :
         holder.date.text = dateFormat.format(expense.date)
         holder.description.text = expense.name
         holder.totalPrice.text = String.format(Locale.getDefault(), "-%.2f грн", expense.amount)
+        holder.quantity.text = String.format(Locale.getDefault(), "%.2f", expense.quantityUnits)
+        holder.quantityUnits.text = expense.nameQuantity
     }
 
     override fun getItemCount(): Int = expenses.size

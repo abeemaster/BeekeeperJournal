@@ -25,6 +25,7 @@ object DialogUtils {
         context: Context,
         hive: HiveEntity,
         onEditName: () -> Unit,
+        onEditNumber: () -> Unit,
         onSelectPrimaryColor: () -> Unit,
         onSelectSecondaryColor: () -> Unit,
         onDeleteHive: () -> Unit
@@ -37,6 +38,11 @@ object DialogUtils {
         val editNameCard: MaterialCardView = dialogView.findViewById(R.id.editNameCard)
         editNameCard.setOnClickListener {
             onEditName()
+            dialog.dismiss()
+        }
+        val editNumberCard: MaterialCardView = dialogView.findViewById(R.id.editNumberCard) // ✅ Додано
+        editNumberCard.setOnClickListener {
+            onEditNumber()
             dialog.dismiss()
         }
 
@@ -79,6 +85,33 @@ object DialogUtils {
             .show()
     }
 
+    /**
+     * ✅ Додано: новий діалог для редагування номера вулика.
+     *
+     * @param context Контекст.
+     * @param currentNumber Поточний номер вулика.
+     * @param onSave Функція зворотного виклику для збереження нового номера.
+     */
+    fun showEditHiveNumberDialog(context: Context, currentNumber: String, onSave: (String) -> Unit) {
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_hive_number, null)
+        val newNumberEditText: EditText = dialogView.findViewById(R.id.newNumberEditText)
+        newNumberEditText.setText(currentNumber)
+
+        AlertDialog.Builder(context)
+            .setTitle(context.getString(R.string.edit_hive_number_title))
+            .setView(dialogView)
+            .setPositiveButton(context.getString(R.string.save)) { _, _ ->
+                val newNumber = newNumberEditText.text.toString().trim()
+                if (newNumber.isNotEmpty() && newNumber != currentNumber) {
+                    onSave(newNumber)
+                } else {
+                    Toast.makeText(context, "Номер вулика не може бути порожнім або незмінним", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(context.getString(R.string.cancel), null)
+            .show()
+    }
+
     fun showColorPickerDialog(
         context: Context,
         onColorSelected: (Int) -> Unit
@@ -108,7 +141,7 @@ object DialogUtils {
 
             colorCircle.setOnClickListener {
                 onColorSelected(color)
-                dialog.dismiss() // ✅ Змінено: тепер ми закриваємо діалог
+                dialog.dismiss()
             }
             colorGrid.addView(colorView)
         }
@@ -152,7 +185,7 @@ object DialogUtils {
             .show()
     }
 
-    fun showAddIncomeDialog(context: Context, viewModel: ProfitabilityViewModel, hiveId: Int?) {
+    fun showAddIncomeDialog(context: Context, viewModel: ProfitabilityViewModel, hiveId: Int) {
         val view = LayoutInflater.from(context).inflate(R.layout.income_dialog, null)
         val descriptionEditText: EditText = view.findViewById(R.id.income_description_edit_text)
         val amountEditText: EditText = view.findViewById(R.id.income_amount_edit_text)
@@ -201,6 +234,7 @@ object DialogUtils {
                     unitName = unitName,
                     totalAmount = quantity * price, // ✅ Обчислюємо totalAmount
                     date = date,
+                    hiveId = hiveId
                 )
                 viewModel.addIncome(newIncome)
                 dialog.dismiss()
@@ -210,7 +244,7 @@ object DialogUtils {
         }
     }
 
-    fun showAddExpenseDialog(context: Context, viewModel: ProfitabilityViewModel) {
+    fun showAddExpenseDialog(context: Context, viewModel: ProfitabilityViewModel, hiveId: Int) {
         val view = LayoutInflater.from(context).inflate(R.layout.expense_dialog, null)
         // ✅ Використовуємо правильні назви змінних
         val nameEditText: EditText = view.findViewById(R.id.expense_name_edit_text)
@@ -257,7 +291,8 @@ object DialogUtils {
                     amount = amount,
                     date = date,
                     quantityUnits = quantityUnits,
-                    nameQuantity = nameQuantity
+                    nameQuantity = nameQuantity,
+                    hiveId = hiveId
                 )
                 viewModel.addExpense(newExpense)
                 dialog.dismiss()

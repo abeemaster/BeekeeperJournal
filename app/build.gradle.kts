@@ -9,7 +9,7 @@ android {
     namespace = "com.beemaster.beekeeperjournal"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.beemaster.beekeeperjournal.dev"
+        applicationId = "com.beemaster.beekeeperjournal"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

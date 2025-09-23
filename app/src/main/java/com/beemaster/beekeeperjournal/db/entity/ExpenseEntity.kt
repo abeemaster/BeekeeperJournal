@@ -14,6 +14,7 @@ import java.util.Date
 data class ExpenseEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val hiveId: Int,
     val date: Date,
     val name: String, // (назва витрати)
     val quantityUnits: Double, // (кількість продукції)
