@@ -6,8 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
-import android.view.MenuItem
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -20,6 +18,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.HiveAdapter
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
@@ -32,7 +31,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
@@ -41,19 +40,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var hiveRecyclerView: RecyclerView
     private lateinit var hiveAdapter: HiveAdapter
     private lateinit var hiveCountTextView: TextView
-    private lateinit var backupManager: BackupManager // ✅ Створюємо екземпляр BackupManager
+    private lateinit var backupManager: BackupManager
 
     private val viewModel: MainActivityViewModel by viewModels()
 
     private val getExportFile = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri?.let {
-            lifecycleScope.launch { backupManager.exportData(it) } // ✅ Викликаємо метод з BackupManager
+            lifecycleScope.launch { backupManager.exportData(it) }
         }
     }
 
     private val getImportFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let {
-            lifecycleScope.launch { backupManager.importData(it) } // ✅ Викликаємо метод з BackupManager
+            lifecycleScope.launch { backupManager.importData(it) }
         }
     }
 
@@ -67,9 +66,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setupRecyclerView()
         observeHives()
 
-        // ✅ Додано: Перевірка та створення вулика за замовчуванням
         lifecycleScope.launch {
-            // ✅ Виправлено: перевіряємо, чи існує вулик з номером "1" перед створенням
             val existingHive = viewModel.getHiveByNumber("1")
             if (existingHive == null) {
                 val defaultHive = HiveEntity(
@@ -82,7 +79,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        backupManager = BackupManager(this, viewModel) // ✅ Ініціалізуємо BackupManager
+        backupManager = BackupManager(this, viewModel)
     }
 
     private fun initViews() {
@@ -98,11 +95,38 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerToggleButton.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
         }
-        navigationView.setNavigationItemSelectedListener(this)
+
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            drawerLayout.closeDrawer(GravityCompat.START)
+            when (menuItem.itemId) {
+                R.id.nav_home -> {
+                    Toast.makeText(this, "Головна сторінка", Toast.LENGTH_SHORT).show()
+                }
+                R.id.nav_search -> {
+                    openSearchActivity()
+                }
+                R.id.nav_add_hive -> {
+                    addHive()
+                }
+                R.id.nav_sync -> {
+                    showSyncOptionsDialog()
+                }
+                R.id.nav_profitability -> {
+                    openProfitabilityActivity()
+                }
+                R.id.nav_settings -> {
+                    openSettingsActivity()
+                }
+                R.id.nav_exit_button -> {
+                    finishAffinity()
+                }
+            }
+            true
+        }
 
         generalNotesButton.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, 0)
+                putExtra(Constants.EXTRA_HIVE_NUMBER, 0)
             }
             startActivity(intent)
         }
@@ -113,9 +137,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         hiveAdapter = HiveAdapter(
             onClick = { hive ->
                 val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                    putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, hive.hiveNumber)
+                    putExtra(Constants.EXTRA_HIVE_ID, hive.id)
                 }
-                Log.d("MainActivity", "onClick: Передача номера вулика: ${hive.hiveNumber}")
                 startActivity(intent)
             },
             onLongClick = { hive ->
@@ -127,9 +150,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             context = this,
                             currentNumber = hive.hiveNumber,
                             onSave = { newNumber ->
-                                val updatedHive = hive.copy(hiveNumber = newNumber)
-                                viewModel.updateHive(updatedHive)
-                                Toast.makeText(this, "Номер вулика оновлено!", Toast.LENGTH_SHORT).show()
+                                lifecycleScope.launch {
+                                    val existingHive = viewModel.getHiveByNumber(newNumber)
+                                    if (existingHive != null && existingHive.id != hive.id) {
+                                        Toast.makeText(this@MainActivity, "Вулик з таким номером вже існує.", Toast.LENGTH_LONG).show()
+                                    } else {
+                                        val updatedHive = hive.copy(hiveNumber = newNumber)
+                                        viewModel.updateHive(updatedHive)
+                                        Toast.makeText(this@MainActivity, "Номер вулика оновлено!", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                             }
                         )
                     },
@@ -187,33 +217,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        drawerLayout.closeDrawer(GravityCompat.START)
-        when (item.itemId) {
-            R.id.nav_home -> {
-                Toast.makeText(this, "Головна сторінка", Toast.LENGTH_SHORT).show()
-            }
-            R.id.nav_search -> {
-                openSearchActivity()
-            }
-            R.id.nav_add_hive -> {
-                addHive()
-            }
-            R.id.nav_sync -> {
-                showSyncOptionsDialog()
-            }
-            R.id.nav_profitability -> {
-                openProfitabilityActivity()
-            }
-            R.id.nav_settings -> {
-                openSettingsActivity()
-            }
-            R.id.nav_exit_button -> {
-                finishAffinity()
-            }
-        }
-        return true
-    }
     private fun openProfitabilityActivity() {
         val intent = Intent(this, ProfitabilityActivity::class.java)
         startActivity(intent)
@@ -230,13 +233,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             DialogUtils.showAddHiveDialog(this,
                 onHiveAdded = { hiveName, hiveNumber ->
-                    val newHive = HiveEntity(
-                        hiveNumber = hiveNumber,
-                        name = hiveName,
-                        color = this.getColor(R.color.color_white),
-                        secondaryColor = 0
-                    )
-                    viewModel.addHive(newHive)
+                    lifecycleScope.launch {
+                        val existingHive = viewModel.getHiveByNumber(hiveNumber)
+                        if (existingHive != null) {
+                            Toast.makeText(this@MainActivity, "Вулик з таким номером вже існує.", Toast.LENGTH_LONG).show()
+                        } else {
+                            val newHive = HiveEntity(
+                                hiveNumber = hiveNumber,
+                                name = hiveName,
+                                color = this@MainActivity.getColor(R.color.color_white),
+                                secondaryColor = 0
+                            )
+                            viewModel.addHive(newHive)
+                        }
+                    }
                 }
             )
         }

@@ -21,6 +21,224 @@ import java.util.Locale
 
 object DialogUtils {
 
+    /** Загальний діалог для редагування або видалення.
+     * @param onEdit Функція, що виконується при виборі "Редагувати".
+     * @param onDelete Функція, що виконується при виборі "Видалити".
+     */
+    fun showEditDeleteDialog(
+        context: Context,
+        onEdit: () -> Unit,
+        onDelete: () -> Unit
+    ) {
+        val options = arrayOf("Редагувати", "Видалити")
+        AlertDialog.Builder(context)
+            .setTitle(R.string.choose_an_action)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> onEdit()
+                    1 -> onDelete()
+                }
+            }
+            .show()
+    }
+    // ✅ Нова функція для відображення діалогу підтвердження видалення
+    fun showDeleteConfirmationDialog(
+        context: Context,
+        onConfirm: () -> Unit
+    ) {
+        AlertDialog.Builder(context)
+            .setTitle(context.getString(R.string.confirm_delete))
+            .setMessage(context.getString(R.string.delete_confirm_message))
+            .setPositiveButton(context.getString(R.string.delete)) { _, _ ->
+                onConfirm.invoke()
+            }
+            .setNegativeButton(context.getString(R.string.cancel), null)
+            .show()
+    }
+    /**
+     * Тепер ця функція може працювати і для редагування існуючого прибутку.
+     * @param incomeToEdit Опціональний об'єкт IncomeEntity. Якщо він не null,
+     * діалог працює в режимі редагування і заповнює поля даними.
+     * @param hiveId Ідентифікатор вулика. Необхідний лише для додавання нового запису.
+     */
+    fun showAddIncomeDialog(
+        context: Context,
+        viewModel: ProfitabilityViewModel,
+        hiveId: Int,
+        incomeToEdit: IncomeEntity? = null
+    ) {
+        val view = LayoutInflater.from(context).inflate(R.layout.income_dialog, null)
+        val descriptionEditText: EditText = view.findViewById(R.id.income_description_edit_text)
+        val amountEditText: EditText = view.findViewById(R.id.income_amount_edit_text)
+        val unitEditText: EditText = view.findViewById(R.id.income_unit_edit_text)
+        val pricePerUnitEditText: EditText = view.findViewById(R.id.income_price_per_unit_edit_text)
+        val dateEditText: EditText = view.findViewById(R.id.income_date_edit_text)
+        val saveButton: Button = view.findViewById(R.id.save_income_button)
+
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+        // ✅ ОНОВЛЕНО: Заповнюємо поля, якщо це режим редагування
+        if (incomeToEdit != null) {
+            descriptionEditText.setText(incomeToEdit.productName)
+            amountEditText.setText(incomeToEdit.quantity.toString())
+            unitEditText.setText(incomeToEdit.unitName)
+            pricePerUnitEditText.setText(incomeToEdit.price.toString())
+            calendar.time = incomeToEdit.date
+            saveButton.text = "Зберегти" // Змінюємо текст кнопки
+        } else {
+            // Режим додавання: встановлюємо поточну дату
+            dateEditText.setText(dateFormat.format(calendar.time))
+        }
+
+        dateEditText.setOnClickListener {
+            val datePickerDialog = DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    calendar.set(year, month, dayOfMonth)
+                    dateEditText.setText(dateFormat.format(calendar.time))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+            datePickerDialog.show()
+        }
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(view)
+            .show()
+
+        saveButton.setOnClickListener {
+            val productName = descriptionEditText.text.toString().trim()
+            val unitName = unitEditText.text.toString().trim()
+            val quantity = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val price = pricePerUnitEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val date = calendar.time
+
+            if (productName.isNotEmpty() && quantity > 0 && price > 0) {
+                if (incomeToEdit == null) {
+                    // ✅ ЛОГІКА ДОДАВАННЯ: створюємо новий об'єкт
+                    val newIncome = IncomeEntity(
+                        productName = productName,
+                        quantity = quantity,
+                        price = price,
+                        unitName = unitName,
+                        totalAmount = quantity * price,
+                        date = date,
+                        hiveId = hiveId
+                    )
+                    viewModel.insertIncome(newIncome)
+                } else {
+                    // ✅ ЛОГІКА РЕДАГУВАННЯ: оновлюємо існуючий об'єкт
+                    val updatedIncome = incomeToEdit.copy(
+                        productName = productName,
+                        quantity = quantity,
+                        price = price,
+                        unitName = unitName,
+                        totalAmount = quantity * price,
+                        date = date
+                    )
+                    viewModel.updateIncome(updatedIncome)
+                }
+                dialog.dismiss()
+            } else {
+                Toast.makeText(context, "Будь ласка, заповніть усі поля", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * ✅ ОНОВЛЕНО: Тепер ця функція може працювати і для редагування існуючої витрати.
+     *
+     * @param expenseToEdit Опціональний об'єкт ExpenseEntity. Якщо він не null,
+     * діалог працює в режимі редагування і заповнює поля даними.
+     * @param hiveId Ідентифікатор вулика. Необхідний лише для додавання нового запису.
+     */
+    fun showAddExpenseDialog(
+        context: Context,
+        viewModel: ProfitabilityViewModel,
+        hiveId: Int,
+        expenseToEdit: ExpenseEntity? = null
+    ) {
+        val view = LayoutInflater.from(context).inflate(R.layout.expense_dialog, null)
+        val nameEditText: EditText = view.findViewById(R.id.expense_name_edit_text)
+        val quantityEditText: EditText = view.findViewById(R.id.expense_quantity)
+        val quantityUnitsEditText: EditText = view.findViewById(R.id.expense_quantity_units)
+        val amountEditText: EditText = view.findViewById(R.id.expense_amount_edit_text)
+        val dateEditText: EditText = view.findViewById(R.id.expense_date_edit_text)
+        val saveButton: Button = view.findViewById(R.id.save_expense_button)
+
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+        // ✅ ОНОВЛЕНО: Заповнюємо поля, якщо це режим редагування
+        if (expenseToEdit != null) {
+            nameEditText.setText(expenseToEdit.name)
+            quantityEditText.setText(expenseToEdit.quantityUnits.toString())
+            quantityUnitsEditText.setText(expenseToEdit.nameQuantity)
+            amountEditText.setText(expenseToEdit.amount.toString())
+            calendar.time = expenseToEdit.date
+            saveButton.text = "Зберегти" // Змінюємо текст кнопки
+        } else {
+            // Режим додавання: встановлюємо поточну дату
+            dateEditText.setText(dateFormat.format(calendar.time))
+        }
+
+        dateEditText.setOnClickListener {
+            val datePickerDialog = DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    calendar.set(year, month, dayOfMonth)
+                    dateEditText.setText(dateFormat.format(calendar.time))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+            datePickerDialog.show()
+        }
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(view)
+            .show()
+
+        saveButton.setOnClickListener {
+            val name = nameEditText.text.toString().trim()
+            val quantityUnits = quantityEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val nameQuantity = quantityUnitsEditText.text.toString().trim()
+            val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val date = calendar.time
+
+            if (name.isNotEmpty() && amount > 0) {
+                if (expenseToEdit == null) {
+                    val newExpense = ExpenseEntity(
+                        name = name,
+                        amount = amount,
+                        date = date,
+                        quantityUnits = quantityUnits,
+                        nameQuantity = nameQuantity,
+                        hiveId = hiveId
+                    )
+                    viewModel.insertExpense(newExpense)
+                } else {
+                    // ✅ ЛОГІКА РЕДАГУВАННЯ: оновлюємо існуючий об'єкт
+                    val updatedExpense = expenseToEdit.copy(
+                        name = name,
+                        amount = amount,
+                        date = date,
+                        quantityUnits = quantityUnits,
+                        nameQuantity = nameQuantity
+                    )
+                    viewModel.updateExpense(updatedExpense)
+                }
+                dialog.dismiss()
+            } else {
+                Toast.makeText(context, "Будь ласка, заповніть усі поля", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     fun showHiveOptionsDialog(
         context: Context,
         hive: HiveEntity,
@@ -40,7 +258,7 @@ object DialogUtils {
             onEditName()
             dialog.dismiss()
         }
-        val editNumberCard: MaterialCardView = dialogView.findViewById(R.id.editNumberCard) // ✅ Додано
+        val editNumberCard: MaterialCardView = dialogView.findViewById(R.id.editNumberCard)
         editNumberCard.setOnClickListener {
             onEditNumber()
             dialog.dismiss()
@@ -85,13 +303,6 @@ object DialogUtils {
             .show()
     }
 
-    /**
-     * ✅ Додано: новий діалог для редагування номера вулика.
-     *
-     * @param context Контекст.
-     * @param currentNumber Поточний номер вулика.
-     * @param onSave Функція зворотного виклику для збереження нового номера.
-     */
     fun showEditHiveNumberDialog(context: Context, currentNumber: String, onSave: (String) -> Unit) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_hive_number, null)
         val newNumberEditText: EditText = dialogView.findViewById(R.id.newNumberEditText)
@@ -172,133 +383,19 @@ object DialogUtils {
             .setTitle(context.getString(R.string.add_hive_title))
             .setView(dialogView)
             .setPositiveButton(context.getString(R.string.save)) { _, _ ->
-                val hiveName = nameEditText.text.toString()
-                val hiveNumber = numberEditText.text.toString()
-                if (hiveName.isNotBlank() && hiveNumber.isNotBlank()) {
+                val hiveNumber = numberEditText.text.toString().trim()
+                var hiveName = nameEditText.text.toString().trim()
+
+                if (hiveNumber.isNotBlank()) {
+                    if (hiveName.isBlank()) {
+                        hiveName = context.getString(R.string.default_hive_name, hiveNumber)
+                    }
                     onHiveAdded(hiveName, hiveNumber)
                 } else {
-                    Toast.makeText(context, "Ім'я та номер вулика не можуть бути порожніми", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Номер вулика є обов'язковим", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton(context.getString(R.string.cancel), null)
-            .create()
             .show()
-    }
-
-    fun showAddIncomeDialog(context: Context, viewModel: ProfitabilityViewModel, hiveId: Int) {
-        val view = LayoutInflater.from(context).inflate(R.layout.income_dialog, null)
-        val descriptionEditText: EditText = view.findViewById(R.id.income_description_edit_text)
-        val amountEditText: EditText = view.findViewById(R.id.income_amount_edit_text)
-        val unitEditText: EditText = view.findViewById(R.id.income_unit_edit_text)
-        val pricePerUnitEditText: EditText = view.findViewById(R.id.income_price_per_unit_edit_text)
-        val dateEditText: EditText = view.findViewById(R.id.income_date_edit_text)
-        val saveButton: Button = view.findViewById(R.id.save_income_button)
-
-        val calendar = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-
-        dateEditText.setText(dateFormat.format(calendar.time))
-
-        dateEditText.setOnClickListener {
-            val datePickerDialog = DatePickerDialog(
-                context,
-                { _, year, month, dayOfMonth ->
-                    calendar.set(year, month, dayOfMonth)
-                    dateEditText.setText(dateFormat.format(calendar.time))
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-            datePickerDialog.show()
-        }
-
-        val dialog = AlertDialog.Builder(context)
-            .setView(view)
-            .show()
-
-        saveButton.setOnClickListener {
-            // ✅ Використовуємо правильні назви полів з UI
-            val productName = descriptionEditText.text.toString().trim()
-            val unitName = unitEditText.text.toString().trim()
-            val quantity = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
-            val price = pricePerUnitEditText.text.toString().toDoubleOrNull() ?: 0.0
-            val date = calendar.time // ✅ Використовуємо об'єкт Date, а не Long
-
-            if (productName.isNotEmpty() && quantity > 0 && price > 0) {
-                // ✅ Створення IncomeEntity з правильними параметрами
-                val newIncome = IncomeEntity(
-                    productName = productName,
-                    quantity = quantity,
-                    price = price,
-                    unitName = unitName,
-                    totalAmount = quantity * price, // ✅ Обчислюємо totalAmount
-                    date = date,
-                    hiveId = hiveId
-                )
-                viewModel.addIncome(newIncome)
-                dialog.dismiss()
-            } else {
-                Toast.makeText(context, "Будь ласка, заповніть усі поля", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    fun showAddExpenseDialog(context: Context, viewModel: ProfitabilityViewModel, hiveId: Int) {
-        val view = LayoutInflater.from(context).inflate(R.layout.expense_dialog, null)
-        // ✅ Використовуємо правильні назви змінних
-        val nameEditText: EditText = view.findViewById(R.id.expense_name_edit_text)
-        val quantityEditText: EditText = view.findViewById(R.id.expense_quantity)
-        val quantityUnitsEditText: EditText = view.findViewById(R.id.expense_quantity_units)
-        val amountEditText: EditText = view.findViewById(R.id.expense_amount_edit_text)
-        val dateEditText: EditText = view.findViewById(R.id.expense_date_edit_text)
-        val saveButton: Button = view.findViewById(R.id.save_expense_button)
-
-        val calendar = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-
-        dateEditText.setText(dateFormat.format(calendar.time))
-
-        dateEditText.setOnClickListener {
-            val datePickerDialog = DatePickerDialog(
-                context,
-                { _, year, month, dayOfMonth ->
-                    calendar.set(year, month, dayOfMonth)
-                    dateEditText.setText(dateFormat.format(calendar.time))
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-            datePickerDialog.show()
-        }
-
-        val dialog = AlertDialog.Builder(context)
-            .setView(view)
-            .show()
-
-        saveButton.setOnClickListener {
-            val name = nameEditText.text.toString().trim()
-            val quantityUnits = quantityEditText.text.toString().toDoubleOrNull() ?: 0.0
-            val nameQuantity = quantityUnitsEditText.text.toString().trim()
-            val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
-            val date = calendar.time // ✅ Використовуємо об'єкт Date
-
-            if (name.isNotEmpty() && amount > 0) {
-                // ✅ Створюємо ExpenseEntity з правильними параметрами
-                val newExpense = ExpenseEntity(
-                    name = name,
-                    amount = amount,
-                    date = date,
-                    quantityUnits = quantityUnits,
-                    nameQuantity = nameQuantity,
-                    hiveId = hiveId
-                )
-                viewModel.addExpense(newExpense)
-                dialog.dismiss()
-            } else {
-                Toast.makeText(context, "Будь ласка, заповніть усі поля", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 }

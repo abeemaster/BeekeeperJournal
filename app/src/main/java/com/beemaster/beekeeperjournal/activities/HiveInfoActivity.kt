@@ -32,19 +32,14 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.beemaster.beekeeperjournal.Constants // ✅ Додано: Імпорт нашого нового файлу
 
 @AndroidEntryPoint
 class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
         private const val TAG = "HiveInfoActivity"
-        const val EXTRA_HIVE_ID = "com.beemaster.beekeeperjournal.HIVE_ID"
-        const val EXTRA_HIVE_NUMBER = "com.beemaster.beekeeperjournal.HIVE_NUMBER"
-        const val EXTRA_HIVE_NAME = "com.beemaster.beekeeperjournal.HIVE_NAME"
-        const val EXTRA_HIVE_COLOR = "com.beemaster.beekeeperjournal.HIVE_COLOR"
-        const val EXTRA_HIVE_SECONDARY_COLOR = "com.beemaster.beekeeperjournal.HIVE_SECONDARY_COLOR"
-        const val EXTRA_ENTRY_TYPE = "com.beemaster.beekeeperjournal.ENTRY_TYPE"
-
+        // ✅ ВИДАЛЕНО: Тепер ми використовуємо константи з файлу Constants.kt
     }
 
     private lateinit var drawerLayout: DrawerLayout
@@ -59,7 +54,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private lateinit var notesBtn: Button
     private lateinit var currentHiveActualName: String
 
-    private var currentHiveNumber: String? = null
+    private var currentHiveId: Int = 0
     private var currentEntryType: String = ""
     private val viewModel: HiveInfoViewModel by viewModels()
 
@@ -90,7 +85,8 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                 finish()
             }
             R.id.nav_general_notes -> {
-                Toast.makeText(this, "Ви вже у Загальних записах", Toast.LENGTH_SHORT).show()
+                currentHiveId = 0
+                updateUIAndLoadData("general")
             }
         }
         return true
@@ -121,32 +117,27 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     }
 
     private fun loadInitialData() {
-        // Отримуємо номер вулика
-        currentHiveNumber = intent.getStringExtra(EXTRA_HIVE_NUMBER)
-        // Отримуємо ім'я вулика
-        val hiveNameFromIntent = intent.getStringExtra(EXTRA_HIVE_NAME)
+        // ✅ ОНОВЛЕНО: Отримуємо унікальний ID вулика з Intent
+        currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
+        // Ми все ще можемо отримувати номер або ім'я для відображення, але не для ідентифікації
+        val hiveNameFromIntent = intent.getStringExtra(Constants.EXTRA_HIVE_NAME)
 
-        // Встановлюємо фактичне ім'я вулика, якщо воно було передано
         currentHiveActualName = if (!hiveNameFromIntent.isNullOrEmpty()) {
             hiveNameFromIntent
-        } else if (!currentHiveNumber.isNullOrEmpty()) {
-            "Вулик №$currentHiveNumber"
         } else {
             "Загальні записи"
         }
 
-        Log.d(TAG, "HiveInfoActivity: Отримано номер вулика: $currentHiveNumber")
+        Log.d(TAG, "HiveInfoActivity: Отримано ID вулика: $currentHiveId")
         Log.d(TAG, "HiveInfoActivity: In onCreate, received hiveName: $currentHiveActualName")
 
-
-        val initialEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "hive"
-        currentEntryType = if (currentHiveNumber.isNullOrEmpty()) "general" else initialEntryType
+        val initialEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
+        currentEntryType = if (currentHiveId == 0) "general" else initialEntryType
         Log.d(TAG, "Тип записів встановлено: $currentEntryType")
 
         updateUIAndLoadData(currentEntryType)
-
-        observeNotes()
     }
+
     private fun observeNotes() {
         lifecycleScope.launch {
             viewModel.notes.collect { notes ->
@@ -203,7 +194,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         currentEntryType = entryType
 
         val title: String = when {
-            currentHiveNumber.isNullOrEmpty() -> "Загальні записи"
+            currentHiveId == 0 -> "Загальні записи"
             entryType == "queen" -> "Матка $currentHiveActualName"
             entryType == "hive" -> " $currentHiveActualName"
             entryType == "notes" -> "Примітки $currentHiveActualName"
@@ -211,7 +202,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
         infoTitle.text = title
 
-        if (currentHiveNumber.isNullOrEmpty()) {
+        if (currentHiveId == 0) {
             queenBtn.visibility = View.GONE
             hiveInfoBtn.visibility = View.GONE
             notesBtn.visibility = View.GONE
@@ -220,21 +211,20 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             hiveInfoBtn.visibility = View.VISIBLE
             notesBtn.visibility = View.VISIBLE
         }
-        Log.d(TAG, "HiveInfoActivity: Запитуємо нотатки для номера: ${currentHiveNumber?.toIntOrNull() ?: 0} і типу: $currentEntryType")
-        viewModel.getNotesForHive(currentHiveNumber?.toIntOrNull() ?: 0, currentEntryType)
+        Log.d(TAG, "HiveInfoActivity: Запитуємо нотатки для ID: $currentHiveId і типу: $currentEntryType")
+        viewModel.getNotesForHive(currentHiveId, currentEntryType)
     }
 
     private fun showInfo(entryType: String) {
         updateUIAndLoadData(entryType)
     }
+
     private fun openNoteEditorActivity(startVoiceInput: Boolean = false) {
         val intent = Intent(this, EditNoteActivity::class.java).apply {
-            putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, currentEntryType)
-            // ✅ Використовуємо toIntOrNull() для безпечного перетворення на Int.
-            // Це забезпечує, що EditNoteActivity отримає правильний тип даних.
-            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, currentHiveNumber?.toIntOrNull() ?: 0)
-            putExtra(EditNoteActivity.EXTRA_HIVE_NAME, currentHiveActualName)
-            putExtra(EditNoteActivity.EXTRA_START_VOICE_INPUT, startVoiceInput)
+            putExtra(Constants.EXTRA_ENTRY_TYPE, currentEntryType)
+            putExtra(Constants.EXTRA_HIVE_ID, currentHiveId)
+            putExtra(Constants.EXTRA_HIVE_NAME, currentHiveActualName)
+            putExtra(Constants.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
         startActivity(intent)
     }
@@ -247,10 +237,10 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                 when (which) {
                     0 -> { // Редагувати
                         val intent = Intent(this, EditNoteActivity::class.java).apply {
-                            putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
-                            putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.content)
-                            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveId)
-                            putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
+                            putExtra(Constants.EXTRA_NOTE_ID, note.id)
+                            putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, note.content)
+                            putExtra(Constants.EXTRA_HIVE_ID, note.hiveId)
+                            putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
                         }
                         startActivity(intent)
                     }
@@ -261,6 +251,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             }
             .show()
     }
+
     private fun showDeleteConfirmationDialog(note: NoteEntity) {
         AlertDialog.Builder(this)
             .setTitle("Видалити запис?")

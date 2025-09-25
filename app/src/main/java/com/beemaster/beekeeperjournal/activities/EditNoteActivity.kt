@@ -3,7 +3,11 @@
 package com.beemaster.beekeeperjournal.activities
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -13,16 +17,12 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.beemaster.beekeeperjournal.BeekeeperApplication
 import com.beemaster.beekeeperjournal.R
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.utils.VoskRecognitionHelper
 import com.beemaster.beekeeperjournal.viewmodel.EditNoteViewModel
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
-import android.speech.RecognitionListener
-import android.speech.SpeechRecognizer
-import android.content.Intent
-import android.speech.RecognizerIntent
 
 @AndroidEntryPoint
 class EditNoteActivity : AppCompatActivity() {
@@ -31,9 +31,10 @@ class EditNoteActivity : AppCompatActivity() {
         private const val TAG = "EditNoteActivity"
         const val EXTRA_NOTE_ID = "com.beemaster.beekeeperjournal.NOTE_ID"
         const val EXTRA_ORIGINAL_NOTE_TEXT = "com.beemaster.beekeeperjournal.ORIGINAL_NOTE_TEXT"
-        const val EXTRA_ENTRY_TYPE = "com.beemaster.beekeeperjournal.ENTRY_TYPE_EDIT"
-        const val EXTRA_HIVE_NUMBER = "com.beemaster.beekeeperjournal.HIVE_NUMBER_EDIT"
+        // ✅ ВИПРАВЛЕНО: Використовуємо EXTRA_HIVE_ID, щоб відповідати HiveInfoActivity
+        const val EXTRA_HIVE_ID = "com.beemaster.beekeeperjournal.HIVE_ID"
         const val EXTRA_HIVE_NAME = "com.beemaster.beekeeperjournal.HIVE_NAME"
+        const val EXTRA_ENTRY_TYPE = "com.beemaster.beekeeperjournal.ENTRY_TYPE_EDIT"
         const val EXTRA_START_VOICE_INPUT = "com.beemaster.beekeeperjournal.START_VOICE_INPUT_EDIT"
     }
 
@@ -46,7 +47,7 @@ class EditNoteActivity : AppCompatActivity() {
 
     private var noteId: Int = 0
     private var currentEntryType: String = ""
-    private var currentHiveNumber: Int = 0
+    private var currentHiveId: Int = 0 // ✅ ЗМІНЕНО: Використовуємо більш точну назву для ID
     private var currentHiveActualName: String = ""
     private var isGoogleListening = false
     private val viewModel: EditNoteViewModel by viewModels()
@@ -61,7 +62,6 @@ class EditNoteActivity : AppCompatActivity() {
         setupListeners()
         setupUI()
 
-        // Передаємо лише одну, правильну кнопку Vosk'у
         voskHelper = VoskRecognitionHelper(
             this,
             editNoteContentInput,
@@ -165,8 +165,9 @@ class EditNoteActivity : AppCompatActivity() {
         noteId = intent.getIntExtra(EXTRA_NOTE_ID, 0)
         val originalNoteText = intent.getStringExtra(EXTRA_ORIGINAL_NOTE_TEXT)
         currentEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "hive"
-        currentHiveNumber = intent.getIntExtra(EXTRA_HIVE_NUMBER, 0)
-        currentHiveActualName = intent.getStringExtra(EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveNumber"
+        // ✅ ВИПРАВЛЕНО: Зчитуємо ID з правильної константи EXTRA_HIVE_ID
+        currentHiveId = intent.getIntExtra(EXTRA_HIVE_ID, 0)
+        currentHiveActualName = intent.getStringExtra(EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveId"
         editNoteContentInput.setText(originalNoteText)
     }
 
@@ -206,9 +207,10 @@ class EditNoteActivity : AppCompatActivity() {
             return
         }
 
+        // ✅ ВИПРАВЛЕНО: Передаємо правильний hiveId
         viewModel.saveNote(
             noteId = noteId,
-            hiveId = currentHiveNumber,
+            hiveId = currentHiveId,
             type = currentEntryType,
             title = "Запис для вуликів",
             content = updatedNoteText,

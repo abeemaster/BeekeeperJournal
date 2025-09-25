@@ -4,7 +4,6 @@
 package com.beemaster.beekeeperjournal.activities
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -23,9 +22,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.BeekeeperApplication
+import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SearchResultsAdapter
-import com.beemaster.beekeeperjournal.utils.DrawerManager
+import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.viewmodel.SearchViewModel
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,11 +34,6 @@ import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import com.beemaster.beekeeperjournal.db.entity.NoteEntity
-import com.beemaster.beekeeperjournal.models.Note
-import com.beemaster.beekeeperjournal.activities.HiveInfoActivity
-import com.beemaster.beekeeperjournal.activities.EditNoteActivity
-
 
 
 @AndroidEntryPoint // ✅ Додаємо анотацію Hilt
@@ -62,9 +57,6 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
-
-        DrawerManager.setupDrawer(this)
-
         bindViews()
         setupListeners()
         setupRecyclerView()
@@ -121,22 +113,22 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
                     0 -> { // Перейти у вулик
                         val intent = Intent(this, HiveInfoActivity::class.java).apply {
                             // ✅ Використовуємо note.hiveNumber
-                            putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
+                            putExtra(Constants.EXTRA_HIVE_NUMBER, note.hiveNumber)
                             // ✅ Додаємо передачу типу запису
-                            putExtra(HiveInfoActivity.EXTRA_ENTRY_TYPE, note.type)
+                            putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
                         }
                         startActivity(intent)
                     }
                     1 -> { // Редагувати запис
                         val intent = Intent(this, EditNoteActivity::class.java).apply {
                             // ✅ Використовуємо note.id
-                            putExtra(EditNoteActivity.EXTRA_NOTE_ID, note.id)
+                            putExtra(Constants.EXTRA_NOTE_ID, note.id)
                             // ✅ Використовуємо note.text
-                            putExtra(EditNoteActivity.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
+                            putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
                             // ✅ Використовуємо note.hiveNumber
-                            putExtra(EditNoteActivity.EXTRA_HIVE_NUMBER, note.hiveNumber)
+                            putExtra(Constants.EXTRA_HIVE_NUMBER, note.hiveNumber)
                             // ✅ Використовуємо note.type
-                            putExtra(EditNoteActivity.EXTRA_ENTRY_TYPE, note.type)
+                            putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
                             // Передача назви вулика тут неможлива, бо адаптер її не передає
                         }
                         startActivity(intent)
@@ -234,12 +226,12 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun showKeyboard(view: View) {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
 
     private fun hideKeyboard() {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(searchQueryInput.windowToken, 0)
     }
 }

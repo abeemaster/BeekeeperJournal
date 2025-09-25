@@ -24,6 +24,14 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
+        <TextView
+            android:id="@+id/year_amount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="Річна рентабельність: 1000.00 грн" />
+
         <!-- TabLayout для перемикання між вкладками -->
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"

@@ -23,7 +23,7 @@ object NaturalHiveNumberComparator : Comparator<String> {
         val tokens1 = pattern.findAll(num1).map { it.value }.toList()
         val tokens2 = pattern.findAll(num2).map { it.value }.toList()
 
-        for (i in 0 until Math.min(tokens1.size, tokens2.size)) {
+        for (i in 0 until tokens1.size.coerceAtMost(tokens2.size)) {
             val token1 = tokens1[i]
             val token2 = tokens2[i]
 
@@ -31,11 +31,9 @@ object NaturalHiveNumberComparator : Comparator<String> {
             val numB = token2.toIntOrNull()
 
             if (numA != null && numB != null) {
-                // Обидва токени - числа, сортуємо числово
                 val result = numA.compareTo(numB)
                 if (result != 0) return result
             } else {
-                // Хоча б один токен - не число, сортуємо за алфавітом
                 val result = token1.compareTo(token2)
                 if (result != 0) return result
             }

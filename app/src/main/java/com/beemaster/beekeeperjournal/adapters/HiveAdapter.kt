@@ -14,6 +14,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.activities.HiveInfoActivity
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
@@ -42,11 +43,11 @@ class HiveAdapter(
                 currentHive?.let {
                     // Виправлено: передаємо повне ім'я вулика, а не лише номер
                     val intent = Intent(itemView.context, HiveInfoActivity::class.java).apply {
-                        putExtra(HiveInfoActivity.EXTRA_HIVE_ID, it.id)
-                        putExtra(HiveInfoActivity.EXTRA_HIVE_NUMBER, it.hiveNumber.toString())
-                        putExtra(HiveInfoActivity.EXTRA_HIVE_NAME, it.name) // Використовуємо name замість hiveNumber
-                        putExtra(HiveInfoActivity.EXTRA_HIVE_COLOR, it.color)
-                        putExtra(HiveInfoActivity.EXTRA_HIVE_SECONDARY_COLOR, it.secondaryColor)
+                        putExtra(Constants.EXTRA_HIVE_ID, it.id)
+                        putExtra(Constants.EXTRA_HIVE_NUMBER, it.hiveNumber.toString())
+                        putExtra(Constants.EXTRA_HIVE_NAME, it.name) // Використовуємо name замість hiveNumber
+                        putExtra(Constants.EXTRA_HIVE_COLOR, it.color)
+                        putExtra(Constants.EXTRA_HIVE_SECONDARY_COLOR, it.secondaryColor)
                     }
                     itemView.context.startActivity(intent)
                 }

@@ -9,6 +9,8 @@
     <string name="add_record_button_text">Зберегти запис</string>
     <string name="queen_button_text">Матка</string>
     <string name="hive_info_title">Вулик</string>
+    <string name="default_hive_name">Вулик %s</string>
+
     <string name="notes_button_text">Приміт</string>
 
     <!-- Рядки для activity_main.xml -->
@@ -55,13 +57,14 @@
     <string name="hive_number_hint">Введіть новий номер</string>
     <string name="save">Зберегти</string>
     <string name="delete">Видалити</string>
+    <string name="edit">Редагувати</string>
     <string name="cancel">Скасувати</string>
     <string name="add_hive_title">Додати новий вулик</string>
     <string name="menu_profitability">Рентабельність</string>
     <string name="total_incomes">Загальні прибутки</string>
     <string name="total_expenses">Загальні витрати</string>
-    <string name="add_income_title">Додати прибуток</string>
-    <string name="add_expense_title">Додати витрату</string>
+    <string name="add_expense_title">Кнопка для додавання нової витрати</string>
+    <string name="add_income_title">Кнопка для додавання нового прибутку</string>
     <string name="income_description_hint">Опис (наприклад, \"Продаж меду\")</string>
     <string name="income_amount_hint">Кількість (наприклад, 20)</string>
     <string name="income_unit_hint">Одиниця виміру (наприклад, \"кг\")</string>
@@ -75,6 +78,13 @@
     <string name="total_income_text">Загальний прибуток: %1$s</string>
     <string name="total_expenses_text">Загальні витрати: %s</string>
     <string name="edit_hive_number_title">Змінити номер вулика</string>
+    <string name="confirm_delete">Видалити запис?</string>
+    <string name="delete_confirm_message">Ви впевнені, що хочете видалити цю нотатку? Цю дію неможливо буде скасувати.</string>
+    <string name="note_deleted">Запис видалено</string>
+    <string name="choose_an_action">Оберіть дію</string>
+
+
+
 
 
 </resources>
