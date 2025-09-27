@@ -11,7 +11,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -24,6 +23,7 @@ import com.beemaster.beekeeperjournal.adapters.HiveAdapter
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.DialogUtils
+import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
@@ -69,13 +69,14 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val existingHive = viewModel.getHiveByNumber("1")
             if (existingHive == null) {
-                val defaultHive = HiveEntity(
-                    hiveNumber = "1",
-                    name = "Вулик 1",
+                val defaultHiveNumber = "1"
+                val newHive = HiveEntity(
+                    hiveNumber = defaultHiveNumber,
+                    name = defaultHiveNumber, // name залишається в БД, але приймає значення number
                     color = this@MainActivity.getColor(R.color.color_white),
                     secondaryColor = 0
                 )
-                viewModel.addHive(defaultHive)
+                viewModel.addHive(newHive)
             }
         }
 
@@ -109,7 +110,15 @@ class MainActivity : AppCompatActivity() {
                     addHive()
                 }
                 R.id.nav_sync -> {
-                    showSyncOptionsDialog()
+                    DialogUtils.showSyncOptionsDialog(
+                        context = this,
+                        onExport = {
+                            getExportFile.launch("beekeeper_backup.json")
+                        },
+                        onImport = {
+                            getImportFile.launch(arrayOf("application/json"))
+                        }
+                    )
                 }
                 R.id.nav_profitability -> {
                     openProfitabilityActivity()
@@ -128,7 +137,7 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
                 putExtra(Constants.EXTRA_HIVE_NUMBER, 0)
             }
-            startActivity(intent)
+            startActivityWithSlideAnimation(intent)
         }
     }
 
@@ -139,7 +148,7 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(this, HiveInfoActivity::class.java).apply {
                     putExtra(Constants.EXTRA_HIVE_ID, hive.id)
                 }
-                startActivity(intent)
+                startActivityWithSlideAnimation(intent)
             },
             onLongClick = { hive ->
                 DialogUtils.showHiveOptionsDialog(
@@ -153,24 +162,13 @@ class MainActivity : AppCompatActivity() {
                                 lifecycleScope.launch {
                                     val existingHive = viewModel.getHiveByNumber(newNumber)
                                     if (existingHive != null && existingHive.id != hive.id) {
-                                        Toast.makeText(this@MainActivity, "Вулик з таким номером вже існує.", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
                                     } else {
-                                        val updatedHive = hive.copy(hiveNumber = newNumber)
+                                        val updatedHive = hive.copy(hiveNumber = newNumber, name = newNumber)
                                         viewModel.updateHive(updatedHive)
-                                        Toast.makeText(this@MainActivity, "Номер вулика оновлено!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(this@MainActivity, R.string.hive_number_updated, Toast.LENGTH_SHORT).show()
                                     }
                                 }
-                            }
-                        )
-                    },
-                    onEditName = {
-                        DialogUtils.showEditNameDialog(
-                            context = this,
-                            hive = hive,
-                            onSave = { newName ->
-                                val updatedHive = hive.copy(name = newName)
-                                viewModel.updateHive(updatedHive)
-                                Toast.makeText(this, "Назву вулика оновлено!", Toast.LENGTH_SHORT).show()
                             }
                         )
                     },
@@ -180,7 +178,7 @@ class MainActivity : AppCompatActivity() {
                         ) { newColor ->
                             val updatedHive = hive.copy(color = newColor)
                             viewModel.updateHive(updatedHive)
-                            Toast.makeText(this, "Основний колір оновлено!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, R.string.primary_color_updated, Toast.LENGTH_SHORT).show()
                         }
                     },
                     onSelectSecondaryColor = {
@@ -189,7 +187,7 @@ class MainActivity : AppCompatActivity() {
                         ) { newColor ->
                             val updatedHive = hive.copy(secondaryColor = newColor)
                             viewModel.updateHive(updatedHive)
-                            Toast.makeText(this, "Додатковий колір оновлено!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, R.string.secondary_color_updated, Toast.LENGTH_SHORT).show()
                         }
                     },
                     onDeleteHive = {
@@ -198,7 +196,7 @@ class MainActivity : AppCompatActivity() {
                             hive = hive,
                             onDeleteConfirmed = {
                                 viewModel.deleteHive(hive)
-                                Toast.makeText(this, "Вулик видалено.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, R.string.hive_deleted, Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -219,54 +217,60 @@ class MainActivity : AppCompatActivity() {
 
     private fun openProfitabilityActivity() {
         val intent = Intent(this, ProfitabilityActivity::class.java)
-        startActivity(intent)
+        startActivityWithSlideAnimation(intent)
     }
     private fun openSearchActivity() {
         val intent = Intent(this, SearchActivity::class.java)
-        startActivity(intent)
+        startActivityWithSlideAnimation(intent)
     }
 
-    private fun addHive() {
-        val currentHives = viewModel.hives.value
-        if (currentHives.size >= 100) {
-            Toast.makeText(this, "Досягнуто максимальну кількість вуликів", Toast.LENGTH_SHORT).show()
-        } else {
-            DialogUtils.showAddHiveDialog(this,
-                onHiveAdded = { hiveName, hiveNumber ->
-                    lifecycleScope.launch {
-                        val existingHive = viewModel.getHiveByNumber(hiveNumber)
-                        if (existingHive != null) {
-                            Toast.makeText(this@MainActivity, "Вулик з таким номером вже існує.", Toast.LENGTH_LONG).show()
-                        } else {
-                            val newHive = HiveEntity(
-                                hiveNumber = hiveNumber,
-                                name = hiveName,
-                                color = this@MainActivity.getColor(R.color.color_white),
-                                secondaryColor = 0
-                            )
-                            viewModel.addHive(newHive)
-                        }
-                    }
-                }
-            )
+    // Функція перевірки наявності номера вулика
+    private fun tryAddHiveIfNotExists(hiveNumber: String, hiveName: String) {
+        lifecycleScope.launch {
+            val existingHive = viewModel.getHiveByNumber(hiveNumber)
+            if (existingHive != null) {
+                Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
+            } else {
+                val newHive = HiveEntity(
+                    hiveNumber = hiveNumber,
+                    name = hiveName,
+                    color = this@MainActivity.getColor(R.color.color_white),
+                    secondaryColor = 0
+                )
+                viewModel.addHive(newHive)
+            }
         }
     }
-
-    private fun showSyncOptionsDialog() {
-        val options = arrayOf("Створити резервну копію", "Відновити з резервної копії")
-        AlertDialog.Builder(this)
-            .setTitle("Оберіть дію")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> getExportFile.launch("beekeeper_backup.json")
-                    1 -> getImportFile.launch(arrayOf("application/json"))
+// Функція додавання нового вулика
+private fun addHive() {
+    val currentHives = viewModel.hives.value
+    if (currentHives.size >= 100) {
+        Toast.makeText(this, R.string.max_hives_reached, Toast.LENGTH_SHORT).show()
+    } else {
+        DialogUtils.showAddHiveDialog(this,
+            onHiveAdded = { hiveNumber -> // ❌ ТУТ МАЄ БУТИ ЛИШЕ ОДИН ПАРАМЕТР!
+                lifecycleScope.launch {
+                    val existingHive = viewModel.getHiveByNumber(hiveNumber)
+                    if (existingHive != null) {
+                        Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
+                    } else {
+                        val newHive = HiveEntity(
+                            hiveNumber = hiveNumber,
+                            name = hiveNumber, // ✅ name = number
+                            color = this@MainActivity.getColor(R.color.color_white),
+                            secondaryColor = 0
+                        )
+                        viewModel.addHive(newHive)
+                    }
                 }
             }
-            .show()
+        )
     }
+}
+
 
     private fun openSettingsActivity() {
         val intent = Intent(this, SettingsActivity::class.java)
-        startActivity(intent)
+        startActivityWithSlideAnimation(intent)
     }
 }

@@ -1,9 +1,8 @@
 // HiveAdapter
-// Оновлено
-// HiveAdapter
 
 package com.beemaster.beekeeperjournal.adapters
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
@@ -60,9 +59,10 @@ class HiveAdapter(
             }
         }
 
+        @SuppressLint("SetTextI18n")
         fun bind(hive: HiveEntity) {
             currentHive = hive
-            hiveNameTextView.text = hive.name
+            hiveNameTextView.text = "Вулик ${hive.hiveNumber}"
             hivePrimaryColorView.setBackgroundColor(hive.color)
 
             if (hive.secondaryColor != 0) {

@@ -63,13 +63,32 @@ class SearchResultsAdapter(
     override fun getItemCount(): Int = searchResults.size
 
     fun updateData(newResults: List<NoteSearchResult>) {
-        val diffCallback = NoteAdapter(searchResults, newResults)
+        val diffCallback = SearchResultsDiffCallback(searchResults, newResults)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
 
         searchResults.clear()
         searchResults.addAll(newResults)
 
         diffResult.dispatchUpdatesTo(this)
+    }
+}
+
+class SearchResultsDiffCallback(
+    private val oldList: List<NoteSearchResult>,
+    private val newList: List<NoteSearchResult>
+) : DiffUtil.Callback() {
+
+    override fun getOldListSize(): Int = oldList.size
+    override fun getNewListSize(): Int = newList.size
+
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        // Порівнюємо за унікальним ID нотатки
+        return oldList[oldItemPosition].note.id == newList[newItemPosition].note.id
+    }
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        // Порівнюємо вміст усього об'єкта NoteSearchResult
+        return oldList[oldItemPosition] == newList[newItemPosition]
     }
 }
 

@@ -44,11 +44,14 @@ object DialogUtils {
     // ✅ Нова функція для відображення діалогу підтвердження видалення
     fun showDeleteConfirmationDialog(
         context: Context,
+        // Приймаємо ресурси для гнучкості
+        titleResId: Int,
+        messageResId: Int,
         onConfirm: () -> Unit
     ) {
         AlertDialog.Builder(context)
-            .setTitle(context.getString(R.string.confirm_delete))
-            .setMessage(context.getString(R.string.delete_confirm_message))
+            .setTitle(context.getString(titleResId)) // Використовуємо переданий ресурс
+            .setMessage(context.getString(messageResId)) // Використовуємо переданий ресурс
             .setPositiveButton(context.getString(R.string.delete)) { _, _ ->
                 onConfirm.invoke()
             }
@@ -78,7 +81,6 @@ object DialogUtils {
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
-        // ✅ ОНОВЛЕНО: Заповнюємо поля, якщо це режим редагування
         if (incomeToEdit != null) {
             descriptionEditText.setText(incomeToEdit.productName)
             amountEditText.setText(incomeToEdit.quantity.toString())
@@ -87,7 +89,6 @@ object DialogUtils {
             calendar.time = incomeToEdit.date
             saveButton.text = "Зберегти" // Змінюємо текст кнопки
         } else {
-            // Режим додавання: встановлюємо поточну дату
             dateEditText.setText(dateFormat.format(calendar.time))
         }
 
@@ -130,7 +131,6 @@ object DialogUtils {
                     )
                     viewModel.insertIncome(newIncome)
                 } else {
-                    // ✅ ЛОГІКА РЕДАГУВАННЯ: оновлюємо існуючий об'єкт
                     val updatedIncome = incomeToEdit.copy(
                         productName = productName,
                         quantity = quantity,
@@ -168,20 +168,17 @@ object DialogUtils {
         val amountEditText: EditText = view.findViewById(R.id.expense_amount_edit_text)
         val dateEditText: EditText = view.findViewById(R.id.expense_date_edit_text)
         val saveButton: Button = view.findViewById(R.id.save_expense_button)
-
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
-        // ✅ ОНОВЛЕНО: Заповнюємо поля, якщо це режим редагування
         if (expenseToEdit != null) {
             nameEditText.setText(expenseToEdit.name)
             quantityEditText.setText(expenseToEdit.quantityUnits.toString())
             quantityUnitsEditText.setText(expenseToEdit.nameQuantity)
             amountEditText.setText(expenseToEdit.amount.toString())
             calendar.time = expenseToEdit.date
-            saveButton.text = "Зберегти" // Змінюємо текст кнопки
+            saveButton.text = "Зберегти"
         } else {
-            // Режим додавання: встановлюємо поточну дату
             dateEditText.setText(dateFormat.format(calendar.time))
         }
 
@@ -222,7 +219,6 @@ object DialogUtils {
                     )
                     viewModel.insertExpense(newExpense)
                 } else {
-                    // ✅ ЛОГІКА РЕДАГУВАННЯ: оновлюємо існуючий об'єкт
                     val updatedExpense = expenseToEdit.copy(
                         name = name,
                         amount = amount,
@@ -242,7 +238,6 @@ object DialogUtils {
     fun showHiveOptionsDialog(
         context: Context,
         hive: HiveEntity,
-        onEditName: () -> Unit,
         onEditNumber: () -> Unit,
         onSelectPrimaryColor: () -> Unit,
         onSelectSecondaryColor: () -> Unit,
@@ -253,11 +248,6 @@ object DialogUtils {
             .setView(dialogView)
             .create()
 
-        val editNameCard: MaterialCardView = dialogView.findViewById(R.id.editNameCard)
-        editNameCard.setOnClickListener {
-            onEditName()
-            dialog.dismiss()
-        }
         val editNumberCard: MaterialCardView = dialogView.findViewById(R.id.editNumberCard)
         editNumberCard.setOnClickListener {
             onEditNumber()
@@ -285,23 +275,6 @@ object DialogUtils {
         dialog.show()
     }
 
-    fun showEditNameDialog(context: Context, hive: HiveEntity, onSave: (String) -> Unit) {
-        val dialogView = View.inflate(context, R.layout.dialog_edit_name, null)
-        val newNameEditText: EditText = dialogView.findViewById(R.id.newNameEditText)
-        newNameEditText.setText(hive.name)
-
-        AlertDialog.Builder(context)
-            .setTitle(context.getString(R.string.edit_name_title))
-            .setView(dialogView)
-            .setPositiveButton(context.getString(R.string.save)) { _, _ ->
-                val newName = newNameEditText.text.toString().trim()
-                if (newName.isNotEmpty() && newName != hive.name) {
-                    onSave(newName)
-                }
-            }
-            .setNegativeButton(context.getString(R.string.cancel), null)
-            .show()
-    }
 
     fun showEditHiveNumberDialog(context: Context, currentNumber: String, onSave: (String) -> Unit) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_hive_number, null)
@@ -339,8 +312,6 @@ object DialogUtils {
             context.getColor(R.color.color_red),
             context.getColor(R.color.color_transparent)
         )
-
-        // Створюємо AlertDialog, але поки не показуємо його
         val dialog = AlertDialog.Builder(context)
             .setView(dialogView)
             .create()
@@ -357,7 +328,6 @@ object DialogUtils {
             colorGrid.addView(colorView)
         }
 
-        // Показуємо діалог після того, як всі View були додані
         dialog.show()
     }
     fun showDeleteHiveDialog(context: Context, hive: HiveEntity, onDeleteConfirmed: () -> Unit) {
@@ -373,7 +343,7 @@ object DialogUtils {
 
     fun showAddHiveDialog(
         context: Context,
-        onHiveAdded: (String, String) -> Unit
+        onHiveAdded: (hiveNumber: String) -> Unit
     ) {
         val dialogView = View.inflate(context, R.layout.dialog_add_hive, null)
         val nameEditText: EditText = dialogView.findViewById(R.id.nameEditText)
@@ -384,18 +354,35 @@ object DialogUtils {
             .setView(dialogView)
             .setPositiveButton(context.getString(R.string.save)) { _, _ ->
                 val hiveNumber = numberEditText.text.toString().trim()
-                var hiveName = nameEditText.text.toString().trim()
+
 
                 if (hiveNumber.isNotBlank()) {
-                    if (hiveName.isBlank()) {
-                        hiveName = context.getString(R.string.default_hive_name, hiveNumber)
-                    }
-                    onHiveAdded(hiveName, hiveNumber)
+                    onHiveAdded(hiveNumber) // ✅ Передаємо лише номер
                 } else {
-                    Toast.makeText(context, "Номер вулика є обов'язковим", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.hive_number_required), Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton(context.getString(R.string.cancel), null)
+            .show()
+    }
+
+    fun showSyncOptionsDialog(
+        context: Context,
+        onExport: () -> Unit,
+        onImport: () -> Unit
+    ) {
+        val options = arrayOf(
+            context.getString(R.string.create_backup),
+            context.getString(R.string.restore_backup)
+        )
+        AlertDialog.Builder(context)
+            .setTitle(context.getString(R.string.choose_an_action))
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> onExport()
+                    1 -> onImport()
+                }
+            }
             .show()
     }
 }

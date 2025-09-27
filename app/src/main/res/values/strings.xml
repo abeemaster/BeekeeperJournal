@@ -8,10 +8,13 @@
     <string name="add_note_button_text">Додати запис</string>
     <string name="add_record_button_text">Зберегти запис</string>
     <string name="queen_button_text">Матка</string>
+    <string name="queen_title">Матка %s</string>
     <string name="hive_info_title">Вулик</string>
     <string name="default_hive_name">Вулик %s</string>
+    <string name="hive_name">Вулик_Імя</string>
 
     <string name="notes_button_text">Приміт</string>
+    <string name="hive_notes_title">Примітки %s</string>
 
     <!-- Рядки для activity_main.xml -->
     <string name="app_title">Щоденник Пасічника</string>
@@ -77,14 +80,31 @@
     <string name="expense_units_hint">Одиниці виміру</string>
     <string name="total_income_text">Загальний прибуток: %1$s</string>
     <string name="total_expenses_text">Загальні витрати: %s</string>
+    <string name="general_notes_title">Загальні записи.</string>
     <string name="edit_hive_number_title">Змінити номер вулика</string>
     <string name="confirm_delete">Видалити запис?</string>
     <string name="delete_confirm_message">Ви впевнені, що хочете видалити цю нотатку? Цю дію неможливо буде скасувати.</string>
     <string name="note_deleted">Запис видалено</string>
-    <string name="choose_an_action">Оберіть дію</string>
+    <string name="choose_an_action">Оберіть дію.</string>
+    <string name="create_backup">Створити резервну копію?</string>
+    <string name="restore_backup">Відновити з резервної копії?</string>
+    <string name="hive_number_updated">Номер вулика оновлено!</string>
+    <string name="hive_name_updated">Назву вулика оновлено!</string>
+    <string name="primary_color_updated">Основний колір оновлено!</string>
+    <string name="secondary_color_updated">Додатковий колір оновлено!</string>
+    <string name="hive_deleted">Вулик видалено.</string>
+    <string name="max_hives_reached">Досягнуто максимальну кількість вуликів</string>
+    <string name="backup_filename">beekeeper_backup.json</string>
+    <string name="hive_number_exists">Вулик з таким номером вже існує.</string>
+    <string name="home_page">Головна сторінка.</string>
+    <string name="delete_expense_title">Видалити витрату?</string>
+    <string name="delete_expense_message">Ви впевнені, що хочете видалити цю витрату?</string>
+    <string name="expense_deleted_success">Витрату видалено</string>
+    <string name="hive_number_required">Номер вулика є обов`язковим</string>
 
-
-
-
+    Номер вулика є обов'язковим
+    hive_number_required
 
 </resources>
+
+

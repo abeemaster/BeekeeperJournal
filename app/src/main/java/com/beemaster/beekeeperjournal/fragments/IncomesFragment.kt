@@ -98,8 +98,11 @@ class IncomesFragment : Fragment() {
             onDelete = {
                 DialogUtils.showDeleteConfirmationDialog(
                     context = requireContext(),
+                    titleResId = R.string.confirm_delete, // "Видалити запис?"
+                    messageResId = R.string.delete_confirm_message, // "Ви впевнені, що хочете видалити...
                     onConfirm = {
                         viewModel.deleteIncome(income.id)
+                        // Toast.makeText(requireContext(), (R.string.note_deleted), Toast.LENGTH_SHORT).show()
                         Toast.makeText(requireContext(), (R.string.note_deleted), Toast.LENGTH_SHORT).show()
                     }
                 )

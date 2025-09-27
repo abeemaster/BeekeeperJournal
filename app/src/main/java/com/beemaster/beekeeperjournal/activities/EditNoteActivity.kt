@@ -2,7 +2,6 @@
 
 package com.beemaster.beekeeperjournal.activities
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognitionListener
@@ -17,8 +16,8 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
-import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.utils.VoskRecognitionHelper
 import com.beemaster.beekeeperjournal.viewmodel.EditNoteViewModel
 import com.google.android.material.button.MaterialButton
@@ -29,13 +28,6 @@ class EditNoteActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "EditNoteActivity"
-        const val EXTRA_NOTE_ID = "com.beemaster.beekeeperjournal.NOTE_ID"
-        const val EXTRA_ORIGINAL_NOTE_TEXT = "com.beemaster.beekeeperjournal.ORIGINAL_NOTE_TEXT"
-        // ✅ ВИПРАВЛЕНО: Використовуємо EXTRA_HIVE_ID, щоб відповідати HiveInfoActivity
-        const val EXTRA_HIVE_ID = "com.beemaster.beekeeperjournal.HIVE_ID"
-        const val EXTRA_HIVE_NAME = "com.beemaster.beekeeperjournal.HIVE_NAME"
-        const val EXTRA_ENTRY_TYPE = "com.beemaster.beekeeperjournal.ENTRY_TYPE_EDIT"
-        const val EXTRA_START_VOICE_INPUT = "com.beemaster.beekeeperjournal.START_VOICE_INPUT_EDIT"
     }
 
     private lateinit var voskHelper: VoskRecognitionHelper
@@ -123,7 +115,7 @@ class EditNoteActivity : AppCompatActivity() {
 
 
     private fun toggleListening() {
-        val sharedPref = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        val sharedPref = getSharedPreferences("app_settings", MODE_PRIVATE)
         val speechEngine = sharedPref.getString("speech_engine", "google")
 
         if (speechEngine == "vosk") {
@@ -162,12 +154,12 @@ class EditNoteActivity : AppCompatActivity() {
     }
 
     private fun getIntentData() {
-        noteId = intent.getIntExtra(EXTRA_NOTE_ID, 0)
-        val originalNoteText = intent.getStringExtra(EXTRA_ORIGINAL_NOTE_TEXT)
-        currentEntryType = intent.getStringExtra(EXTRA_ENTRY_TYPE) ?: "hive"
+        noteId = intent.getIntExtra(Constants.EXTRA_NOTE_ID, 0)
+        val originalNoteText = intent.getStringExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT)
+        currentEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
         // ✅ ВИПРАВЛЕНО: Зчитуємо ID з правильної константи EXTRA_HIVE_ID
-        currentHiveId = intent.getIntExtra(EXTRA_HIVE_ID, 0)
-        currentHiveActualName = intent.getStringExtra(EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveId"
+        currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
+        currentHiveActualName = intent.getStringExtra(Constants.EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveId"
         editNoteContentInput.setText(originalNoteText)
     }
 
@@ -187,14 +179,14 @@ class EditNoteActivity : AppCompatActivity() {
             else -> "Редагувати запис"
         }
 
-        val startVoiceInputImmediately = intent.getBooleanExtra(EXTRA_START_VOICE_INPUT, false)
+        val startVoiceInputImmediately = intent.getBooleanExtra(Constants.EXTRA_START_VOICE_INPUT, false)
         if (startVoiceInputImmediately) {
             editNoteContentInput.post {
                 toggleListening()
             }
         } else {
             editNoteContentInput.requestFocus()
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(editNoteContentInput, InputMethodManager.SHOW_IMPLICIT)
         }
     }

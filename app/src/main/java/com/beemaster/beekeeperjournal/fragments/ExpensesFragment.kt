@@ -95,9 +95,12 @@ class ExpensesFragment : Fragment() {
             onDelete = {
                 DialogUtils.showDeleteConfirmationDialog(
                     context = requireContext(),
+                    titleResId = R.string.confirm_delete, // Або R.string.delete_expense_title
+                    messageResId = R.string.delete_confirm_message, // Або R.string.delete_expense_message
                     onConfirm = {
                         viewModel.deleteExpense(expense.id)
-                        Toast.makeText(requireContext(), (R.string.note_deleted), Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(requireContext(), (R.string.note_deleted), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), getString(R.string.note_deleted), Toast.LENGTH_SHORT).show()
                     }
                 )
             }
