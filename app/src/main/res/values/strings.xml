@@ -102,8 +102,31 @@
     <string name="expense_deleted_success">Витрату видалено</string>
     <string name="hive_number_required">Номер вулика є обов`язковим</string>
 
-    Номер вулика є обов'язковим
-    hive_number_required
+    <string name="general_record_title">Загальний запис</string>
+    <string name="hive_record_title">Запис для вулика №%s</string>
+    <string name="queen_record_title">Запис для матки вулика №%s</string>
+    <string name="notes_record_title">Запис для приміток вулика №%s</string>
+    <string name="edit_record_title">Редагувати запис</string>
+    <string name="note_cannot_be_empty">Запис не може бути порожнім</string>
+    <string name="listening_message">Слухаю…</string>
+    <string name="recognition_error">Помилка: %s</string>
+    <string name="error_audio">Помилка аудіо</string>
+    <string name="error_client">Помилка клієнта</string>
+    <string name="error_permissions">Недостатньо прав</string>
+    <string name="error_network">Помилка мережі</string>
+    <string name="error_network_timeout">Час очікування мережі вичерпано</string>
+    <string name="error_no_match">Не розпізнано</string>
+    <string name="error_recognizer_busy">Розпізнавач зайнятий</string>
+    <string name="error_server">Помилка сервера</string>
+    <string name="error_speech_timeout">Час очікування мовлення вичерпано</string>
+    <string name="error_unknown">Невідома помилка</string>
+    <string name="hive_number_not_found">Номер вулика не знайдено</string>
+    <string name="tab_title_expenses">Витрати</string>
+    <string name="tab_title_income">Прибутки</string>
+    <string name="error_invalid_tab_position">Недійсна позиція</string>
+
+    <string name="annual_profitability_format">Річна рентабельність: %s</string>
+
 
 </resources>
 

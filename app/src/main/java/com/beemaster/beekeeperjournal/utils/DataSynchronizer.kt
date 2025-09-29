@@ -128,20 +128,6 @@ class DataSynchronizer(
         return "\"${note.id}\",\"$dateString\",\"$escapedText\",\"${note.type}\",\"$hiveNumber\",\"${note.timestamp}\""
     }
 
-    //private fun formatNoteToCsvRow(note: Note): String {
-        // ✅ Тепер ми просто беремо рядок дати з об'єкта note.
-        // SimpleDateFormat більше не потрібен!
-    //      val dateString = note.date
-
-    //    val escapedText = note.text.replace("\"", "\"\"").replace("\n", " ").trim()
-    //    val hiveNumber = note.hiveNumber
-
-        // ✅ Виправлений рядок CSV:
-        // Порядок полів: Дата, Текст, Тип, Номер Вулика, Мітка Часу, ID
-    //    return "\"$dateString\",\"$escapedText\",\"${note.type}\",\"$hiveNumber\",\"${note.timestamp}\",\"${note.id}\""
-    //}
-
-
     private fun openFolderPicker() {
         pickFolderLauncher.launch(null)
     }

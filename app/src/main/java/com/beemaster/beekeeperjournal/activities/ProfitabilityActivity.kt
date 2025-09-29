@@ -21,12 +21,21 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Locale
 
+/**
+ * Activity для відображення екрана річної рентабельності.
+ * Включає ViewPager2 з двома вкладками: Витрати та Прибутки.
+ */
 @AndroidEntryPoint
 class ProfitabilityActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfitabilityBinding
     private val viewModel: ProfitabilityViewModel by viewModels()
 
+    /**
+     * Викликається при першому створенні Activity.
+     * Ініціалізує View Binding, Toolbar, налаштовує ViewPager2 та TabLayout,
+     * а також починає спостереження за даними рентабельності.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfitabilityBinding.inflate(layoutInflater)
@@ -41,9 +50,9 @@ class ProfitabilityActivity : AppCompatActivity() {
         binding.viewPager.adapter = sectionsPagerAdapter
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.text = when (position) {
-                0 -> "Витрати"
-                1 -> "Прибутки"
-                else -> throw IllegalArgumentException("Недійсна позиція")
+                0 -> getString(R.string.tab_title_expenses) // ✅ Локалізовано
+                1 -> getString(R.string.tab_title_income)   // ✅ Локалізовано
+                else -> throw IllegalArgumentException(getString(R.string.error_invalid_tab_position)) // ✅ Локалізовано
             }
         }.attach()
 
@@ -51,7 +60,8 @@ class ProfitabilityActivity : AppCompatActivity() {
     }
 
     /**
-     * Спостерігає за рентабельністю у ViewModel та оновлює UI.
+     * Спостерігає за значенням річної рентабельності у ViewModel (Flow<Double>) та оновлює UI.
+     * Встановлює колір тексту відповідно до знаку суми (позитивний, негативний, нуль).
      */
     private fun observeProfitability() {
         lifecycleScope.launch {
@@ -70,7 +80,8 @@ class ProfitabilityActivity : AppCompatActivity() {
                     colorId = R.color.profit_zero
                 }
 
-                val fullText = "Річна рентабельність:  $amountText"
+                // ✅ Використовуємо форматний рядок для локалізації
+                val fullText = getString(R.string.annual_profitability_format, amountText)
                 val spannableString = SpannableString(fullText)
 
                 val startIndex = fullText.indexOf(amountText)
@@ -95,6 +106,10 @@ class ProfitabilityActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Обробляє натискання на кнопку "Вгору" (стрілка назад) на панелі інструментів.
+     * @return true, якщо перехід виконано.
+     */
     override fun onSupportNavigateUp(): Boolean {
         onBackPressedDispatcher.onBackPressed()
         return true

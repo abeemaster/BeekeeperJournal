@@ -11,56 +11,94 @@ import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
+import javax.inject.Singleton // ✅ Потрібно додати @Singleton, як і в NoteRepository
 
+/**
+ * Репозиторій для роботи з вуликами.
+ * Відповідає за абстрагування джерела даних (HiveDao) від рівня ViewModel.
+ * Здійснює всі операції, пов'язані з HiveEntity.
+ */
+@Singleton // ✅ Додаємо Singleton для коректної роботи Hilt
 class HiveRepository @Inject constructor(
     private val hiveDao: HiveDao
 ) {
+    /**
+     * Вставляє новий вулик у базу даних.
+     * @param hive Об'єкт HiveEntity, який потрібно вставити.
+     */
     suspend fun insertHive(hive: HiveEntity) {
         hiveDao.insertHive(hive)
     }
 
+    /**
+     * Отримує об'єкт вулика за його унікальним ID.
+     * @param hiveId Унікальний ID вулика.
+     * @return Об'єкт HiveEntity або null.
+     */
     suspend fun getHiveById(hiveId: Int): HiveEntity? {
         return hiveDao.getHiveById(hiveId)
     }
 
     /**
-     * Асинхронний виклик, що повертає список вуликів один раз.
-     * Цей метод є suspend, тому його потрібно викликати в корутині.
+     * Асинхронний виклик, що повертає список усіх вуликів один раз.
+     * Отримує перше значення з потоку Flow.
+     * @return Список усіх HiveEntity.
      */
     suspend fun getAllHives(): List<HiveEntity> {
         return hiveDao.getAllHives().first()
     }
 
     /**
-     * Повертає Flow зі списком вуликів.
-     * Цей метод не є suspend, і він автоматично надає оновлення.
+     * Повертає Flow зі списком усіх вуликів.
+     * Цей метод використовується для спостереження за даними в реальному часі.
+     * @return Flow, що містить список усіх HiveEntity.
      */
     fun getAllHivesAsFlow(): Flow<List<HiveEntity>> {
         return hiveDao.getAllHives()
     }
 
-    // ✅ ДОДАНО: Метод для оновлення вулика
+    /**
+     * Оновлює інформацію про існуючий вулик.
+     * @param hive Об'єкт HiveEntity з оновленими даними.
+     */
     suspend fun updateHive(hive: HiveEntity) {
         hiveDao.updateHive(hive)
     }
 
-    // ✅ Оновлено: Репозиторій містить метод для отримання вулика за номером.
+    /**
+     * Отримує об'єкт вулика за його унікальним номером.
+     * Використовується для перевірки унікальності при додаванні нового вулика.
+     * @param hiveNumber Номер вулика (String).
+     * @return Об'єкт HiveEntity або null.
+     */
     suspend fun getHiveByNumber(hiveNumber: String): HiveEntity? {
         return hiveDao.getHiveByNumber(hiveNumber)
     }
 
-    // ✅ ДОДАНО: Метод для видалення вулика
+    /**
+     * Видаляє вулик із бази даних.
+     * @param hive Об'єкт HiveEntity для видалення.
+     */
     suspend fun deleteHive(hive: HiveEntity) {
+        // Припускаємо, що deleteHive приймає ID
         hiveDao.deleteHive(hive.id)
     }
 
-    // ✅ Додано: метод для отримання всіх вуликів
+    /**
+     * Отримує всі об'єкти вулика. Використовується у синхронному контексті (наприклад, для експорту).
+     * @return Список усіх HiveEntity.
+     */
     suspend fun getAllHivesSuspend(): List<HiveEntity> {
+        // Припускаємо, що HiveDao має відповідний suspend метод
         return hiveDao.getAllHivesSuspend()
     }
 
-    // ✅ Додано: метод для імпорту вуликів
+    /**
+     * Імпортує список вуликів у базу даних, зазвичай, для відновлення.
+     * @param hives Список HiveEntity для імпорту.
+     */
     suspend fun importHives(hives: List<HiveEntity>) {
+        // Припускаємо, що HiveDao має відповідний метод для вставки списку
         hiveDao.insertHives(hives)
     }
 }

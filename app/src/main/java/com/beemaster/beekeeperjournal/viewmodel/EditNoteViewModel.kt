@@ -1,11 +1,12 @@
-// EditNoteViewModel
+// Цей клас буде керувати даними для EditNoteActivity
 
-// У файлі EditNoteViewModel.kt
 package com.beemaster.beekeeperjournal.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
+import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -13,10 +14,21 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditNoteViewModel @Inject constructor(
-    private val noteRepository: NoteRepository
+    private val noteRepository: NoteRepository,
+    private val hiveRepository: HiveRepository
 ) : ViewModel() {
 
-    // ✅ Оновлено: додано параметр createdAt
+    /**
+     * Зберігає або оновлює нотатку в базі даних.
+     * Якщо [noteId] > 0, нотатка оновлюється. Якщо [noteId] = 0, створюється нова нотатка.
+     * @param noteId Унікальний ID нотатки (0 для нової).
+     * @param hiveId ID вулика, до якого відноситься нотатка (0 для загальних нотаток).
+     * @param type Тип запису ("hive", "queen", "notes", "general").
+     * @param title Заголовок нотатки.
+     * @param content Текст нотатки.
+     * @param imagePath Шлях до зображення (може бути null).
+     * @param createdAt Час створення нотатки (для збереження часу при оновленні).
+     */
     fun saveNote(
         noteId: Int,
         hiveId: Int,
@@ -24,7 +36,7 @@ class EditNoteViewModel @Inject constructor(
         title: String,
         content: String,
         imagePath: String?,
-        createdAt: Long // ✅ Додано параметр createdAt
+        createdAt: Long
     ) {
         viewModelScope.launch {
             val note = NoteEntity(
@@ -34,9 +46,20 @@ class EditNoteViewModel @Inject constructor(
                 title = title,
                 content = content,
                 imagePath = imagePath,
-                createdAt = createdAt // ✅ Використовуємо передане значення
+                createdAt = createdAt
             )
             noteRepository.insertNote(note)
         }
+    }
+
+    /**
+     * Отримує об'єкт вулика за його унікальним ID.
+     * Ця функція необхідна для асинхронного отримання номера вулика (hiveNumber)
+     * для відображення в заголовку EditNoteActivity.
+     * @param hiveId Унікальний ID вулика.
+     * @return Об'єкт HiveEntity або null, якщо вулик не знайдено.
+     */
+    suspend fun getHiveById(hiveId: Int): HiveEntity? {
+        return hiveRepository.getHiveById(hiveId)
     }
 }

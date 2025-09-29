@@ -16,12 +16,14 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.utils.VoskRecognitionHelper
 import com.beemaster.beekeeperjournal.viewmodel.EditNoteViewModel
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class EditNoteActivity : AppCompatActivity() {
@@ -39,12 +41,17 @@ class EditNoteActivity : AppCompatActivity() {
 
     private var noteId: Int = 0
     private var currentEntryType: String = ""
-    private var currentHiveId: Int = 0 // ✅ ЗМІНЕНО: Використовуємо більш точну назву для ID
-    private var currentHiveActualName: String = ""
+    private var currentHiveId: Int = 0
+    // ✅ НОВЕ ПОЛЕ: Використовується для відображення номера вулика (асинхронно завантажується)
+    private lateinit var currentHiveDisplayTitle: String
     private var isGoogleListening = false
     private val viewModel: EditNoteViewModel by viewModels()
 
 
+    /**
+     * Основний метод життєвого циклу Activity. Ініціалізує View, отримує дані з Intent,
+     * налаштовує розпізнавання мовлення та завантажує заголовок.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_note)
@@ -52,7 +59,8 @@ class EditNoteActivity : AppCompatActivity() {
         bindViews()
         getIntentData()
         setupListeners()
-        setupUI()
+        // ✅ ЗМІНЕНО: Асинхронне завантаження даних та налаштування заголовка
+        loadDataAndSetupTitle()
 
         voskHelper = VoskRecognitionHelper(
             this,
@@ -60,6 +68,13 @@ class EditNoteActivity : AppCompatActivity() {
             microphoneBtnEditNote
         )
 
+        setupSpeechRecognizer()
+    }
+
+    /**
+     * Налаштовує обробники подій для Google Speech Recognizer.
+     */
+    private fun setupSpeechRecognizer() {
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         speechRecognizer.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
@@ -67,7 +82,7 @@ class EditNoteActivity : AppCompatActivity() {
             }
             override fun onBeginningOfSpeech() {
                 Log.d(TAG, "onBeginningOfSpeech")
-                Toast.makeText(this@EditNoteActivity, "Слухаю...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@EditNoteActivity, getString(R.string.listening_message), Toast.LENGTH_SHORT).show()
                 updateMicrophoneButtonState(true)
             }
             override fun onRmsChanged(rmsdB: Float) {}
@@ -79,18 +94,18 @@ class EditNoteActivity : AppCompatActivity() {
             override fun onError(error: Int) {
                 Log.e(TAG, "Google recognition error: $error")
                 val errorMessage = when(error) {
-                    SpeechRecognizer.ERROR_AUDIO -> "Помилка аудіо"
-                    SpeechRecognizer.ERROR_CLIENT -> "Помилка клієнта"
-                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Недостатньо прав"
-                    SpeechRecognizer.ERROR_NETWORK -> "Помилка мережі"
-                    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Час очікування мережі вичерпано"
-                    SpeechRecognizer.ERROR_NO_MATCH -> "Не розпізнано"
-                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Розпізнавач зайнятий"
-                    SpeechRecognizer.ERROR_SERVER -> "Помилка сервера"
-                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Час очікування мовлення вичерпано"
-                    else -> "Невідома помилка"
+                    SpeechRecognizer.ERROR_AUDIO -> getString(R.string.error_audio)
+                    SpeechRecognizer.ERROR_CLIENT -> getString(R.string.error_client)
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> getString(R.string.error_permissions)
+                    SpeechRecognizer.ERROR_NETWORK -> getString(R.string.error_network)
+                    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> getString(R.string.error_network_timeout)
+                    SpeechRecognizer.ERROR_NO_MATCH -> getString(R.string.error_no_match)
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> getString(R.string.error_recognizer_busy)
+                    SpeechRecognizer.ERROR_SERVER -> getString(R.string.error_server)
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> getString(R.string.error_speech_timeout)
+                    else -> getString(R.string.error_unknown)
                 }
-                Toast.makeText(this@EditNoteActivity, "Помилка: $errorMessage", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@EditNoteActivity, getString(R.string.recognition_error, errorMessage), Toast.LENGTH_LONG).show()
                 updateMicrophoneButtonState(false)
             }
             override fun onResults(results: Bundle?) {
@@ -106,6 +121,11 @@ class EditNoteActivity : AppCompatActivity() {
         })
     }
 
+
+    /**
+     * Викликається при знищенні Activity.
+     * Звільняє ресурси Vosk та SpeechRecognizer.
+     */
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: Releasing Vosk resources.")
@@ -113,7 +133,10 @@ class EditNoteActivity : AppCompatActivity() {
         speechRecognizer.destroy()
     }
 
-
+    /**
+     * Перемикає стан розпізнавання мовлення (Vosk або Google)
+     * залежно від налаштувань користувача.
+     */
     private fun toggleListening() {
         val sharedPref = getSharedPreferences("app_settings", MODE_PRIVATE)
         val speechEngine = sharedPref.getString("speech_engine", "google")
@@ -141,11 +164,17 @@ class EditNoteActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Обробляє результат запиту дозволів. Передає результат у VoskHelper.
+     */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         voskHelper.onRequestPermissionsResult(requestCode, grantResults)
     }
 
+    /**
+     * Прив'язує змінні-члени класу до елементів View за їхніми ID.
+     */
     private fun bindViews() {
         editNoteScreenTitle = findViewById(R.id.editNoteScreenTitle)
         editNoteContentInput = findViewById(R.id.editNoteContentInput)
@@ -153,31 +182,59 @@ class EditNoteActivity : AppCompatActivity() {
         saveEditedNoteButton = findViewById(R.id.saveEditedNoteButton)
     }
 
+    /**
+     * Отримує всі необхідні дані (ID нотатки, текст, ID вулика, тип запису) з Intent.
+     */
     private fun getIntentData() {
         noteId = intent.getIntExtra(Constants.EXTRA_NOTE_ID, 0)
         val originalNoteText = intent.getStringExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT)
         currentEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
-        // ✅ ВИПРАВЛЕНО: Зчитуємо ID з правильної константи EXTRA_HIVE_ID
         currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
-        currentHiveActualName = intent.getStringExtra(Constants.EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveId"
+        // ❌ ВИДАЛЕНО: Більше не читаємо EXTRA_HIVE_NAME
         editNoteContentInput.setText(originalNoteText)
     }
 
+    /**
+     * Налаштовує слухачі подій для кнопок "Зберегти" та "Мікрофон".
+     */
     private fun setupListeners() {
         saveEditedNoteButton.setOnClickListener { saveEditedNote() }
         microphoneBtnEditNote.setOnClickListener { toggleListening() }
     }
 
+    /**
+     * Асинхронно завантажує номер вулика для відображення заголовка (якщо це не загальна нотатка)
+     * і викликає [finishSetup] для завершення налаштування UI.
+     */
+    private fun loadDataAndSetupTitle() {
+        lifecycleScope.launch {
+            val displayTitle = if (currentHiveId == 0) {
+                getString(R.string.general_notes_title)
+            } else {
+                val hiveEntity = viewModel.getHiveById(currentHiveId)
+                hiveEntity?.hiveNumber ?: getString(R.string.hive_number_not_found)
+            }
+            currentHiveDisplayTitle = displayTitle
 
-    private fun setupUI() {
-        editNoteContentInput.setSelection(editNoteContentInput.text.length)
-        editNoteScreenTitle.text = when (currentEntryType) {
-            "general" -> "Редагувати загальний запис"
-            "hive" -> "Редагувати запис для $currentHiveActualName"
-            "queen" -> "Редагувати запис для Матки $currentHiveActualName"
-            "notes" -> "Редагувати запис для Приміток $currentHiveActualName"
-            else -> "Редагувати запис"
+            // Встановлення заголовка екрана на основі завантаженого номера вулика
+            editNoteScreenTitle.text = when (currentEntryType) {
+                "general" -> getString(R.string.general_record_title)
+                "hive" -> getString(R.string.hive_record_title, currentHiveDisplayTitle)
+                "queen" -> getString(R.string.queen_record_title, currentHiveDisplayTitle)
+                "notes" -> getString(R.string.notes_record_title, currentHiveDisplayTitle)
+                else -> getString(R.string.edit_record_title)
+            }
+
+            finishSetup()
         }
+    }
+
+    /**
+     * Завершує налаштування UI: встановлює курсор, фокусує поле вводу
+     * і, якщо потрібно, активує голосовий ввід.
+     */
+    private fun finishSetup() {
+        editNoteContentInput.setSelection(editNoteContentInput.text.length)
 
         val startVoiceInputImmediately = intent.getBooleanExtra(Constants.EXTRA_START_VOICE_INPUT, false)
         if (startVoiceInputImmediately) {
@@ -191,20 +248,31 @@ class EditNoteActivity : AppCompatActivity() {
         }
     }
 
-
+    /**
+     * Зберігає нотатку (створює нову або оновлює існуючу) і закриває Activity.
+     * Використовує завантажений [currentHiveDisplayTitle] для формування заголовка нотатки.
+     */
     private fun saveEditedNote() {
         val updatedNoteText = editNoteContentInput.text.toString().trim()
         if (updatedNoteText.isEmpty()) {
-            Toast.makeText(this, "Запис не може бути порожнім", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.note_cannot_be_empty), Toast.LENGTH_SHORT).show()
             return
         }
 
-        // ✅ ВИПРАВЛЕНО: Передаємо правильний hiveId
+        // Формуємо заголовок на основі типу запису
+        val noteTitle = when (currentEntryType) {
+            "general" -> getString(R.string.general_record_title)
+            "hive" -> getString(R.string.hive_record_title, currentHiveDisplayTitle)
+            "queen" -> getString(R.string.queen_record_title, currentHiveDisplayTitle)
+            "notes" -> getString(R.string.notes_record_title, currentHiveDisplayTitle)
+            else -> getString(R.string.edit_record_title)
+        }
+
         viewModel.saveNote(
             noteId = noteId,
             hiveId = currentHiveId,
             type = currentEntryType,
-            title = "Запис для вуликів",
+            title = noteTitle, // ✅ Використовуємо локалізований заголовок
             content = updatedNoteText,
             imagePath = null,
             createdAt = System.currentTimeMillis()
@@ -213,6 +281,11 @@ class EditNoteActivity : AppCompatActivity() {
         finish()
     }
 
+    /**
+     * Оновлює зовнішній вигляд кнопки мікрофона (колір) залежно від стану
+     * голосового розпізнавання.
+     * @param isListening True, якщо розпізнавання активне.
+     */
     private fun updateMicrophoneButtonState(isListening: Boolean) {
         if (isListening) {
             microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_active_color)
