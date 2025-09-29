@@ -7,10 +7,13 @@
     <string name="voice_input_description">Голосовий ввід</string>
     <string name="add_note_button_text">Додати запис</string>
     <string name="add_record_button_text">Зберегти запис</string>
+
     <string name="queen_button_text">Матка</string>
     <string name="queen_title">Матка %s</string>
-    <string name="hive_info_title">Вулик</string>
-    <string name="default_hive_name">Вулик %s</string>
+
+    <string name="hive_button_text">Вулик</string>
+    <string name="hive_info_title">Вулик %s</string>
+
     <string name="hive_name">Вулик_Імя</string>
 
     <string name="notes_button_text">Приміт</string>
@@ -101,9 +104,9 @@
     <string name="delete_expense_message">Ви впевнені, що хочете видалити цю витрату?</string>
     <string name="expense_deleted_success">Витрату видалено</string>
     <string name="hive_number_required">Номер вулика є обов`язковим</string>
+    <string name="hive_number_not_found">Номер вулика не знайдено</string>
 
-    Номер вулика є обов'язковим
-    hive_number_required
+
 
 </resources>
 

@@ -126,7 +126,7 @@
                 style="@style/NavButton"
                 android:layout_marginLeft="@dimen/spacing_small"
                 android:layout_marginRight="@dimen/spacing_small"
-                android:text="@string/hive_info_title" />
+                android:text="@string/hive_button_text" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/notesBtn"

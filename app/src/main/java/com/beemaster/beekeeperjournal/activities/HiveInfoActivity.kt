@@ -41,11 +41,17 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private lateinit var queenBtn: Button
     private lateinit var hiveInfoBtn: Button
     private lateinit var notesBtn: Button
-    private lateinit var currentHiveActualName: String
+
+    // ✅ ЗМІНЕНО: Перейменовано для відображення номера/заголовка замість 'імені'
+    private lateinit var currentHiveDisplayTitle: String
     private var currentHiveId: Int = 0
     private var currentEntryType: String = ""
     private val viewModel: HiveInfoViewModel by viewModels()
 
+    /**
+     * Основний метод життєвого циклу Activity.
+     * Ініціалізує View, слухачів та розпочинає завантаження початкових даних.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hive_info)
@@ -53,10 +59,15 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         setupListeners()
         setupNavigationView()
         setupRecyclerView()
+        // ✅ loadInitialData тепер запускає процес асинхронного завантаження
         loadInitialData()
-        observeNotes()
+        // ✅ observeNotes викликається після завантаження заголовка в loadInitialData
     }
 
+    /**
+     * Налаштовує RecyclerView та його адаптер.
+     * Встановлює обробник довгого натискання для відображення опцій нотатки.
+     */
     private fun setupRecyclerView() {
         notesAdapter = NotesAdapter(
             onLongClick = { note ->
@@ -67,16 +78,24 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         // LayoutManager уже встановлено в XML, але можна додати тут, якщо потрібно:
         // notesRecyclerView.layoutManager = LinearLayoutManager(this)
     }
+
+    /**
+     * Встановлює слухача для навігаційного меню.
+     */
     private fun setupNavigationView() {
         navView.setNavigationItemSelectedListener(this)
     }
 
+    /**
+     * Обробляє вибір елементів у навігаційному меню (Drawer Layout).
+     * @param item Обраний елемент меню.
+     */
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         drawerLayout.closeDrawer(GravityCompat.START)
         when (item.itemId) {
             R.id.nav_home -> {
                 val intent = Intent(this, MainActivity::class.java)
-
+                // Використовуємо уніфіковану функцію анімації
                 startActivityWithSlideAnimation(intent, finishCurrentActivity = true)
             }
             R.id.nav_general_notes -> {
@@ -87,6 +106,9 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         return true
     }
 
+    /**
+     * Ініціалізує всі елементи View, використовуючи findViewById.
+     */
     private fun setupViews() {
         drawerLayout = findViewById(R.id.drawer_layout)
         drawerToggleBtn = findViewById(R.id.drawer_toggle_button)
@@ -100,6 +122,9 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         notesBtn = findViewById(R.id.notesBtn)
     }
 
+    /**
+     * Налаштовує всі слухачі подій для кнопок.
+     */
     private fun setupListeners() {
         newNoteButton.setOnClickListener { openNoteEditorActivity() }
         microphoneBtn.setOnClickListener { openNoteEditorActivity(startVoiceInput = true) }
@@ -111,45 +136,67 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
     }
 
+    /**
+     * Завантажує початкові дані з Intent (ID вулика та тип запису)
+     * і асинхронно отримує номер вулика для відображення заголовка.
+     */
     private fun loadInitialData() {
         currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
-        // Ми все ще можемо отримувати номер або ім'я для відображення, але не для ідентифікації
-        val hiveNameFromIntent = intent.getStringExtra(Constants.EXTRA_HIVE_NAME)
-
-        currentHiveActualName = hiveNameFromIntent ?: getString(R.string.general_notes_title)
-
         val initialEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
         currentEntryType = if (currentHiveId == 0) "general" else initialEntryType
 
-        updateUIAndLoadData(currentEntryType)
+        lifecycleScope.launch {
+            if (currentHiveId != 0) {
+                // ✅ Завантаження номера вулика для заголовка
+                // ПРИМІТКА: Потрібно додати fun getHiveById(id: Int) до HiveInfoViewModel
+                val hiveEntity = viewModel.getHiveById(currentHiveId)
+                currentHiveDisplayTitle = hiveEntity?.hiveNumber ?: getString(R.string.hive_number_not_found)
+            } else {
+                // Загальні нотатки
+                currentHiveDisplayTitle = getString(R.string.general_notes_title)
+            }
+            // Оновлення UI та запуск спостереження за даними після завантаження заголовка
+            updateUIAndLoadData(currentEntryType)
+            observeNotes()
+        }
     }
 
+    /**
+     * Починає спостерігати за потоком нотаток із ViewModel
+     * та оновлює адаптер RecyclerView.
+     */
     private fun observeNotes() {
         lifecycleScope.launch {
             viewModel.notes.collect { notes ->
                 notesAdapter.submitList(notes)
-            // TODO: Додати логіку відображення заглушки, якщо список notes порожній.
+                // TODO: Додати логіку відображення заглушки, якщо список notes порожній.
             }
         }
     }
 
+    /**
+     * Оновлює заголовок Activity та видимість кнопок залежно від типу запису (entryType).
+     * Здійснює запит до ViewModel для завантаження відповідних нотаток.
+     * @param entryType Тип нотатки, який потрібно відобразити ("queen", "hive", "notes", "general").
+     */
     private fun updateUIAndLoadData(entryType: String) {
         currentEntryType = entryType
         val titleResId: Int = when {
             currentHiveId == 0 -> R.string.general_notes_title
-            entryType == "queen" -> R.string.queen_title // "Матка %s"
-            entryType == "hive" -> R.string.hive_info_title // "%s" (або інший шаблон)
-            entryType == "notes" -> R.string.hive_notes_title // "Примітки %s"
-            else -> R.string.hive_name // Якщо використовуєте лише назву
+            entryType == "queen" -> R.string.queen_title
+            entryType == "hive" -> R.string.hive_info_title
+            entryType == "notes" -> R.string.hive_notes_title
+            else -> R.string.hive_name
         }
 
-        // Правильне використання getString для заголовка
+        // Встановлення заголовка з використанням currentHiveDisplayTitle
         infoTitle.text = if (currentHiveId == 0) {
             getString(titleResId)
         } else {
-            getString(titleResId, currentHiveActualName)
+            getString(titleResId, currentHiveDisplayTitle)
         }
 
+        // Управління видимістю кнопок
         if (currentHiveId == 0) {
             queenBtn.visibility = View.GONE
             hiveInfoBtn.visibility = View.GONE
@@ -159,23 +206,37 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             hiveInfoBtn.visibility = View.VISIBLE
             notesBtn.visibility = View.VISIBLE
         }
+
+        // Завантаження нотаток для обраного типу
         viewModel.getNotesForHive(currentHiveId, currentEntryType)
     }
 
+    /**
+     * Змінює поточний тип відображення інформації та оновлює UI.
+     * @param entryType Новий тип запису для відображення.
+     */
     private fun showInfo(entryType: String) {
         updateUIAndLoadData(entryType)
     }
 
+    /**
+     * Відкриває Activity для створення або редагування нотатки.
+     * Передає ID вулика та поточний тип запису.
+     * @param startVoiceInput Якщо true, активує голосовий ввід у редакторі.
+     */
     private fun openNoteEditorActivity(startVoiceInput: Boolean = false) {
         val intent = Intent(this, EditNoteActivity::class.java).apply {
             putExtra(Constants.EXTRA_ENTRY_TYPE, currentEntryType)
             putExtra(Constants.EXTRA_HIVE_ID, currentHiveId)
-            putExtra(Constants.EXTRA_HIVE_NAME, currentHiveActualName)
             putExtra(Constants.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
         startActivity(intent)
     }
 
+    /**
+     * Відображає діалог з опціями "Редагувати" та "Видалити" для обраної нотатки.
+     * @param note Об'єкт нотатки, для якого відображаються опції.
+     */
     private fun showNoteOptionsDialog(note: NoteEntity) {
         DialogUtils.showEditDeleteDialog(
             context = this,
@@ -194,6 +255,10 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         )
     }
 
+    /**
+     * Відображає діалог підтвердження видалення нотатки.
+     * @param note Об'єкт нотатки, яку потрібно видалити.
+     */
     private fun showDeleteConfirmationDialog(note: NoteEntity) {
         DialogUtils.showDeleteConfirmationDialog(
             context = this,
