@@ -1,4 +1,4 @@
-// EditNoteActivity.kt - Файл для редагування/створення нотаток
+// EditNoteActivity.kt - Файл для редагування/створення нотаток.
 
 package com.beemaster.beekeeperjournal.activities
 
