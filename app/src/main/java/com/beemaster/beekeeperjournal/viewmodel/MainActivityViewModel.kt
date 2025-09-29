@@ -66,6 +66,11 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
+    // Функція для додавання нової нотатки.
+    fun addNote(note: NoteEntity) = viewModelScope.launch {
+        noteRepository.insertNote(note)
+    }
+
     // Функція для перевірки, чи існує вулик з певним номером.
     // Це потрібно, щоб уникнути дублювання вуликів за замовчуванням.
     suspend fun getHiveByNumber(hiveNumber: String): HiveEntity? {

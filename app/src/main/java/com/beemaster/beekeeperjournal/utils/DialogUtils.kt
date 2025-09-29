@@ -346,6 +346,7 @@ object DialogUtils {
         onHiveAdded: (hiveNumber: String) -> Unit
     ) {
         val dialogView = View.inflate(context, R.layout.dialog_add_hive, null)
+        val nameEditText: EditText = dialogView.findViewById(R.id.nameEditText)
         val numberEditText: EditText = dialogView.findViewById(R.id.numberEditText)
 
         AlertDialog.Builder(context)

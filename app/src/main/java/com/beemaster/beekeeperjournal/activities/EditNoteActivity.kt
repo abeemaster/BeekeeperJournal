@@ -157,6 +157,7 @@ class EditNoteActivity : AppCompatActivity() {
         noteId = intent.getIntExtra(Constants.EXTRA_NOTE_ID, 0)
         val originalNoteText = intent.getStringExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT)
         currentEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
+        // ✅ ВИПРАВЛЕНО: Зчитуємо ID з правильної константи EXTRA_HIVE_ID
         currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
         currentHiveActualName = intent.getStringExtra(Constants.EXTRA_HIVE_NAME) ?: "Вулик №$currentHiveId"
         editNoteContentInput.setText(originalNoteText)
@@ -171,10 +172,10 @@ class EditNoteActivity : AppCompatActivity() {
     private fun setupUI() {
         editNoteContentInput.setSelection(editNoteContentInput.text.length)
         editNoteScreenTitle.text = when (currentEntryType) {
-            "general" -> "Загальний запис"
-            "hive" -> "Запис для $currentHiveActualName"
-            "queen" -> "Запис для Матки $currentHiveActualName"
-            "notes" -> "Запис для Приміток $currentHiveActualName"
+            "general" -> "Редагувати загальний запис"
+            "hive" -> "Редагувати запис для $currentHiveActualName"
+            "queen" -> "Редагувати запис для Матки $currentHiveActualName"
+            "notes" -> "Редагувати запис для Приміток $currentHiveActualName"
             else -> "Редагувати запис"
         }
 
