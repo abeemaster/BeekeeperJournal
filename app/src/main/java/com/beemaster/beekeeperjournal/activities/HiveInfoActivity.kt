@@ -41,7 +41,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private lateinit var queenBtn: Button
     private lateinit var hiveInfoBtn: Button
     private lateinit var notesBtn: Button
-    private lateinit var currentHiveActualName: String
+    private lateinit var currentHiveNumber: String
     private var currentHiveId: Int = 0
     private var currentEntryType: String = ""
     private val viewModel: HiveInfoViewModel by viewModels()
@@ -114,9 +114,9 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private fun loadInitialData() {
         currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
         // Ми все ще можемо отримувати номер або ім'я для відображення, але не для ідентифікації
-        val hiveNameFromIntent = intent.getStringExtra(Constants.EXTRA_HIVE_NAME)
+        val hiveNameFromIntent = intent.getStringExtra(Constants.EXTRA_HIVE_NUMBER)
 
-        currentHiveActualName = hiveNameFromIntent ?: getString(R.string.general_notes_title)
+        currentHiveNumber = hiveNameFromIntent ?: getString(R.string.general_notes_title)
 
         val initialEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
         currentEntryType = if (currentHiveId == 0) "general" else initialEntryType
@@ -147,7 +147,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         infoTitle.text = if (currentHiveId == 0) {
             getString(titleResId)
         } else {
-            getString(titleResId, currentHiveActualName)
+            getString(titleResId, currentHiveNumber)
         }
 
         if (currentHiveId == 0) {
@@ -170,7 +170,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         val intent = Intent(this, EditNoteActivity::class.java).apply {
             putExtra(Constants.EXTRA_ENTRY_TYPE, currentEntryType)
             putExtra(Constants.EXTRA_HIVE_ID, currentHiveId)
-            putExtra(Constants.EXTRA_HIVE_NAME, currentHiveActualName)
+            putExtra(Constants.EXTRA_HIVE_NUMBER, currentHiveNumber)
             putExtra(Constants.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
         startActivity(intent)

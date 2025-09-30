@@ -44,7 +44,7 @@ class HiveAdapter(
                     val intent = Intent(itemView.context, HiveInfoActivity::class.java).apply {
                         putExtra(Constants.EXTRA_HIVE_ID, it.id)
                         putExtra(Constants.EXTRA_HIVE_NUMBER, it.hiveNumber.toString())
-                        putExtra(Constants.EXTRA_HIVE_NAME, it.name) // Використовуємо name замість hiveNumber
+                        // putExtra(Constants.EXTRA_HIVE_NAME, it.name) // Використовуємо name замість hiveNumber
                         putExtra(Constants.EXTRA_HIVE_COLOR, it.color)
                         putExtra(Constants.EXTRA_HIVE_SECONDARY_COLOR, it.secondaryColor)
                     }
