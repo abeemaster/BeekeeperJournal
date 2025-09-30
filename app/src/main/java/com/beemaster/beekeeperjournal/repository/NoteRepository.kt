@@ -5,6 +5,7 @@ package com.beemaster.beekeeperjournal.repository
 
 import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
+import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity // ✅ ДОДАНО: Імпорт нової сутності
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,7 +21,6 @@ class NoteRepository @Inject constructor(
 ) {
     /**
      * Отримує всі нотатки з бази даних у вигляді потоку Flow.
-     * Використовується для експорту або загального відображення даних.
      * @return Flow, що містить список усіх NoteEntity.
      */
     fun getAllNotes(): Flow<List<NoteEntity>> {
@@ -29,7 +29,6 @@ class NoteRepository @Inject constructor(
 
     /**
      * Отримує нотатки, відфільтровані за ID вулика та типом запису.
-     * Використовується для відображення даних у HiveInfoActivity та EditNoteActivity.
      * @param hiveId ID вулика (0 для загальних нотаток).
      * @param noteType Тип нотатки ("hive", "queen", "notes" або "general").
      * @return Flow, що містить відфільтрований список NoteEntity.
@@ -72,19 +71,31 @@ class NoteRepository @Inject constructor(
     }
 
     /**
-     * Отримує всі нотатки. Використовується у синхронному контексті (наприклад, для експорту).
-     * @return Список усіх NoteEntity.
+     * ✅ ДОДАНО: Виконує ефективний пошук нотаток через DAO.
+     * @param query Текст для пошуку.
+     * @return Flow, що містить список NoteSearchResultEntity з актуальною назвою вулика.
      */
-    suspend fun getAllNotesSuspend(): List<NoteEntity> {
-        return noteDao.getAllNotesSuspend()
+    fun searchNotes(query: String): Flow<List<NoteSearchResultEntity>> {
+        // ПРИМІТКА: Вам потрібно буде замінити List<NoteEntity> у NoteDao.kt на
+        // Flow<List<NoteSearchResultEntity>> після того, як ви створили клас NoteSearchResultEntity.
+        @Suppress("UNCHECKED_CAST")
+        return noteDao.searchNotes(query) as Flow<List<NoteSearchResultEntity>>
     }
+
+
+    /**
+     * ❌ ВИДАЛЕНО: Цей метод є надлишковим.
+     * Якщо потрібні дані без Flow, використовуйте getAllNotes().first() у ViewModel.
+     * suspend fun getAllNotesSuspend(): List<NoteEntity> {
+     * return noteDao.getAllNotesSuspend()
+     * }
+     */
 
     /**
      * Імпортує список нотаток у базу даних, зазвичай, після очищення існуючих даних.
      * @param notes Список NoteEntity для імпорту.
      */
     suspend fun importNotes(notes: List<NoteEntity>) {
-        // Припускаємо, що noteDao.clearAndInsertNotes містить логіку очищення та вставки.
         noteDao.clearAndInsertNotes(notes)
     }
 }

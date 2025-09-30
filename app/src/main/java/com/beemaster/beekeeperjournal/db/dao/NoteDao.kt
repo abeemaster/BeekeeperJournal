@@ -4,13 +4,15 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
+import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity // ✅ НОВИЙ ІМПОРТ
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: NoteEntity)
 
     @Update
@@ -25,23 +27,35 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: Int): NoteEntity?
 
-    // ✅ ДОДАНО: Метод для отримання всіх нотаток
     @Query("SELECT * FROM notes ORDER BY createdAt DESC")
     fun getAllNotes(): Flow<List<NoteEntity>>
 
-    // ✅ Додаємо метод для отримання всіх нотаток
-    @Query("SELECT * FROM notes")
-    suspend fun getAllNotesSuspend(): List<NoteEntity>
+    /**
+     * ✅ ВИПРАВЛЕНО: Змінено тип повернення на Flow<List<NoteSearchResultEntity>>.
+     * Room тепер знає, як відобразити результат SQL JOIN.
+     */
+    @Query("""
+        SELECT 
+            N.*, 
+            H.hiveNumber AS currentHiveDisplayNumber
+        FROM notes AS N
+        LEFT JOIN hives AS H ON N.hiveId = H.id
+        WHERE N.content LIKE '%' || :query || '%' 
+        OR N.title LIKE '%' || :query || '%' 
+        OR N.type LIKE '%' || :query || '%' 
+        OR H.name LIKE '%' || :query || '%' 
+        OR H.hiveNumber LIKE '%' || :query || '%'
+        ORDER BY N.createdAt DESC
+    """)
+    fun searchNotes(query: String): Flow<List<NoteSearchResultEntity>> // ⬅️ ВИПРАВЛЕНО
 
-    // ✅ Додаємо метод для заміни всіх нотаток
     @Query("DELETE FROM notes")
     suspend fun deleteAllNotes()
 
-    // ✅ Вставляємо всі нотатки. OnConflictStrategy.REPLACE замінить існуючі записи з тими ж первинними ключами
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllNotes(notes: List<NoteEntity>)
 
-    // ✅ Об'єднуємо операції очищення та вставки в одну транзакцію
+    @Transaction
     suspend fun clearAndInsertNotes(notes: List<NoteEntity>) {
         deleteAllNotes()
         insertAllNotes(notes)

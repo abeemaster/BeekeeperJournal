@@ -45,6 +45,7 @@ class EditNoteActivity : AppCompatActivity() {
     // ✅ НОВЕ ПОЛЕ: Використовується для відображення номера вулика (асинхронно завантажується)
     private lateinit var currentHiveDisplayTitle: String
     private var isGoogleListening = false
+    private var originalCreatedAt: Long = System.currentTimeMillis()
     private val viewModel: EditNoteViewModel by viewModels()
 
 
@@ -185,11 +186,20 @@ class EditNoteActivity : AppCompatActivity() {
     /**
      * Отримує всі необхідні дані (ID нотатки, текст, ID вулика, тип запису) з Intent.
      */
+    /**
+     * Отримує всі необхідні дані (ID нотатки, текст, ID вулика, тип запису) з Intent.
+     */
     private fun getIntentData() {
         noteId = intent.getIntExtra(Constants.EXTRA_NOTE_ID, 0)
         val originalNoteText = intent.getStringExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT)
         currentEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
-        currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
+
+        // ❌ ВИДАЛЕНО: Якщо noteId > 0, ми не довіряємо цьому значенню з Intent.
+        // Ми завантажимо правильний hiveId асинхронно.
+        if (noteId == 0) {
+            currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
+        }
+
         // ❌ ВИДАЛЕНО: Більше не читаємо EXTRA_HIVE_NAME
         editNoteContentInput.setText(originalNoteText)
     }
@@ -206,8 +216,31 @@ class EditNoteActivity : AppCompatActivity() {
      * Асинхронно завантажує номер вулика для відображення заголовка (якщо це не загальна нотатка)
      * і викликає [finishSetup] для завершення налаштування UI.
      */
+    /**
+     * Асинхронно завантажує дані нотатки (для редагування) та номер вулика для відображення заголовка
+     * і викликає [finishSetup] для завершення налаштування UI.
+     */
     private fun loadDataAndSetupTitle() {
         lifecycleScope.launch {
+            // 🚀 ВИПРАВЛЕННЯ ДЛЯ РЕДАГУВАННЯ: Якщо нотатка вже існує, завантажуємо її для отримання правильного hiveId
+            if (noteId > 0) {
+                val loadedNoteEntity = viewModel.getNoteEntityById(noteId)
+                if (loadedNoteEntity != null) {
+                    // ✅ КОРЕКЦІЯ: Перезаписуємо currentHiveId коректним значенням із бази
+                    currentHiveId = loadedNoteEntity.hiveId
+                    currentEntryType = loadedNoteEntity.type
+                    editNoteContentInput.setText(loadedNoteEntity.content)
+                    originalCreatedAt = loadedNoteEntity.createdAt
+                    // Тут також можна завантажити title, якщо він використовується у формі
+                } else {
+                    // Нотатка не знайдена, можливо, помилка.
+                    Toast.makeText(this@EditNoteActivity, getString(R.string.error_note_not_found), Toast.LENGTH_LONG).show()
+                    finish()
+                    return@launch
+                }
+            }
+
+            // Використовуємо коректний currentHiveId для завантаження назви вулика
             val displayTitle = if (currentHiveId == 0) {
                 getString(R.string.general_notes_title)
             } else {
@@ -267,6 +300,9 @@ class EditNoteActivity : AppCompatActivity() {
             "notes" -> getString(R.string.notes_record_title, currentHiveDisplayTitle)
             else -> getString(R.string.edit_record_title)
         }
+        // ✅ ВИПРАВЛЕННЯ: Використовуємо originalCreatedAt, якщо редагуємо, або System.currentTimeMillis() для нової
+        val saveTimestamp = if (noteId > 0) originalCreatedAt else System.currentTimeMillis()
+
 
         viewModel.saveNote(
             noteId = noteId,
@@ -275,7 +311,7 @@ class EditNoteActivity : AppCompatActivity() {
             title = noteTitle, // ✅ Використовуємо локалізований заголовок
             content = updatedNoteText,
             imagePath = null,
-            createdAt = System.currentTimeMillis()
+            createdAt = saveTimestamp // ✅ ВИКОРИСТОВУЄМО ЗБЕРЕЖЕНЕ ЗНАЧЕННЯ
         )
 
         finish()
