@@ -31,9 +31,9 @@ class SearchResultsAdapter(
      */
     class SearchResultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // TextView для відображення дати нотатки
-        val noteDate: TextView = itemView.findViewById(R.id.noteDate)
+        val noteDate: TextView = itemView.findViewById(R.id.dateTextView)
         // TextView для відображення вмісту (тексту) нотатки
-        val noteText: TextView = itemView.findViewById(R.id.noteText)
+        val noteText: TextView = itemView.findViewById(R.id.contentTextView)
         // TextView для відображення типу запису та назви вулика
         val noteTypeAndHive: TextView = itemView.findViewById(R.id.noteTypeAndHive)
     }
@@ -43,7 +43,7 @@ class SearchResultsAdapter(
      * Надуває макет елемента списку з XML.
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchResultViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.note_item_search_result, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.note_list_item, parent, false)
         return SearchResultViewHolder(view)
     }
 
@@ -52,39 +52,33 @@ class SearchResultsAdapter(
      * Цей метод викликається для кожного елемента списку.
      */
     @SuppressLint("StringFormatMatches")
+    // У файлі SearchResultsAdapter.kt (функція onBindViewHolder)
+
     override fun onBindViewHolder(holder: SearchResultViewHolder, position: Int) {
         val result = searchResults[position]
         val note = result.note
-        val hiveNumber = result.hiveNumber
+        val hiveNumber = result.hiveNumber // Тут лише число, наприклад, "49"
         val context = holder.itemView.context
 
-        // ✅ ПОКРАЩЕННЯ: Використовуємо функцію-розширення для форматування дати.
-        // Це забезпечує єдиний формат по всьому додатку.
+        // ... (форматування дати та тексту нотатки)
         holder.noteDate.text = note.getFormattedDate()
-
         holder.noteText.text = note.text
 
-        // Визначаємо локалізовану назву типу запису
+        // ✅ ЛОГІКА, ЯКА ФОРМУЄ ПІДПИС
         val displayText = when (note.type) {
             "general" -> context.getString(R.string.general_records_type_name) // Наприклад, "Загальні записи"
 
-            // Якщо є номер вулика, використовуємо новий шаблон "Вулик №%s"
+            // Якщо є номер вулика: використовуємо шаблон "Вулик №%s"
             else -> context.getString(R.string.hive_display_number, hiveNumber)
         }
 
-        holder.noteTypeAndHive.text = displayText // Встановлюємо спрощений підпис
-
-        // Форматуємо рядок "Тип: Назва вулика"
-        holder.noteTypeAndHive.text = context.getString(
-            R.string.hive_display_number,
-            displayText,
-            hiveNumber
-        )
+        // ✅ Встановлюємо КОРЕКТНИЙ підпис.
+        holder.noteTypeAndHive.text = displayText
 
         // Обробник довгого натискання для взаємодії з нотаткою (наприклад, контекстне меню)
         holder.itemView.setOnLongClickListener {
             onItemLongClick(note)
-            true // Повертаємо true, щоб вказати, що подія оброблена
+            true
         }
     }
 

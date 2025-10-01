@@ -24,16 +24,19 @@ class NotesAdapter(
     private val onLongClick: (NoteEntity) -> Unit
 ) : ListAdapter<NoteEntity, NotesAdapter.NoteViewHolder>(NoteDiffCallback()) {
 
-    // 1. ViewHolder: зберігає посилання на елементи макета item_note.xml
+    // 1. ViewHolder: зберігає посилання на елементи макета note_list_item.xml
     inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val dateTextView: TextView = itemView.findViewById(R.id.dateTextView)
         private val contentTextView: TextView = itemView.findViewById(R.id.contentTextView)
+        val hiveInfoTextView: TextView = itemView.findViewById(R.id.noteTypeAndHive)
 
         fun bind(note: NoteEntity) {
             val dateFormat = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
             dateTextView.text = dateFormat.format(Date(note.createdAt))
             contentTextView.text = note.content
-
+            // ✅ ВИПРАВЛЕННЯ: Приховуємо поле з інформацією про вулик,
+            // оскільки ми вже знаходимося у контексті цього вулика.
+            hiveInfoTextView.visibility = View.GONE
             // Встановлення слухача для довгого натискання
             itemView.setOnLongClickListener {
                 onLongClick(note) // Викликаємо колбек
@@ -45,7 +48,7 @@ class NotesAdapter(
     // 2. Створення нового View-елемента з макета
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_note, parent, false) // Використовуємо макет елемента, який ми обговорювали
+            .inflate(R.layout.note_list_item, parent, false) // Використовуємо макет елемента, який ми обговорювали
         return NoteViewHolder(view)
     }
 
