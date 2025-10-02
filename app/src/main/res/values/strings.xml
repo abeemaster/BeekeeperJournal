@@ -150,7 +150,8 @@
     <string name="note_type_and_hive_name">%1$s – %2$s</string>
     <string name="hive_number_prefix">Вулик №%s</string>
     <string name="hive_display_number">Вулик №%s</string>
-
+    <string name="error_hive_not_found_placeholder">Вулик (Не знайдено)</string>
+    <string name="error_hive_loading">Помилка завантаження даних вулика.</string>
 
 </resources>
 

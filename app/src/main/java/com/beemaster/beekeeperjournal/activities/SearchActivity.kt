@@ -145,23 +145,27 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_choose_action))
             .setItems(options) { dialog, which ->
+                // ✅ Використовуємо коректний ID вулика: note.hiveNumber
+                val targetHiveId = note.hiveNumber
+
                 when (which) {
                     0 -> { // Перейти у вулик
                         val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                            // Передаємо ID вулика для завантаження інформації
-                            putExtra(Constants.EXTRA_HIVE_ID, note.id)
+                            // Передаємо ID вулика, до якого належить нотатка
+                            putExtra(Constants.EXTRA_HIVE_ID, targetHiveId)
                             putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
                         }
                         startActivity(intent)
                     }
                     1 -> { // Редагувати запис
+                        // ❌ ВИПРАВЛЕНО: Також використовуємо targetHiveId для редагування
                         val intent = Intent(this, EditNoteActivity::class.java).apply {
                             // Передача ID нотатки для завантаження всього вмісту
                             putExtra(Constants.EXTRA_NOTE_ID, note.id)
                             // Передача тексту нотатки
                             putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
                             // Передача ID вулика
-                            putExtra(Constants.EXTRA_HIVE_ID, note.id)
+                            putExtra(Constants.EXTRA_HIVE_ID, targetHiveId) // ✅ ВИПРАВЛЕНО
                             // Передача типу запису
                             putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
                         }

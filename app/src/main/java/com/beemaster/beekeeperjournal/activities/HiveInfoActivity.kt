@@ -111,44 +111,71 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
     }
 
+    // У файлі HiveInfoActivity.kt
+
+// ... (допоміжні змінні)
+// ...
+// ... (setupViews, setupListeners, setupNavigationView, setupRecyclerView)
+
     private fun loadInitialData() {
         currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
-        // Ми все ще можемо отримувати номер або ім'я для відображення, але не для ідентифікації
-        val hiveNameFromIntent = intent.getStringExtra(Constants.EXTRA_HIVE_NUMBER)
-
-        currentHiveNumber = hiveNameFromIntent ?: getString(R.string.general_notes_title)
+        // ❌ ВИДАЛЕНО: Тут більше не намагаємося отримати номер з Intent
+        // val hiveNameFromIntent = intent.getStringExtra(Constants.EXTRA_HIVE_NUMBER)
+        // currentHiveNumber = hiveNameFromIntent ?: getString(R.string.general_notes_title)
 
         val initialEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
         currentEntryType = if (currentHiveId == 0) "general" else initialEntryType
 
-        updateUIAndLoadData(currentEntryType)
+        // ✅ НОВИЙ КРОК: Запускаємо асинхронне завантаження номера вулика
+        loadHiveData()
     }
 
-    private fun observeNotes() {
+    // ✅ НОВА ФУНКЦІЯ: Асинхронно завантажує номер вулика з бази даних
+    private fun loadHiveData() {
+        if (currentHiveId == 0) {
+            // Для загальних записів
+            currentHiveNumber = getString(R.string.general_notes_title)
+            updateUIAndLoadData(currentEntryType)
+            return
+        }
+
         lifecycleScope.launch {
-            viewModel.notes.collect { notes ->
-                notesAdapter.submitList(notes)
-            // TODO: Додати логіку відображення заглушки, якщо список notes порожній.
+            val hive = viewModel.getHiveById(currentHiveId)
+
+            if (hive != null) {
+                // Отримуємо фактичний НОМЕР вулика (наприклад, "49")
+                currentHiveNumber = hive.hiveNumber.toString()
+            } else {
+                // Резервний варіант, якщо вулик не знайдено
+                currentHiveNumber = getString(R.string.error_hive_not_found_placeholder)
+                Toast.makeText(this@HiveInfoActivity, getString(R.string.error_hive_loading), Toast.LENGTH_LONG).show()
             }
+
+            // Після завантаження номера вулика, оновлюємо UI (включаючи заголовок)
+            updateUIAndLoadData(currentEntryType)
         }
     }
 
+    // Змінюємо updateUIAndLoadData - тепер вона використовує коректно встановлений currentHiveNumber
     private fun updateUIAndLoadData(entryType: String) {
         currentEntryType = entryType
+
         val titleResId: Int = when {
             currentHiveId == 0 -> R.string.general_notes_title
-            entryType == "queen" -> R.string.queen_title // "Матка %s"
-            entryType == "hive" -> R.string.hive_info_title // "%s" (або інший шаблон)
-            entryType == "notes" -> R.string.hive_notes_title // "Примітки %s"
-            else -> R.string.hive_name // Якщо використовуєте лише назву
+            entryType == "queen" -> R.string.queen_title
+            entryType == "hive" -> R.string.hive_info_title
+            entryType == "notes" -> R.string.hive_notes_title
+            else -> R.string.hive_name
         }
 
-        // Правильне використання getString для заголовка
+        // ✅ ПЕРЕВІРКА: currentHiveNumber тепер містить "49" або "Загальні записи"
         infoTitle.text = if (currentHiveId == 0) {
             getString(titleResId)
         } else {
             getString(titleResId, currentHiveNumber)
         }
+
+        // ... (логіка видимості кнопок залишається без змін)
 
         if (currentHiveId == 0) {
             queenBtn.visibility = View.GONE
@@ -161,6 +188,17 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
         viewModel.getNotesForHive(currentHiveId, currentEntryType)
     }
+
+    private fun observeNotes() {
+        lifecycleScope.launch {
+            viewModel.notes.collect { notes ->
+                notesAdapter.submitList(notes)
+            // TODO: Додати логіку відображення заглушки, якщо список notes порожній.
+            }
+        }
+    }
+
+
 
     private fun showInfo(entryType: String) {
         updateUIAndLoadData(entryType)
