@@ -2,21 +2,33 @@
 
 package com.beemaster.beekeeperjournal.activities
 
-import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
+import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 
+/**
+ * Activity для налаштування параметрів додатку, зокрема, вибору рушія розпізнавання мови.
+ */
 class SettingsActivity : AppCompatActivity() {
 
+    // 1. Ініціалізація View: використовуємо "лениву" ініціалізацію або by viewModels()
+    // для більш складних випадків. Тут залишаємо lateinit, але можемо використати View Binding.
     private lateinit var speechEngineRadioGroup: RadioGroup
     private lateinit var googleRadioButton: RadioButton
     private lateinit var voskRadioButton: RadioButton
     private lateinit var saveButton: Button
+
+    // ✅ ДОДАНО: Лінива ініціалізація SharedPreferences для чистоти коду
+    private val sharedPreferences: SharedPreferences by lazy {
+        getSharedPreferences(Constants.SETTINGS_PREFS_NAME, MODE_PRIVATE)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,40 +37,59 @@ class SettingsActivity : AppCompatActivity() {
         initViews()
         loadSettings()
         setupListeners()
+        // ✅ Встановлення заголовка ActionBar
+        supportActionBar?.title = getString(R.string.title_settings)
     }
 
     private fun initViews() {
+        // ✅ Використовуємо apply{} для більш компактного коду
         speechEngineRadioGroup = findViewById(R.id.speechEngineRadioGroup)
         googleRadioButton = findViewById(R.id.googleRadioButton)
         voskRadioButton = findViewById(R.id.voskRadioButton)
         saveButton = findViewById(R.id.saveButton)
     }
 
+    /**
+     * Завантажує поточні налаштування з SharedPreferences і встановлює відповідний RadioButton.
+     */
     private fun loadSettings() {
-        val sharedPref = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val savedEngine = sharedPref.getString("speech_engine", "google")
+        val savedEngine = sharedPreferences.getString(
+            Constants.KEY_SPEECH_ENGINE,
+            Constants.DEFAULT_SPEECH_ENGINE // "google"
+        )
 
-        if (savedEngine == "google") {
-            googleRadioButton.isChecked = true
-        } else {
-            voskRadioButton.isChecked = true
+        when (savedEngine) {
+            Constants.ENGINE_GOOGLE -> googleRadioButton.isChecked = true
+            Constants.ENGINE_VOSK -> voskRadioButton.isChecked = true
         }
     }
 
     private fun setupListeners() {
         saveButton.setOnClickListener {
-            val selectedEngine = if (googleRadioButton.isChecked) "google" else "vosk"
+            val selectedEngine = getSelectedEngine()
             saveSettings(selectedEngine)
-            Toast.makeText(this, "Налаштування збережено", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.settings_saved_message), Toast.LENGTH_SHORT).show()
             finish()
         }
     }
 
+    // ✅ ДОДАНО: Окрема функція для визначення вибраного рушія
+    private fun getSelectedEngine(): String {
+        return if (googleRadioButton.isChecked) {
+            Constants.ENGINE_GOOGLE // "google"
+        } else {
+            Constants.ENGINE_VOSK // "vosk"
+        }
+    }
+
+    /**
+     * Зберігає вибраний рушій розпізнавання мови у SharedPreferences.
+     * ✅ ВИКОРИСТАННЯ KTX: Використовує функцію-розширення SharedPreferences.edit { ... }.
+     * @param engine Вибраний рушій ("google" або "vosk").
+     */
     private fun saveSettings(engine: String) {
-        val sharedPref = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            putString("speech_engine", engine)
-            apply()
+        sharedPreferences.edit {
+            putString(Constants.KEY_SPEECH_ENGINE, engine)
         }
     }
 }

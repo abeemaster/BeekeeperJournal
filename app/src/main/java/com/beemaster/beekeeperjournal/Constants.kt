@@ -3,6 +3,18 @@
 package com.beemaster.beekeeperjournal
 
 object Constants {
+    // ✅ НАЛАШТУВАННЯ (Settings)
+    const val SETTINGS_PREFS_NAME = "app_settings"
+
+    // Ключі для налаштувань
+    const val KEY_SPEECH_ENGINE = "speech_engine"
+
+    // Значення для рушіїв
+    const val ENGINE_GOOGLE = "google"
+    const val ENGINE_VOSK = "vosk"
+
+    // Значення за замовчуванням
+    const val DEFAULT_SPEECH_ENGINE = ENGINE_GOOGLE
     const val EXTRA_HIVE_ID = "com.beemaster.beekeeperjournal.HIVE_ID"
     const val EXTRA_HIVE_NUMBER = "com.beemaster.beekeeperjournal.HIVE_NUMBER"
     // const val EXTRA_HIVE_NAME = "com.beemaster.beekeeperjournal.HIVE_NAME"

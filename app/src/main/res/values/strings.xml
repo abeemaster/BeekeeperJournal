@@ -152,6 +152,8 @@
     <string name="hive_display_number">Вулик №%s</string>
     <string name="error_hive_not_found_placeholder">Вулик (Не знайдено)</string>
     <string name="error_hive_loading">Помилка завантаження даних вулика.</string>
+    <string name="title_settings">Налаштування</string>
+    <string name="settings_saved_message">Налаштування збережено</string>
 
 </resources>
 
