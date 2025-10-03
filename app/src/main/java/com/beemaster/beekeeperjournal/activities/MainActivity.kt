@@ -20,10 +20,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.HiveAdapter
-import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.DialogUtils
+import com.beemaster.beekeeperjournal.utils.createDefaultHiveEntity
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
+import com.beemaster.beekeeperjournal.viewmodel.HiveAddResult
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
@@ -44,12 +45,14 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainActivityViewModel by viewModels()
 
+    // Activity Result Launcher для вибору місця збереження файлу експорту.
     private val getExportFile = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri?.let {
             lifecycleScope.launch { backupManager.exportData(it) }
         }
     }
 
+    // Activity Result Launcher для вибору файлу імпорту.
     private val getImportFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let {
             lifecycleScope.launch { backupManager.importData(it) }
@@ -65,16 +68,17 @@ class MainActivity : AppCompatActivity() {
         setupListeners()
         setupRecyclerView()
         observeHives()
+        collectHiveEvents() // Запуск спостереження за подіями ViewModel
 
+        // Перевірка та створення "Вулика №1" за замовчуванням, якщо він відсутній.
         lifecycleScope.launch {
             val existingHive = viewModel.getHiveByNumber("1")
             if (existingHive == null) {
                 val defaultHiveNumber = "1"
-                val newHive = HiveEntity(
-                    hiveNumber = defaultHiveNumber,
-                    name = defaultHiveNumber, // name залишається в БД, але приймає значення number
-                    color = this@MainActivity.getColor(R.color.color_white),
-                    secondaryColor = 0
+
+                val newHive = createDefaultHiveEntity(
+                    this@MainActivity,
+                    defaultHiveNumber
                 )
                 viewModel.addHive(newHive)
             }
@@ -83,6 +87,9 @@ class MainActivity : AppCompatActivity() {
         backupManager = BackupManager(this, viewModel)
     }
 
+    /**
+     * Ініціалізує всі елементи інтерфейсу (View).
+     */
     private fun initViews() {
         drawerLayout = findViewById(R.id.drawer_layout)
         navigationView = findViewById(R.id.nav_view)
@@ -92,6 +99,9 @@ class MainActivity : AppCompatActivity() {
         hiveCountTextView = findViewById(R.id.hiveCountTextView)
     }
 
+    /**
+     * Налаштовує всі слухачі подій для елементів інтерфейсу.
+     */
     private fun setupListeners() {
         drawerToggleButton.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
@@ -101,7 +111,7 @@ class MainActivity : AppCompatActivity() {
             drawerLayout.closeDrawer(GravityCompat.START)
             when (menuItem.itemId) {
                 R.id.nav_home -> {
-                    Toast.makeText(this, "Головна сторінка", Toast.LENGTH_SHORT).show()
+                    // Перехід не потрібен, бо ми вже на головній сторінці.
                 }
                 R.id.nav_search -> {
                     openSearchActivity()
@@ -135,18 +145,26 @@ class MainActivity : AppCompatActivity() {
 
         generalNotesButton.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                putExtra(Constants.EXTRA_HIVE_NUMBER, 0)
+                // Використання ID 0 для позначення загальних нотаток.
+                putExtra(Constants.EXTRA_HIVE_ID, 0)
             }
             startActivityWithSlideAnimation(intent)
         }
     }
 
+    /**
+     * Налаштовує RecyclerView для відображення списку вуликів.
+     * Містить логіку обробки натискань та довгих натискань.
+     */
     private fun setupRecyclerView() {
         hiveRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         hiveAdapter = HiveAdapter(
             onClick = { hive ->
                 val intent = Intent(this, HiveInfoActivity::class.java).apply {
                     putExtra(Constants.EXTRA_HIVE_ID, hive.id)
+                    putExtra(Constants.EXTRA_HIVE_NUMBER, hive.hiveNumber)
+                    putExtra(Constants.EXTRA_HIVE_COLOR, hive.color)
+                    putExtra(Constants.EXTRA_HIVE_SECONDARY_COLOR, hive.secondaryColor)
                 }
                 startActivityWithSlideAnimation(intent)
             },
@@ -161,6 +179,7 @@ class MainActivity : AppCompatActivity() {
                             onSave = { newNumber ->
                                 lifecycleScope.launch {
                                     val existingHive = viewModel.getHiveByNumber(newNumber)
+                                    // Логіка перевірки існування вулика (бізнес-логіка, яку слід винести)
                                     if (existingHive != null && existingHive.id != hive.id) {
                                         Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
                                     } else {
@@ -206,6 +225,10 @@ class MainActivity : AppCompatActivity() {
         hiveRecyclerView.adapter = hiveAdapter
     }
 
+    /**
+     * Запускає спостереження за списком вуликів з ViewModel.
+     * Оновлює адаптер RecyclerView та лічильник вуликів.
+     */
     private fun observeHives() {
         lifecycleScope.launch {
             viewModel.hives.collect { hives ->
@@ -215,60 +238,60 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Обробляє одноразові події додавання вуликів, надіслані з ViewModel.
+     * Відображає відповідні повідомлення Toast для користувача (успіх/помилка/ліміт).
+     */
+    private fun collectHiveEvents() {
+        lifecycleScope.launch {
+            viewModel.hiveEvents.collect { result ->
+                val messageResId = when (result) {
+                    HiveAddResult.SUCCESS -> R.string.hive_added_success
+                    HiveAddResult.EXISTS -> R.string.hive_number_exists
+                    HiveAddResult.LIMIT_REACHED -> R.string.max_hives_reached
+                }
+                Toast.makeText(this@MainActivity, messageResId, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
+     * Відкриває Activity для перегляду рентабельності.
+     */
     private fun openProfitabilityActivity() {
         val intent = Intent(this, ProfitabilityActivity::class.java)
         startActivityWithSlideAnimation(intent)
     }
+
+    /**
+     * Відкриває Activity для пошуку.
+     */
     private fun openSearchActivity() {
         val intent = Intent(this, SearchActivity::class.java)
         startActivityWithSlideAnimation(intent)
     }
 
-    // Функція перевірки наявності номера вулика
-    private fun tryAddHiveIfNotExists(hiveNumber: String, hiveName: String) {
-        lifecycleScope.launch {
-            val existingHive = viewModel.getHiveByNumber(hiveNumber)
-            if (existingHive != null) {
-                Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
-            } else {
-                val newHive = HiveEntity(
-                    hiveNumber = hiveNumber,
-                    name = hiveName,
-                    color = this@MainActivity.getColor(R.color.color_white),
-                    secondaryColor = 0
-                )
-                viewModel.addHive(newHive)
-            }
-        }
-    }
-// Функція додавання нового вулика
-private fun addHive() {
-    val currentHives = viewModel.hives.value
-    if (currentHives.size >= 100) {
-        Toast.makeText(this, R.string.max_hives_reached, Toast.LENGTH_SHORT).show()
-    } else {
+    /**
+     * Запускає діалог додавання нового вулика.
+     * Використовує ViewModel для обробки бізнес-логіки (перевірка ліміту та унікальності).
+     */
+    private fun addHive() {
         DialogUtils.showAddHiveDialog(this,
-            onHiveAdded = { hiveNumber -> // ❌ ТУТ МАЄ БУТИ ЛИШЕ ОДИН ПАРАМЕТР!
+            onHiveAdded = { hiveNumber ->
                 lifecycleScope.launch {
-                    val existingHive = viewModel.getHiveByNumber(hiveNumber)
-                    if (existingHive != null) {
-                        Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
-                    } else {
-                        val newHive = HiveEntity(
-                            hiveNumber = hiveNumber,
-                            name = hiveNumber, // ✅ name = number
-                            color = this@MainActivity.getColor(R.color.color_white),
-                            secondaryColor = 0
-                        )
-                        viewModel.addHive(newHive)
-                    }
+                    // Створення об'єкта HiveEntity зі стандартними налаштуваннями кольорів.
+                    val newHive = createDefaultHiveEntity(this@MainActivity, hiveNumber)
+                    // Делегуємо бізнес-логіку (перевірки) ViewModel.
+                    viewModel.addNewHive(newHive)
                 }
             }
         )
     }
-}
 
 
+    /**
+     * Відкриває Activity для налаштувань.
+     */
     private fun openSettingsActivity() {
         val intent = Intent(this, SettingsActivity::class.java)
         startActivityWithSlideAnimation(intent)

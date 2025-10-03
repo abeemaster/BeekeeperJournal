@@ -11,8 +11,12 @@ import com.beemaster.beekeeperjournal.fragments.IncomesFragment
 
 class SectionsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
 
+    companion object {
+        const val TAB_COUNT = 2
+    }
+
     override fun getItemCount(): Int {
-        return 2 // Кількість вкладок: Витрати та Прибутки
+        return TAB_COUNT // Використовуємо константу
     }
 
     override fun createFragment(position: Int): Fragment {

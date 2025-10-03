@@ -3,8 +3,7 @@ package com.beemaster.beekeeperjournal.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beemaster.beekeeperjournal.adapters.NoteSearchResult
-import com.beemaster.beekeeperjournal.db.toSearchResult // ✅ НОВИЙ ІМПОРТ: Функція-розширення з NoteMappers
-import com.beemaster.beekeeperjournal.repository.HiveRepository
+import com.beemaster.beekeeperjournal.db.toSearchResult
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,8 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val noteRepository: NoteRepository,
-    private val hiveRepository: HiveRepository
+    private val noteRepository: NoteRepository
 ) : ViewModel() {
 
     private val _searchResults = MutableStateFlow<List<NoteSearchResult>>(emptyList())
@@ -37,7 +35,7 @@ class SearchViewModel @Inject constructor(
             // 1. Виклик оптимізованого репозиторію
             noteRepository.searchNotes(query).collect { results ->
 
-                // 2. ✅ КОРЕКТНЕ ВИПРАВЛЕННЯ: Конвертуємо кожен NoteSearchResultEntity
+                // 2. КОРЕКТНЕ ВИПРАВЛЕННЯ: Конвертуємо кожен NoteSearchResultEntity
                 // у NoteSearchResult за допомогою функції-розширення.
                 val searchResults = results.map { it.toSearchResult() }
 

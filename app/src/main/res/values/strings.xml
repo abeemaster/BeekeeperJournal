@@ -13,6 +13,7 @@
 
     <string name="hive_button_text">Вулик</string>
     <string name="hive_info_title">Вулик %s</string>
+    <string name="hive_name_format">Вулик %s</string>
     <string name="hive_name">Вулик_Імя</string>
 
     <string name="notes_button_text">Приміт</string>
@@ -29,6 +30,7 @@
     <string name="new_record_button_text">Новий запис</string>
 
     <string name="hive_added_message">Додано Вулик №%d!</string>
+    <string name="hive_added_success">Додано Вулик!</string>
 
     <string name="save_record_button_text">Зберегти запис</string>
 
@@ -138,6 +140,7 @@
     <string name="vosk_model_loading">Vosk модель завантажується, голосовий пошук недоступний.</string>
     <string name="vosk_model_not_loaded">Модель Vosk ще не завантажена. Зачекайте або перезапустіть додаток.</string>
     <string name="voice_input_stopped">Голосовий ввід зупинено.</string>
+    <string name="voice_input">Голосовий ввід.</string>
     <string name="voice_input_listening">Слухаю…</string>
     <string name="voice_input_timeout">Тайм-аут голосового вводу. Запис зупинено.</string>
     <string name="error_recognition_start">Помилка запуску розпізнавання: %1$s</string>
@@ -154,6 +157,14 @@
     <string name="error_hive_loading">Помилка завантаження даних вулика.</string>
     <string name="title_settings">Налаштування</string>
     <string name="settings_saved_message">Налаштування збережено</string>
+    <string name="no_notes_yet">Нотаток поки що немає.\nНатисніть /Новий запис/, щоб додати першу!</string>
+    <string name="edit_your_entry">Редагуйте ваш запис тут…</string>
+    <string name="expense_format_with_currency">-%1$.2f грн</string>
+    <string name="quantity_format">%.2f</string>
+    <string name="income_amount_format">+%.2f грн</string>
+    <string name="income_quantity_details_format">%.2f %s по %.2f грн/%s</string>
+
+
 
 </resources>
 

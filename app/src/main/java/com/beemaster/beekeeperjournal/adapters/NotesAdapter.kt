@@ -1,8 +1,8 @@
 //  NoteDiffCallback.kt  DiffUtil — це допоміжний клас, який обчислює різницю між двома списками даних (старим і новим)
 //  і надає список конкретних оновлень. Замість того, щоб перемальовувати весь список, він каже RecyclerView,
 //  які саме елементи були додані, видалені чи змінені. Це значно покращує продуктивність і прибирає блимання.
-
-// Новий вміст для NotesAdapter.kt
+// NotesAdapter.kt
+// Адаптер для RecyclerView, який відображає список нотаток.
 
 package com.beemaster.beekeeperjournal.adapters
 
@@ -11,63 +11,89 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter // КЛЮЧОВА ЗМІНА: використовуємо ListAdapter
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
-import com.beemaster.beekeeperjournal.db.entity.NoteEntity // Припускаємо, що використовується NoteEntity
+import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Адаптер для відображення списку об'єктів [NoteEntity] у RecyclerView.
+ * Використовує [ListAdapter] та [NoteDiffCallback] для ефективного оновлення списку.
+ *
+ * @property onLongClick Лямбда-функція, що викликається при довгому натисканні на елемент.
+ */
 class NotesAdapter(
-    // Приймаємо колбек для обробки довгого натискання
-    private val onLongClick: (NoteEntity) -> Unit
+    private val onLongClick: (NoteEntity) -> Unit,
+    // ✅ ДОДАНО: Прапорець для керування відображенням інформації про вулик (для гнучкості)
+    private val showHiveInfo: Boolean = false
 ) : ListAdapter<NoteEntity, NotesAdapter.NoteViewHolder>(NoteDiffCallback()) {
 
-    // 1. ViewHolder: зберігає посилання на елементи макета note_list_item.xml
+    /**
+     * Внутрішній клас, що представляє елемент списку нотаток (ViewHolder).
+     */
     inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val dateTextView: TextView = itemView.findViewById(R.id.dateTextView)
         private val contentTextView: TextView = itemView.findViewById(R.id.contentTextView)
-        val hiveInfoTextView: TextView = itemView.findViewById(R.id.noteTypeAndHive)
+        private val hiveInfoTextView: TextView = itemView.findViewById(R.id.noteTypeAndHive) // Зроблено приватним
 
+        // Створюємо SimpleDateFormat ОДИН РАЗ
+        private val dateFormat = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
+
+        /**
+         * Прив'язує об'єкт [NoteEntity] до елементів інтерфейсу.
+         *
+         * @param note Об'єкт нотатки, який потрібно відобразити.
+         */
         fun bind(note: NoteEntity) {
-            val dateFormat = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
             dateTextView.text = dateFormat.format(Date(note.createdAt))
             contentTextView.text = note.content
-            // ✅ ВИПРАВЛЕННЯ: Приховуємо поле з інформацією про вулик,
-            // оскільки ми вже знаходимося у контексті цього вулика.
-            hiveInfoTextView.visibility = View.GONE
-            // Встановлення слухача для довгого натискання
+
+            // Керуємо видимістю залежно від прапорця
+            hiveInfoTextView.visibility = if (showHiveInfo) View.VISIBLE else View.GONE
+
             itemView.setOnLongClickListener {
-                onLongClick(note) // Викликаємо колбек
-                true
+                onLongClick(note)
+                true // Повертаємо true, що подія оброблена
             }
         }
     }
 
-    // 2. Створення нового View-елемента з макета
+    /**
+     * Створює новий ViewHolder.
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.note_list_item, parent, false) // Використовуємо макет елемента, який ми обговорювали
+            .inflate(R.layout.note_list_item, parent, false)
         return NoteViewHolder(view)
     }
 
-    // 3. Прив'язка даних до View-елемента
+    /**
+     * Прив'язує дані до ViewHolder.
+     */
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 }
 
-// 4. NoteDiffCallback (коректна реалізація, подібна до вашої ідеї)
-// Вбудовуємо його в цей же файл, або залишаємо окремим класом, але він повинен наслідувати DiffUtil.ItemCallback
-class NoteDiffCallback : DiffUtil.ItemCallback<NoteEntity>() {
+/**
+ * Допоміжний клас для обчислення різниці між списками нотаток.
+ */
+private class NoteDiffCallback : DiffUtil.ItemCallback<NoteEntity>() { // Зроблено приватним
+
+    /**
+     * Порівнюємо за унікальним ID.
+     */
     override fun areItemsTheSame(oldItem: NoteEntity, newItem: NoteEntity): Boolean {
-        // Порівнюємо за унікальним ID
         return oldItem.id == newItem.id
     }
 
+    /**
+     * Порівнюємо весь вміст (якщо ID однакові).
+     */
     override fun areContentsTheSame(oldItem: NoteEntity, newItem: NoteEntity): Boolean {
-        // Порівнюємо весь вміст
         return oldItem == newItem
     }
 }

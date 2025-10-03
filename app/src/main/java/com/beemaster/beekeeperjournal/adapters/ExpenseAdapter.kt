@@ -15,25 +15,39 @@ import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-// ✅ ОНОВЛЕНО: Тепер адаптер успадковується від ListAdapter.
+/**
+ * Адаптер для відображення списку об'єктів [ExpenseEntity] у RecyclerView.
+ * Використовує [ListAdapter] та [DiffUtil] для ефективного оновлення списку.
+ *
+ * @property onClick Лямбда-функція, що викликається при натисканні на елемент.
+ * @property onLongClick Лямбда-функція, що викликається при довгому натисканні на елемент.
+ */
 class ExpenseAdapter(
     private val onClick: (ExpenseEntity) -> Unit,
-    // ✅ НОВЕ: Додано обробник подій для довгого натискання.
     private val onLongClick: (ExpenseEntity) -> Unit
 ) : ListAdapter<ExpenseEntity, ExpenseAdapter.ExpenseViewHolder>(ExpenseDiffCallback()) {
 
+    /**
+     * Створює новий ViewHolder.
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.expense_item, parent, false)
-        // ✅ ОНОВЛЕНО: Передаємо обидва обробники до ViewHolder.
         return ExpenseViewHolder(view, onClick, onLongClick)
     }
 
+    /**
+     * Прив'язує дані до ViewHolder.
+     */
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = getItem(position)
         holder.bind(expense)
     }
 
+    /**
+     * Внутрішній клас, що представляє елемент списку витрат (ViewHolder).
+     * Відповідає за прив'язку даних ExpenseEntity до елементів View.
+     */
     class ExpenseViewHolder(
         view: View,
         private val onClick: (ExpenseEntity) -> Unit,
@@ -46,35 +60,50 @@ class ExpenseAdapter(
         private val quantityUnits: TextView = view.findViewById(R.id.expense_quantity_units)
         private val dateFormat = SimpleDateFormat("dd.MM.yy", Locale.getDefault())
 
+        /**
+         * Прив'язує об'єкт [ExpenseEntity] до елементів інтерфейсу.
+         *
+         * @param expense Об'єкт витрати, який потрібно відобразити.
+         */
         fun bind(expense: ExpenseEntity) {
             date.text = dateFormat.format(expense.date)
             description.text = expense.name
-            totalPrice.text = String.format(Locale.getDefault(), "-%.2f грн", expense.amount)
-            quantity.text = String.format(Locale.getDefault(), "%.2f", expense.quantityUnits)
+
+            // Використання ресурсів для форматування ціни та кількості (як обговорювалося)
+            totalPrice.text = itemView.context.getString(R.string.expense_format_with_currency, expense.amount)
+            quantity.text = itemView.context.getString(R.string.quantity_format, expense.quantityUnits)
+
             quantityUnits.text = expense.nameQuantity
 
-            // ✅ НОВЕ: Обробка звичайного натискання.
             itemView.setOnClickListener {
                 onClick(expense)
             }
 
-            // ✅ НОВЕ: Обробка довгого натискання.
+            // Обробка довгого натискання
             itemView.setOnLongClickListener {
                 onLongClick(expense)
-                true // Повертаємо true, щоб вказати, що подію оброблено.
+                true // Повертаємо true, щоб вказати, що подія оброблена
             }
         }
     }
 
-    // ✅ НОВЕ: DiffUtil.ItemCallback для оптимізації оновлень списку.
+    /**
+     * Внутрішній клас для обчислення різниці між старим і новим списком елементів.
+     * Забезпечує плавну анімацію та ефективне оновлення [ListAdapter].
+     */
     private class ExpenseDiffCallback : DiffUtil.ItemCallback<ExpenseEntity>() {
+        /**
+         * Перевіряє, чи представляють два об'єкти один і той самий елемент (за ID).
+         */
         override fun areItemsTheSame(oldItem: ExpenseEntity, newItem: ExpenseEntity): Boolean {
             return oldItem.id == newItem.id
         }
 
+        /**
+         * Перевіряє, чи мають два елементи однакові дані (після перевірки areItemsTheSame).
+         */
         override fun areContentsTheSame(oldItem: ExpenseEntity, newItem: ExpenseEntity): Boolean {
             return oldItem == newItem
         }
     }
 }
-

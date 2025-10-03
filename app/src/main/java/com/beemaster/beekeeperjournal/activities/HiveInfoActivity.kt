@@ -1,5 +1,7 @@
 // HiveInfoActivity файл котрий спрацьовує при натисканні на кнопку "Вулик№"
 
+// HiveInfoActivity файл котрий спрацьовує при натисканні на кнопку "Вулик№"
+
 package com.beemaster.beekeeperjournal.activities
 
 import android.content.Intent
@@ -41,6 +43,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private lateinit var queenBtn: Button
     private lateinit var hiveInfoBtn: Button
     private lateinit var notesBtn: Button
+    private lateinit var emptyNotesPlaceholder: View // ✅ ВИПРАВЛЕННЯ 1: Оголошено заглушку
     private lateinit var currentHiveNumber: String
     private var currentHiveId: Int = 0
     private var currentEntryType: String = ""
@@ -98,6 +101,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         queenBtn = findViewById(R.id.queenBtn)
         hiveInfoBtn = findViewById(R.id.hiveInfoBtn)
         notesBtn = findViewById(R.id.notesBtn)
+        emptyNotesPlaceholder = findViewById(R.id.emptyNotesPlaceholder) // ✅ ВИПРАВЛЕННЯ 1: Ініціалізовано заглушку
     }
 
     private fun setupListeners() {
@@ -111,22 +115,13 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
     }
 
-    // У файлі HiveInfoActivity.kt
-
-// ... (допоміжні змінні)
-// ...
-// ... (setupViews, setupListeners, setupNavigationView, setupRecyclerView)
-
     private fun loadInitialData() {
         currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
-        // ❌ ВИДАЛЕНО: Тут більше не намагаємося отримати номер з Intent
-        // val hiveNameFromIntent = intent.getStringExtra(Constants.EXTRA_HIVE_NUMBER)
-        // currentHiveNumber = hiveNameFromIntent ?: getString(R.string.general_notes_title)
 
         val initialEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
         currentEntryType = if (currentHiveId == 0) "general" else initialEntryType
 
-        // ✅ НОВИЙ КРОК: Запускаємо асинхронне завантаження номера вулика
+        // Запускаємо асинхронне завантаження номера вулика
         loadHiveData()
     }
 
@@ -144,7 +139,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
             if (hive != null) {
                 // Отримуємо фактичний НОМЕР вулика (наприклад, "49")
-                currentHiveNumber = hive.hiveNumber.toString()
+                currentHiveNumber = hive.hiveNumber
             } else {
                 // Резервний варіант, якщо вулик не знайдено
                 currentHiveNumber = getString(R.string.error_hive_not_found_placeholder)
@@ -168,14 +163,12 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             else -> R.string.hive_name
         }
 
-        // ✅ ПЕРЕВІРКА: currentHiveNumber тепер містить "49" або "Загальні записи"
+        // ПЕРЕВІРКА: currentHiveNumber тепер містить "49" або "Загальні записи"
         infoTitle.text = if (currentHiveId == 0) {
             getString(titleResId)
         } else {
             getString(titleResId, currentHiveNumber)
         }
-
-        // ... (логіка видимості кнопок залишається без змін)
 
         if (currentHiveId == 0) {
             queenBtn.visibility = View.GONE
@@ -192,8 +185,23 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private fun observeNotes() {
         lifecycleScope.launch {
             viewModel.notes.collect { notes ->
+                // 1. Оновлення адаптера
                 notesAdapter.submitList(notes)
-            // TODO: Додати логіку відображення заглушки, якщо список notes порожній.
+
+                // 2. ЛОГІКА ЗАГЛУШКИ ТА ПРОКРУТКИ
+                if (notes.isEmpty()) {
+                    // Якщо нотаток немає: показуємо заглушку
+                    emptyNotesPlaceholder.visibility = View.VISIBLE
+                    notesRecyclerView.visibility = View.GONE
+                } else {
+                    // Якщо нотатки є: показуємо список
+                    emptyNotesPlaceholder.visibility = View.GONE
+                    notesRecyclerView.visibility = View.VISIBLE
+
+                    // ✅ ПРОКРУТКА: Нова нотатка додається на початок (позиція 0)
+                    // Використовуємо smoothScrollToPosition для плавного переходу
+                    notesRecyclerView.smoothScrollToPosition(0)
+                }
             }
         }
     }
@@ -211,7 +219,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             putExtra(Constants.EXTRA_HIVE_NUMBER, currentHiveNumber)
             putExtra(Constants.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
-        startActivity(intent)
+        startActivityWithSlideAnimation(intent) // ✅ ВИПРАВЛЕННЯ 2: Використовуємо анімацію
     }
 
     private fun showNoteOptionsDialog(note: NoteEntity) {
@@ -224,7 +232,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                     putExtra(Constants.EXTRA_HIVE_ID, note.hiveId)
                     putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
                 }
-                startActivity(intent)
+                startActivityWithSlideAnimation(intent) // ✅ ВИПРАВЛЕННЯ 2: Використовуємо анімацію
             },
             onDelete = {
                 showDeleteConfirmationDialog(note)
