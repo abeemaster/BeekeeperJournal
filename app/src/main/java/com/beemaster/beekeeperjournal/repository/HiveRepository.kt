@@ -98,7 +98,8 @@ class HiveRepository @Inject constructor(
      * @param hives Список HiveEntity для імпорту.
      */
     suspend fun importHives(hives: List<HiveEntity>) {
-        // Припускаємо, що HiveDao має відповідний метод для вставки списку
-        hiveDao.insertHives(hives)
+        // ВИКОРИСТОВУЙТЕ DAO-метод, що виконує очищення та вставку в ОДНІЙ транзакції.
+        // Це забезпечує надійне відновлення/імпорт даних.
+        hiveDao.clearAndInsertHives(hives)
     }
 }

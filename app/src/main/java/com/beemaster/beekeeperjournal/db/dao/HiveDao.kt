@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +19,7 @@ interface HiveDao {
      * Вставляє новий вулик у базу даних або замінює його, якщо він вже існує (за ID).
      * @param hive Об'єкт HiveEntity для вставки.
      */
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHive(hive: HiveEntity)
 
     /**
@@ -84,24 +85,17 @@ interface HiveDao {
      * Вставляє список вуликів. Використовується для імпорту/відновлення даних.
      * @param hives Список HiveEntity для вставки.
      */
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllHives(hives: List<HiveEntity>)
 
     /**
      * Виконує очищення таблиці та подальшу вставку нового списку вуликів.
-     * Це допоміжний метод для імпорту/відновлення.
+     * Це допоміжний метод для імпорту/відновлення, який гарантує атомарність.
      * @param hives Список HiveEntity для імпорту.
      */
+    @Transaction // ✅ Додано: Забезпечує, що операції виконуються як єдина транзакція
     suspend fun clearAndInsertHives(hives: List<HiveEntity>) {
         deleteAllHives()
         insertAllHives(hives)
     }
-
-    /**
-     * Вставляє список вуликів, замінюючи існуючі за конфліктом ID.
-     * Це дублюючий метод для insertAllHives, але використовується в репозиторії.
-     * @param hives Список HiveEntity для імпорту.
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertHives(hives: List<HiveEntity>)
 }

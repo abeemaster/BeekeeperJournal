@@ -6,6 +6,9 @@ package com.beemaster.beekeeperjournal.repository
 import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity // ✅ ДОДАНО: Імпорт нової сутності
+import com.beemaster.beekeeperjournal.db.toNote
+import com.beemaster.beekeeperjournal.db.toNoteEntity
+import com.beemaster.beekeeperjournal.models.Note
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -66,8 +69,17 @@ class NoteRepository @Inject constructor(
      * @param id ID нотатки, яку потрібно знайти.
      * @return Об'єкт NoteEntity або null.
      */
-    suspend fun getNoteById(id: Int): NoteEntity? {
-        return noteDao.getNoteById(id)
+
+
+// 1. Змінюємо тип, що повертається, на Note (модель)
+    suspend fun getNoteById(id: Int): Note? {
+
+        // 2. Отримуємо NoteEntity з DAO
+        val noteEntity = noteDao.getNoteById(id)
+
+        // 3. Якщо NoteEntity знайдено, перетворюємо його на Note.
+        // Якщо ні, повертаємо null.
+        return noteEntity?.toNote()
     }
 
     /**
@@ -84,18 +96,28 @@ class NoteRepository @Inject constructor(
 
 
     /**
-     * ❌ ВИДАЛЕНО: Цей метод є надлишковим.
-     * Якщо потрібні дані без Flow, використовуйте getAllNotes().first() у ViewModel.
-     * suspend fun getAllNotesSuspend(): List<NoteEntity> {
-     * return noteDao.getAllNotesSuspend()
-     * }
-     */
-
-    /**
      * Імпортує список нотаток у базу даних, зазвичай, після очищення існуючих даних.
      * @param notes Список NoteEntity для імпорту.
      */
     suspend fun importNotes(notes: List<NoteEntity>) {
         noteDao.clearAndInsertNotes(notes)
+    }
+
+
+    /**
+     * Отримує всі нотатки для експорту або створення бекапу.
+     * Повертає статичний List, а не Flow.
+     */
+    suspend fun getAllNotesForExport(): List<NoteEntity> {
+        // 🎉 Використовуємо DAO-метод, щоб отримати всі дані для експорту
+        return noteDao.getAllNotesSuspend()
+    }
+    // У NoteRepository.kt
+    suspend fun insertNote(note: Note) {
+        // 1. Використовуємо функцію-розширення
+        val noteEntity = note.toNoteEntity()
+
+        // 2. DAO працює з Entity
+        noteDao.insertNote(noteEntity)
     }
 }

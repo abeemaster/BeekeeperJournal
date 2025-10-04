@@ -7,32 +7,72 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
-import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity // ✅ НОВИЙ ІМПОРТ
+import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Data Access Object (DAO) для роботи з сутностями [NoteEntity] (нотатки).
+ */
 @Dao
 interface NoteDao {
+    /**
+     * Вставляє нову нотатку або замінює існуючу в разі конфлікту ID.
+     * @param note Об'єкт [NoteEntity] для вставки.
+     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: NoteEntity)
 
+    /**
+     * Оновлює інформацію про існуючу нотатку.
+     * @param note Об'єкт [NoteEntity] для оновлення.
+     */
     @Update
     suspend fun updateNote(note: NoteEntity)
 
+    /**
+     * Видаляє нотатку за її унікальним ID.
+     * @param id ID нотатки для видалення.
+     */
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNote(id: Int)
 
+    /**
+     * Отримує нотатки, пов'язані з певним вуликом та типом запису,
+     * відсортовані за датою створення.
+     * @param hiveId ID вулика.
+     * @param type Тип запису ("hive", "queen", "general" тощо).
+     * @return [Flow], що містить список [NoteEntity].
+     */
     @Query("SELECT * FROM notes WHERE hiveId = :hiveId AND type = :type ORDER BY createdAt DESC")
     fun getNotesByHiveAndType(hiveId: Int, type: String): Flow<List<NoteEntity>>
 
+    /**
+     * Отримує нотатку за її унікальним ID.
+     * @param id ID нотатки.
+     * @return [NoteEntity] або null.
+     */
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: Int): NoteEntity?
 
+    /**
+     * Отримує всі нотатки з бази даних.
+     * @return [Flow], що містить список усіх [NoteEntity], відсортованих за датою створення.
+     */
     @Query("SELECT * FROM notes ORDER BY createdAt DESC")
     fun getAllNotes(): Flow<List<NoteEntity>>
 
     /**
-     * ✅ ВИПРАВЛЕНО: Змінено тип повернення на Flow<List<NoteSearchResultEntity>>.
-     * Room тепер знає, як відобразити результат SQL JOIN.
+     * Отримує всі нотатки як статичний список. Використовується для операцій бекапу/експорту.
+     * @return Список усіх [NoteEntity].
+     */
+    @Query("SELECT * FROM notes")
+    suspend fun getAllNotesSuspend(): List<NoteEntity> // ✅ ДОДАНО
+
+    /**
+     * Виконує пошук нотаток, поєднуючи дані з таблиці notes та hives.
+     * Пошук здійснюється за вмістом, заголовком нотатки, типом та номером/назвою вулика.
+     * @param query Рядок пошуку.
+     * @return [Flow], що містить список результатів [NoteSearchResultEntity].
      */
     @Query("""
         SELECT 
@@ -47,14 +87,26 @@ interface NoteDao {
         OR H.hiveNumber LIKE '%' || :query || '%'
         ORDER BY N.createdAt DESC
     """)
-    fun searchNotes(query: String): Flow<List<NoteSearchResultEntity>> // ⬅️ ВИПРАВЛЕНО
+    fun searchNotes(query: String): Flow<List<NoteSearchResultEntity>>
 
+    /**
+     * Видаляє всі записи з таблиці нотаток.
+     */
     @Query("DELETE FROM notes")
     suspend fun deleteAllNotes()
 
+    /**
+     * Вставляє список нотаток у базу даних.
+     * @param notes Список [NoteEntity] для вставки.
+     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllNotes(notes: List<NoteEntity>)
 
+    /**
+     * Виконує очищення таблиці нотаток та подальшу вставку нового списку
+     * в рамках однієї атомарної транзакції (для імпорту/відновлення).
+     * @param notes Список [NoteEntity] для імпорту.
+     */
     @Transaction
     suspend fun clearAndInsertNotes(notes: List<NoteEntity>) {
         deleteAllNotes()

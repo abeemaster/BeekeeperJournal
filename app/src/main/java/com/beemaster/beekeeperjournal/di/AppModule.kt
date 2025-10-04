@@ -1,7 +1,5 @@
 // Цей об'єктний клас буде відповідати за надання (провайдінг) залежностей, таких як база даних та DAO.
 
-// Цей об'єктний клас буде відповідати за надання (провайдінг) залежностей, таких як база даних та DAO.
-
 package com.beemaster.beekeeperjournal.di
 
 import android.content.Context
@@ -10,12 +8,7 @@ import com.beemaster.beekeeperjournal.db.AppDatabase
 import com.beemaster.beekeeperjournal.db.dao.ExpenseDao
 import com.beemaster.beekeeperjournal.db.dao.HiveDao
 import com.beemaster.beekeeperjournal.db.dao.IncomeDao
-import com.beemaster.beekeeperjournal.db.MIGRATION_1_2
-import com.beemaster.beekeeperjournal.db.MIGRATION_2_3
-import com.beemaster.beekeeperjournal.db.MIGRATION_3_4
-import com.beemaster.beekeeperjournal.db.MIGRATION_4_5
-import com.beemaster.beekeeperjournal.db.MIGRATION_5_6
-import com.beemaster.beekeeperjournal.db.MIGRATION_6_7
+import com.beemaster.beekeeperjournal.db.ALL_MIGRATIONS
 import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
@@ -28,57 +21,95 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Модуль Dagger Hilt для надання залежностей на рівні життєвого циклу програми (Singleton).
+ * Надає екземпляри бази даних, DAO та Репозиторіїв.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+    private const val DATABASE_NAME = "beekeeper_journal_database"
 
+    /**
+     * Надає єдиний екземпляр бази даних (Singleton).
+     * Конфігурує Room та застосовує усі міграції.
+     */
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext appContext: Context): AppDatabase {
         return Room.databaseBuilder(
             appContext,
             AppDatabase::class.java,
-            "beekeeper_journal_database"
+            DATABASE_NAME
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+
+            .addMigrations(*ALL_MIGRATIONS)
             .build()
     }
 
+    /**
+     * Надає Hive Data Access Object (DAO).
+     */
     @Provides
     fun provideHiveDao(database: AppDatabase): HiveDao {
         return database.hiveDao()
     }
 
+    /**
+     * Надає Note Data Access Object (DAO).
+     */
     @Provides
     fun provideNoteDao(database: AppDatabase): NoteDao {
         return database.noteDao()
     }
 
+    /**
+     * Надає Expense Data Access Object (DAO).
+     */
     @Provides
     fun provideExpenseDao(database: AppDatabase): ExpenseDao {
         return database.expenseDao()
     }
 
+    /**
+     * Надає Income Data Access Object (DAO).
+     */
     @Provides
     fun provideIncomeDao(database: AppDatabase): IncomeDao {
         return database.incomeDao()
     }
 
+    // --------------------------------------------------------------------------
+    // Repositories
+    // --------------------------------------------------------------------------
+
+    /**
+     * Надає екземпляр Hive Repository.
+     */
     @Provides
     fun provideHiveRepository(hiveDao: HiveDao): HiveRepository {
         return HiveRepository(hiveDao)
     }
 
+    /**
+     * Надає екземпляр Note Repository.
+     */
     @Provides
     fun provideNoteRepository(noteDao: NoteDao): NoteRepository {
         return NoteRepository(noteDao)
     }
 
+    /**
+     * Надає екземпляр Income Repository.
+     */
     @Provides
     fun provideIncomeRepository(incomeDao: IncomeDao): IncomeRepository {
         return IncomeRepository(incomeDao)
     }
 
+    /**
+     * Надає екземпляр Expense Repository.
+     */
     @Provides
     fun provideExpenseRepository(expenseDao: ExpenseDao): ExpenseRepository {
         return ExpenseRepository(expenseDao)

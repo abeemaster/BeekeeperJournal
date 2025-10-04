@@ -17,6 +17,7 @@ import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 object DialogUtils {
@@ -86,8 +87,8 @@ object DialogUtils {
             amountEditText.setText(incomeToEdit.quantity.toString())
             unitEditText.setText(incomeToEdit.unitName)
             pricePerUnitEditText.setText(incomeToEdit.price.toString())
-            calendar.time = incomeToEdit.date
-            saveButton.text = "Зберегти" // Змінюємо текст кнопки
+            calendar.time = Date(incomeToEdit.date)
+            saveButton.text = "Зберегти"
         } else {
             dateEditText.setText(dateFormat.format(calendar.time))
         }
@@ -116,6 +117,7 @@ object DialogUtils {
             val quantity = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
             val price = pricePerUnitEditText.text.toString().toDoubleOrNull() ?: 0.0
             val date = calendar.time
+            val dateAsLong = date.time
 
             if (productName.isNotEmpty() && quantity > 0 && price > 0) {
                 if (incomeToEdit == null) {
@@ -126,7 +128,7 @@ object DialogUtils {
                         price = price,
                         unitName = unitName,
                         totalAmount = quantity * price,
-                        date = date,
+                        date = dateAsLong,
                         hiveId = hiveId
                     )
                     viewModel.insertIncome(newIncome)
@@ -137,7 +139,7 @@ object DialogUtils {
                         price = price,
                         unitName = unitName,
                         totalAmount = quantity * price,
-                        date = date
+                        date = dateAsLong
                     )
                     viewModel.updateIncome(updatedIncome)
                 }
@@ -176,7 +178,7 @@ object DialogUtils {
             quantityEditText.setText(expenseToEdit.quantityUnits.toString())
             quantityUnitsEditText.setText(expenseToEdit.nameQuantity)
             amountEditText.setText(expenseToEdit.amount.toString())
-            calendar.time = expenseToEdit.date
+            calendar.time = Date(expenseToEdit.date)
             saveButton.text = "Зберегти"
         } else {
             dateEditText.setText(dateFormat.format(calendar.time))
@@ -206,13 +208,14 @@ object DialogUtils {
             val nameQuantity = quantityUnitsEditText.text.toString().trim()
             val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
             val date = calendar.time
+            val dateAsLong = date.time
 
             if (name.isNotEmpty() && amount > 0) {
                 if (expenseToEdit == null) {
                     val newExpense = ExpenseEntity(
                         name = name,
                         amount = amount,
-                        date = date,
+                        date = dateAsLong,
                         quantityUnits = quantityUnits,
                         nameQuantity = nameQuantity,
                         hiveId = hiveId
@@ -222,7 +225,7 @@ object DialogUtils {
                     val updatedExpense = expenseToEdit.copy(
                         name = name,
                         amount = amount,
-                        date = date,
+                        date = dateAsLong,
                         quantityUnits = quantityUnits,
                         nameQuantity = nameQuantity
                     )

@@ -125,7 +125,6 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     private fun setupRecyclerView() {
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this)
         searchResultsAdapter = SearchResultsAdapter(
-            mutableListOf(),
             onItemLongClick = { note ->
                 showNoteOptionsDialog(note)
             }
@@ -182,7 +181,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     private fun observeViewModel() {
         lifecycleScope.launch {
             viewModel.searchResults.collect { results ->
-                searchResultsAdapter.updateData(results)
+                searchResultsAdapter.submitList(results)
                 if (results.isEmpty() && searchQueryInput.text.isNotBlank()) {
                     val message = getString(R.string.search_not_found, searchQueryInput.text)
                     Toast.makeText(this@SearchActivity, message, Toast.LENGTH_SHORT).show()

@@ -1,7 +1,5 @@
 // NoteMappers.kt
 
-// NoteMappers.kt
-
 package com.beemaster.beekeeperjournal.db
 
 import com.beemaster.beekeeperjournal.adapters.NoteSearchResult
@@ -12,12 +10,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * Функція-розширення для конвертації об'єкта NoteEntity (база даних) в об'єкт Note (UI).
+ * Функція-розширення для конвертації об'єкта NoteEntity (база даних) в об'єкт Note (UI/модель).
+ * @return Об'єкт Note для використання у шарі UI/ViewModel.
  */
 fun NoteEntity.toNote(): Note {
     return Note(
         id = this.id,
-        hiveNumber = this.hiveId,
+        hiveNumber = this.hiveId, // Припускаємо, що Note.hiveNumber - це ID вулика
         type = this.type,
         timestamp = this.createdAt,
         text = this.content,
@@ -26,7 +25,8 @@ fun NoteEntity.toNote(): Note {
 }
 
 /**
- * Функція-розширення для конвертації об'єкта Note (UI) в об'єкт NoteEntity (база даних).
+ * Функція-розширення для конвертації об'єкта Note (UI/модель) в об'єкт NoteEntity (база даних).
+ * @return Об'єкт NoteEntity для збереження у базі даних.
  */
 fun Note.toNoteEntity(): NoteEntity {
     return NoteEntity(
@@ -35,48 +35,48 @@ fun Note.toNoteEntity(): NoteEntity {
         type = this.type,
         createdAt = this.timestamp,
         content = this.text,
-        imagePath = null,
+        imagePath = null, // Припускаємо, що UI-модель не зберігає imagePath
         title = this.title
     )
 }
 
-// 🚀 ВИПРАВЛЕНО: Конвертує результат пошуку (Entity з JOIN) у модель для адаптера
 /**
  * Конвертує об'єкт NoteSearchResultEntity (результат DAO-запиту з JOIN)
- * у модель NoteSearchResult для відображення в адаптері.
+ * у модель NoteSearchResult для відображення в адаптері результатів пошуку.
+ * @return Об'єкт NoteSearchResult з об'єднаними даними.
  */
 fun NoteSearchResultEntity.toSearchResult(): NoteSearchResult {
 
     // 1. Створюємо модель Note з полів Entity
     val noteModel = Note(
         id = this.id,
-        // ✅ ВИПРАВЛЕНО: Використовуємо hiveId, який є int
         text = this.content,
         type = this.type,
-        hiveNumber = this.hiveId, // ПРИПУЩЕННЯ: Note.hiveNumber має тип Int
+        hiveNumber = this.hiveId,
         timestamp = this.createdAt,
         title = this.title
     )
 
-    // 2. Визначаємо відображувану назву вулика
+    // 2. Визначаємо відображуваний номер вулика.
+    // Якщо currentHiveNumber (з JOIN) null (наприклад, вулик видалено),
+    // використовуємо hiveId як рядок.
     val displayHiveNumber: String = this.currentHiveNumber
-        ?: // Запасний варіант для нотаток, що не прив'язані до вулика (hiveId == 0)
-        this.hiveId.toString()
+        ?: this.hiveId.toString()
 
-    // 3. ✅ КЛЮЧОВЕ ВИПРАВЛЕННЯ: Створюємо NoteSearchResult, передаючи Note та String.
-    // Припускаємо конструктор NoteSearchResult(note: Note, hiveName: String).
+    // 3. Створюємо NoteSearchResult, передаючи Note та відображувану назву вулика.
     return NoteSearchResult(
         note = noteModel,
-        // ПРИПУЩЕННЯ: Поле в NoteSearchResult має назву hiveNumber (String)
         hiveNumber = displayHiveNumber
     )
 }
 
 
 /**
- * Допоміжна функція для форматування дати.
+ * Допоміжна функція для форматування дати нотатки у формат "dd.MM.yyyy".
+ * @return Відформатований рядок дати.
  */
 fun Note.getFormattedDate(): String {
     val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+    // Note.timestamp має бути Long (мілісекунди)
     return dateFormat.format(Date(this.timestamp))
 }

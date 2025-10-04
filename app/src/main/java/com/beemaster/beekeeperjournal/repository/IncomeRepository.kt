@@ -41,8 +41,11 @@ class IncomeRepository @Inject constructor(
     suspend fun getAllIncomesSuspend(): List<IncomeEntity> {
         return incomeDao.getAllIncomesSuspend()
     }
-
     suspend fun importIncomes(incomes: List<IncomeEntity>) {
-        return incomeDao.insertIncomes(incomes)
+        return incomeDao.clearAndInsertIncomes(incomes)
     }
+    suspend fun getFinalTotalIncome(): Double? {
+        return incomeDao.getTotalIncomeSuspend()
+    }
+
 }
