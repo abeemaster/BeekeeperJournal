@@ -1,5 +1,7 @@
 // IncomesFragment.kt
 // Фрагмент, що відображає список прибутків.
+// IncomesFragment.kt
+// Фрагмент, що відображає список прибутків.
 
 package com.beemaster.beekeeperjournal.fragments
 
@@ -17,7 +19,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.IncomeAdapter
 import com.beemaster.beekeeperjournal.databinding.FragmentIncomesBinding
-import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
+// import com.beemaster.beekeeperjournal.db.entity.IncomeEntity // ❌ ВИДАЛИТИ: більше не використовується напряму
+import com.beemaster.beekeeperjournal.models.Income // ✅ ЗАЛИШАЄМО: Чиста Domain Model
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -73,8 +76,8 @@ class IncomesFragment : Fragment() {
     private fun setupRecyclerView() {
         incomeAdapter = IncomeAdapter(
             onClick = { /* Обробка звичайного натискання (якщо потрібна) */ },
-            onLongClick = { incomeEntity ->
-                showEditDeleteDialog(incomeEntity)
+            onLongClick = { income -> // ✅ ВИПРАВЛЕНО: Parameter now uses 'income' which is of type Income (as defined in IncomeAdapter)
+                showEditDeleteDialog(income)
             }
         )
         binding.incomesRecyclerView.apply {
@@ -115,9 +118,9 @@ class IncomesFragment : Fragment() {
 
     /**
      * Відображає діалог редагування або видалення для обраного запису про прибуток.
-     * @param income [IncomeEntity] запис, який потрібно редагувати або видалити.
+     * @param income [Income] запис, який потрібно редагувати або видалити.
      */
-    private fun showEditDeleteDialog(income: IncomeEntity) {
+    private fun showEditDeleteDialog(income: Income) {
         DialogUtils.showEditDeleteDialog(
             context = requireContext(),
             onEdit = {

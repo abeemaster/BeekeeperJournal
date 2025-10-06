@@ -5,9 +5,9 @@ package com.beemaster.beekeeperjournal.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
-import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.models.Expense
+import com.beemaster.beekeeperjournal.models.Income
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
@@ -158,7 +158,7 @@ class MainActivityViewModel @Inject constructor(
      * Отримує всі об'єкти IncomeEntity. Використовується для експорту даних.
      * @return Список усіх IncomeEntity.
      */
-    suspend fun getAllIncomesSuspend(): List<IncomeEntity> {
+    suspend fun getAllIncomesSuspend(): List<Income> {
         return incomeRepository.getAllIncomesSuspend()
     }
 
@@ -192,7 +192,7 @@ class MainActivityViewModel @Inject constructor(
      * Імпортує список IncomeEntity в базу даних.
      * @param incomes Список об'єктів для імпорту.
      */
-    fun importIncomes(incomes: List<IncomeEntity>) = viewModelScope.launch(Dispatchers.IO) {
+    fun importIncomes(incomes: List<Income>) = viewModelScope.launch(Dispatchers.IO) {
         incomeRepository.importIncomes(incomes)
     }
 }

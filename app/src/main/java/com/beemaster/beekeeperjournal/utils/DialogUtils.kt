@@ -12,8 +12,9 @@ import android.widget.Toast
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
-import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
+// import com.beemaster.beekeeperjournal.db.entity.IncomeEntity // ❌ ВИДАЛЯЄМО
 import com.beemaster.beekeeperjournal.models.Expense
+import com.beemaster.beekeeperjournal.models.Income // ✅ ДОДАНО: Domain Model
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
@@ -23,10 +24,7 @@ import java.util.Locale
 
 object DialogUtils {
 
-    /** Загальний діалог для редагування або видалення.
-     * @param onEdit Функція, що виконується при виборі "Редагувати".
-     * @param onDelete Функція, що виконується при виборі "Видалити".
-     */
+    /** Загальний діалог для редагування або видалення. */
     fun showEditDeleteDialog(
         context: Context,
         onEdit: () -> Unit,
@@ -43,34 +41,32 @@ object DialogUtils {
             }
             .show()
     }
-    // ✅ Нова функція для відображення діалогу підтвердження видалення
+
     fun showDeleteConfirmationDialog(
         context: Context,
-        // Приймаємо ресурси для гнучкості
         titleResId: Int,
         messageResId: Int,
         onConfirm: () -> Unit
     ) {
         AlertDialog.Builder(context)
-            .setTitle(context.getString(titleResId)) // Використовуємо переданий ресурс
-            .setMessage(context.getString(messageResId)) // Використовуємо переданий ресурс
+            .setTitle(context.getString(titleResId))
+            .setMessage(context.getString(messageResId))
             .setPositiveButton(context.getString(R.string.delete)) { _, _ ->
                 onConfirm.invoke()
             }
             .setNegativeButton(context.getString(R.string.cancel), null)
             .show()
     }
+
     /**
-     * Тепер ця функція може працювати і для редагування існуючого прибутку.
-     * @param incomeToEdit Опціональний об'єкт IncomeEntity. Якщо він не null,
-     * діалог працює в режимі редагування і заповнює поля даними.
-     * @param hiveId Ідентифікатор вулика. Необхідний лише для додавання нового запису.
+     * Діалог для додавання або редагування прибутку.
+     * @param incomeToEdit Опціональний об'єкт Income. Якщо не null, діалог працює в режимі редагування.
      */
     fun showAddIncomeDialog(
         context: Context,
         viewModel: ProfitabilityViewModel,
         hiveId: Int,
-        incomeToEdit: IncomeEntity? = null
+        incomeToEdit: Income? = null // ✅ ЗМІНА ТИПУ НА Income?
     ) {
         val view = LayoutInflater.from(context).inflate(R.layout.income_dialog, null)
         val descriptionEditText: EditText = view.findViewById(R.id.income_description_edit_text)
@@ -122,8 +118,8 @@ object DialogUtils {
 
             if (productName.isNotEmpty() && quantity > 0 && price > 0) {
                 if (incomeToEdit == null) {
-                    // ✅ ЛОГІКА ДОДАВАННЯ: створюємо новий об'єкт
-                    val newIncome = IncomeEntity(
+                    // ✅ СТВОРЕННЯ НОВОГО Income (Domain Model)
+                    val newIncome = Income( // 💡 Змінено з IncomeEntity на Income
                         productName = productName,
                         quantity = quantity,
                         price = price,
@@ -134,7 +130,8 @@ object DialogUtils {
                     )
                     viewModel.insertIncome(newIncome)
                 } else {
-                    val updatedIncome = incomeToEdit.copy(
+                    // ✅ ОНОВЛЕННЯ ІСНУЮЧОГО Income (Domain Model)
+                    val updatedIncome = incomeToEdit.copy( // incomeToEdit тепер є Income
                         productName = productName,
                         quantity = quantity,
                         price = price,
@@ -154,8 +151,7 @@ object DialogUtils {
     /**
      * ✅ ОНОВЛЕНО: Тепер ця функція може працювати і для редагування існуючої витрати.
      *
-     * @param expenseToEdit Опціональний об'єкт ExpenseEntity. Якщо він не null,
-     * діалог працює в режимі редагування і заповнює поля даними.
+     * @param expenseToEdit Опціональний об'єкт Expense.
      * @param hiveId Ідентифікатор вулика. Необхідний лише для додавання нового запису.
      */
     fun showAddExpenseDialog(
@@ -360,7 +356,7 @@ object DialogUtils {
 
 
                 if (hiveNumber.isNotBlank()) {
-                    onHiveAdded(hiveNumber) // ✅ Передаємо лише номер
+                    onHiveAdded(hiveNumber)
                 } else {
                     Toast.makeText(context, context.getString(R.string.hive_number_required), Toast.LENGTH_SHORT).show()
                 }

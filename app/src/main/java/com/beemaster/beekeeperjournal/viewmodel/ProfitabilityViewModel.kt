@@ -3,13 +3,13 @@
 // Цей клас буде відповідати за бізнес-логіку екрана рентабельності,
 // взаємодіючи з репозиторіями для отримання та оновлення даних.
 
+
 package com.beemaster.beekeeperjournal.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
-import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 import com.beemaster.beekeeperjournal.models.Expense
+import com.beemaster.beekeeperjournal.models.Income
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,7 +39,7 @@ class ProfitabilityViewModel @Inject constructor(
     /**
      * Потік, що містить список усіх записів про прибутки.
      */
-    val incomes: StateFlow<List<IncomeEntity>> =
+    val incomes: StateFlow<List<Income>> = // ЗМІНА ТИПУ НА Income
         incomeRepository.getAllIncomes().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -96,9 +96,9 @@ class ProfitabilityViewModel @Inject constructor(
     /**
      * Вставляє новий запис про прибуток.
      * Виконується в фоновому потоці Dispatchers.IO.
-     * @param income Об'єкт IncomeEntity для вставки.
+     * @param income Об'єкт Income для вставки.
      */
-    fun insertIncome(income: IncomeEntity) {
+    fun insertIncome(income: Income) { // ЗМІНА ТИПУ НА Income
         viewModelScope.launch(Dispatchers.IO) {
             incomeRepository.insertIncome(income)
         }
@@ -107,9 +107,9 @@ class ProfitabilityViewModel @Inject constructor(
     /**
      * Оновлює існуючий запис про прибуток.
      * Виконується в фоновому потоці Dispatchers.IO.
-     * @param income Об'єкт IncomeEntity для оновлення.
+     * @param income Об'єкт Income для оновлення.
      */
-    fun updateIncome(income: IncomeEntity) {
+    fun updateIncome(income: Income) { // ЗМІНА ТИПУ НА Income
         viewModelScope.launch(Dispatchers.IO) {
             incomeRepository.updateIncome(income)
         }
@@ -133,7 +133,7 @@ class ProfitabilityViewModel @Inject constructor(
     /**
      * Вставляє новий запис про витрати.
      * Виконується в фоновому потоці Dispatchers.IO.
-     * @param expense Об'єкт ExpenseEntity для вставки.
+     * @param expense Об'єкт Expense для вставки.
      */
     fun insertExpense(expense: Expense) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -144,7 +144,7 @@ class ProfitabilityViewModel @Inject constructor(
     /**
      * Оновлює існуючий запис про витрати.
      * Виконується в фоновому потоці Dispatchers.IO.
-     * @param expense Об'єкт ExpenseEntity для оновлення.
+     * @param expense Об'єкт Expense для оновлення.
      */
     fun updateExpense(expense: Expense) {
         viewModelScope.launch(Dispatchers.IO) {

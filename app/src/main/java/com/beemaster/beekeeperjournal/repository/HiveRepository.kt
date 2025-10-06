@@ -11,7 +11,7 @@ import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
-import javax.inject.Singleton // ✅ Потрібно додати @Singleton, як і в NoteRepository
+import javax.inject.Singleton
 
 /**
  * Репозиторій для роботи з вуликами.

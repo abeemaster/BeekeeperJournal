@@ -10,28 +10,28 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.databinding.IncomeItemBinding
-import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
+// import com.beemaster.beekeeperjournal.db.entity.IncomeEntity // ❌ ВИДАЛЯЄМО: більше не використовуємо Entity напряму
+import com.beemaster.beekeeperjournal.models.Income // ✅ ДОДАЄМО: Чиста Domain Model Income
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 /**
- * Адаптер для відображення списку об'єктів [IncomeEntity] у RecyclerView.
- * Використовує View Binding та [ListAdapter] для ефективності.
+ * Адаптер для відображення списку об'єктів [Income] у RecyclerView.
  *
  * @property onClick Лямбда-функція, що викликається при натисканні на елемент.
  * @property onLongClick Лямбда-функція, що викликається при довгому натисканні на елемент.
  */
 class IncomeAdapter(
-    private val onClick: (IncomeEntity) -> Unit,
-    private val onLongClick: (IncomeEntity) -> Unit
-) : ListAdapter<IncomeEntity, IncomeAdapter.IncomeViewHolder>(IncomeDiffCallback()) {
+    // ✅ ЗМІНА ТИПУ: Тепер адаптер приймає Income
+    private val onClick: (Income) -> Unit,
+    private val onLongClick: (Income) -> Unit
+) : ListAdapter<Income, IncomeAdapter.IncomeViewHolder>(IncomeDiffCallback()) { // ✅ ЗМІНА ТИПУ
 
     /**
      * Створює новий ViewHolder, використовуючи View Binding.
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): IncomeViewHolder {
         val binding = IncomeItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        // Передаємо onClick та onLongClick до конструктора ViewHolder
         return IncomeViewHolder(binding, onClick, onLongClick)
     }
 
@@ -40,7 +40,6 @@ class IncomeAdapter(
      */
     override fun onBindViewHolder(holder: IncomeViewHolder, position: Int) {
         val income = getItem(position)
-        // Тепер метод bind приймає лише дані.
         holder.bind(income)
     }
 
@@ -49,12 +48,13 @@ class IncomeAdapter(
      */
     class IncomeViewHolder(
         private val binding: IncomeItemBinding,
-        private val onClick: (IncomeEntity) -> Unit, // ✅ ВИПРАВЛЕНО
-        private val onLongClick: (IncomeEntity) -> Unit // ✅ ВИПРАВЛЕНО
+        // ✅ ЗМІНА ТИПУ: Тепер ViewHolder працює з Income
+        private val onClick: (Income) -> Unit,
+        private val onLongClick: (Income) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private val dateFormat = SimpleDateFormat("dd.MM.yy", Locale.getDefault())
-        private var currentIncome: IncomeEntity? = null
+        private var currentIncome: Income? = null // ✅ ЗМІНА ТИПУ
 
         init {
             // Слухачі кліків налаштовуються ОДИН РАЗ тут
@@ -69,17 +69,16 @@ class IncomeAdapter(
         }
 
         /**
-         * Прив'язує об'єкт [IncomeEntity] до елементів інтерфейсу.
+         * Прив'язує об'єкт [Income] до елементів інтерфейсу.
          *
          * @param income Об'єкт прибутку, який потрібно відобразити.
          */
-        fun bind(income: IncomeEntity) {
+        fun bind(income: Income) { // ✅ ЗМІНА ТИПУ
             currentIncome = income // Зберігаємо для використання у кліках
 
             binding.tvDescription.text = income.productName
-            binding.tvPricePerUnit.text = itemView.context.getString(R.string.income_amount_format, income.totalAmount) // ✅ ВИПРАВЛЕННЯ 2
+            binding.tvPricePerUnit.text = itemView.context.getString(R.string.income_amount_format, income.totalAmount)
 
-            // ✅ ВИПРАВЛЕННЯ 2: Використання ресурсу для детальної інформації про кількість
             binding.tvQuantity.text = itemView.context.getString(
                 R.string.income_quantity_details_format,
                 income.quantity, income.unitName, income.price, income.unitName
@@ -92,18 +91,19 @@ class IncomeAdapter(
     /**
      * Внутрішній клас для обчислення різниці між старим і новим списком елементів.
      */
-    private class IncomeDiffCallback : DiffUtil.ItemCallback<IncomeEntity>() {
+    private class IncomeDiffCallback : DiffUtil.ItemCallback<Income>() { // ✅ ЗМІНА ТИПУ
         /**
          * Перевіряє, чи представляють два об'єкти один і той самий елемент (за ID).
          */
-        override fun areItemsTheSame(oldItem: IncomeEntity, newItem: IncomeEntity): Boolean {
+        override fun areItemsTheSame(oldItem: Income, newItem: Income): Boolean {
             return oldItem.id == newItem.id
         }
 
         /**
          * Перевіряє, чи мають два елементи однакові дані.
          */
-        override fun areContentsTheSame(oldItem: IncomeEntity, newItem: IncomeEntity): Boolean {
+        override fun areContentsTheSame(oldItem: Income, newItem: Income): Boolean {
+            // Перевірка всіх полів чистої Domain Model (Income)
             return oldItem == newItem
         }
     }
