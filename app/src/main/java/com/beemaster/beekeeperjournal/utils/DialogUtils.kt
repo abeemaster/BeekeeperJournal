@@ -13,6 +13,7 @@ import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
+import com.beemaster.beekeeperjournal.models.Expense
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
@@ -161,7 +162,7 @@ object DialogUtils {
         context: Context,
         viewModel: ProfitabilityViewModel,
         hiveId: Int,
-        expenseToEdit: ExpenseEntity? = null
+        expenseToEdit: Expense? = null
     ) {
         val view = LayoutInflater.from(context).inflate(R.layout.expense_dialog, null)
         val nameEditText: EditText = view.findViewById(R.id.expense_name_edit_text)
@@ -212,7 +213,7 @@ object DialogUtils {
 
             if (name.isNotEmpty() && amount > 0) {
                 if (expenseToEdit == null) {
-                    val newExpense = ExpenseEntity(
+                    val newExpense = Expense(
                         name = name,
                         amount = amount,
                         date = dateAsLong,

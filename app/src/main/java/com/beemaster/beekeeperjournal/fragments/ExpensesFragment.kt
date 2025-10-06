@@ -17,7 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.ExpenseAdapter
 import com.beemaster.beekeeperjournal.databinding.FragmentExpensesBinding
-import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
+// import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity // ❌ ВИДАЛЕНО
+import com.beemaster.beekeeperjournal.models.Expense // ✅ ДОДАНО: Використовуємо бізнес-модель
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -66,8 +67,8 @@ class ExpensesFragment : Fragment() {
     private fun setupRecyclerView() {
         expenseAdapter = ExpenseAdapter(
             onClick = { /* Можна додати обробку звичайного натискання, якщо потрібно */ },
-            onLongClick = { expenseEntity ->
-                showEditDeleteDialog(expenseEntity)
+            onLongClick = { expense -> // ✅ Змінено тип аргументу на Expense
+                showEditDeleteDialog(expense)
             }
         )
         binding.expensesRecyclerView.apply {
@@ -82,6 +83,7 @@ class ExpensesFragment : Fragment() {
     private fun observeExpenses() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // expenses тепер повертає List<Expense>, що відповідає адаптеру
                 viewModel.expenses.collect { expenses ->
                     expenseAdapter.submitList(expenses)
                 }
@@ -106,10 +108,11 @@ class ExpensesFragment : Fragment() {
     /**
      * Відображає діалог редагування/видалення при тривалому натисканні на елемент.
      */
-    private fun showEditDeleteDialog(expense: ExpenseEntity) {
+    private fun showEditDeleteDialog(expense: Expense) { // ✅ Змінено тип аргументу на Expense
         DialogUtils.showEditDeleteDialog(
             context = requireContext(),
             onEdit = {
+                // ✅ ВИПРАВЛЕНО: Тепер передаємо об'єкт Expense у DialogUtils
                 DialogUtils.showAddExpenseDialog(requireContext(), viewModel, hiveId = expense.hiveId, expenseToEdit = expense)
             },
             onDelete = {
@@ -120,6 +123,7 @@ class ExpensesFragment : Fragment() {
                     onConfirm = {
                         viewModel.deleteExpense(expense.id)
                         // ✅ ПОКРАЩЕННЯ: Використовуйте R.string.expense_deleted (якщо створено)
+                        // Залишив R.string.note_deleted як приклад, але краще використовувати специфічний рядок.
                         Toast.makeText(requireContext(), getString(R.string.note_deleted), Toast.LENGTH_SHORT).show()
                     }
                 )

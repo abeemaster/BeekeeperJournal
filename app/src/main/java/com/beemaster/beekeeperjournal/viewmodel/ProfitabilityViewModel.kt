@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
 import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
+import com.beemaster.beekeeperjournal.models.Expense
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,7 +49,7 @@ class ProfitabilityViewModel @Inject constructor(
     /**
      * Потік, що містить список усіх записів про витрати.
      */
-    val expenses: StateFlow<List<ExpenseEntity>> =
+    val expenses: StateFlow<List<Expense>> =
         expenseRepository.getAllExpenses().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -134,7 +135,7 @@ class ProfitabilityViewModel @Inject constructor(
      * Виконується в фоновому потоці Dispatchers.IO.
      * @param expense Об'єкт ExpenseEntity для вставки.
      */
-    fun insertExpense(expense: ExpenseEntity) {
+    fun insertExpense(expense: Expense) {
         viewModelScope.launch(Dispatchers.IO) {
             expenseRepository.insertExpense(expense)
         }
@@ -145,7 +146,7 @@ class ProfitabilityViewModel @Inject constructor(
      * Виконується в фоновому потоці Dispatchers.IO.
      * @param expense Об'єкт ExpenseEntity для оновлення.
      */
-    fun updateExpense(expense: ExpenseEntity) {
+    fun updateExpense(expense: Expense) {
         viewModelScope.launch(Dispatchers.IO) {
             expenseRepository.updateExpense(expense)
         }
