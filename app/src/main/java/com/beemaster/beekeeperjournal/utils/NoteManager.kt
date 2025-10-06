@@ -4,6 +4,7 @@ package com.beemaster.beekeeperjournal.utils
 
 import android.util.Log
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
+import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import kotlinx.coroutines.flow.Flow
@@ -44,7 +45,7 @@ class NoteManager @Inject constructor(
      * @param noteId Ідентифікатор запису.
      * @return Об'єкт NoteEntity або null, якщо не знайдено.
      */
-    suspend fun getNoteById(noteId: Int): NoteEntity? {
+    suspend fun getNoteById(noteId: Int): Note? {
         return noteRepository.getNoteById(noteId)
     }
 

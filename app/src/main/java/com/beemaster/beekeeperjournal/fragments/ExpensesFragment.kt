@@ -24,11 +24,18 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Locale
 
+/**
+ * Фрагмент для відображення списку витрат та загальної суми витрат.
+ * Використовує Hilt для ін'єкції ViewModel.
+ */
 @AndroidEntryPoint
 class ExpensesFragment : Fragment() {
 
     private var _binding: FragmentExpensesBinding? = null
+    // Надає доступ до View Binding, безпечний від null після onCreateView
     private val binding get() = _binding!!
+
+    // Ініціалізація ViewModel через viewModels()
     private val viewModel: ProfitabilityViewModel by viewModels()
     private lateinit var expenseAdapter: ExpenseAdapter
 
@@ -48,10 +55,14 @@ class ExpensesFragment : Fragment() {
         observeTotalExpense()
 
         binding.fabAddExpense.setOnClickListener {
+            // hiveId = 0 означає, що витрата не прив'язана до конкретного вулика
             DialogUtils.showAddExpenseDialog(requireContext(), viewModel, hiveId = 0)
         }
     }
 
+    /**
+     * Налаштовує RecyclerView та адаптер для відображення списку витрат.
+     */
     private fun setupRecyclerView() {
         expenseAdapter = ExpenseAdapter(
             onClick = { /* Можна додати обробку звичайного натискання, якщо потрібно */ },
@@ -65,6 +76,9 @@ class ExpensesFragment : Fragment() {
         }
     }
 
+    /**
+     * Спостерігає за списком витрат з ViewModel та оновлює RecyclerView.
+     */
     private fun observeExpenses() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -75,6 +89,9 @@ class ExpensesFragment : Fragment() {
         }
     }
 
+    /**
+     * Спостерігає за загальною сумою витрат та оновлює текстове поле.
+     */
     private fun observeTotalExpense() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -86,6 +103,9 @@ class ExpensesFragment : Fragment() {
         }
     }
 
+    /**
+     * Відображає діалог редагування/видалення при тривалому натисканні на елемент.
+     */
     private fun showEditDeleteDialog(expense: ExpenseEntity) {
         DialogUtils.showEditDeleteDialog(
             context = requireContext(),
@@ -95,11 +115,11 @@ class ExpensesFragment : Fragment() {
             onDelete = {
                 DialogUtils.showDeleteConfirmationDialog(
                     context = requireContext(),
-                    titleResId = R.string.confirm_delete, // Або R.string.delete_expense_title
-                    messageResId = R.string.delete_confirm_message, // Або R.string.delete_expense_message
+                    titleResId = R.string.confirm_delete,
+                    messageResId = R.string.delete_confirm_message,
                     onConfirm = {
                         viewModel.deleteExpense(expense.id)
-                        // Toast.makeText(requireContext(), (R.string.note_deleted), Toast.LENGTH_SHORT).show()
+                        // ✅ ПОКРАЩЕННЯ: Використовуйте R.string.expense_deleted (якщо створено)
                         Toast.makeText(requireContext(), getString(R.string.note_deleted), Toast.LENGTH_SHORT).show()
                     }
                 )
@@ -109,6 +129,7 @@ class ExpensesFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Звільняємо посилання на binding, щоб уникнути витоків пам'яті
         _binding = null
     }
 }

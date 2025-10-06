@@ -222,18 +222,28 @@ class EditNoteActivity : AppCompatActivity() {
      */
     private fun loadDataAndSetupTitle() {
         lifecycleScope.launch {
-            // 🚀 ВИПРАВЛЕННЯ ДЛЯ РЕДАГУВАННЯ: Якщо нотатка вже існує, завантажуємо її для отримання правильного hiveId
+
             if (noteId > 0) {
-                val loadedNoteEntity = viewModel.getNoteEntityById(noteId)
-                if (loadedNoteEntity != null) {
-                    // ✅ КОРЕКЦІЯ: Перезаписуємо currentHiveId коректним значенням із бази
-                    currentHiveId = loadedNoteEntity.hiveId
-                    currentEntryType = loadedNoteEntity.type
-                    editNoteContentInput.setText(loadedNoteEntity.content)
-                    originalCreatedAt = loadedNoteEntity.createdAt
+                // 1. ПЕРЕЙМЕНУВАННЯ: Викликаємо метод, який повертає Note, і називаємо змінну loadedNote
+                val loadedNote = viewModel.getNoteEntityById(noteId)
+
+                if (loadedNote != null) {
+
+                    // 2. ОНОВЛЕННЯ ПОСИЛАНЬ: Використовуємо коректні назви полів з моделі Note
+
+                    // ✅ currentHiveId = loadedNote.hiveNumber (якщо hiveNumber зберігає ID)
+                    currentHiveId = loadedNote.hiveNumber
+
+                    currentEntryType = loadedNote.type
+
+                    // ✅ text замість content
+                    editNoteContentInput.setText(loadedNote.text)
+
+                    // ✅ timestamp замість createdAt
+                    originalCreatedAt = loadedNote.timestamp
+
                     // Тут також можна завантажити title, якщо він використовується у формі
                 } else {
-                    // Нотатка не знайдена, можливо, помилка.
                     Toast.makeText(this@EditNoteActivity, getString(R.string.error_note_not_found), Toast.LENGTH_LONG).show()
                     finish()
                     return@launch

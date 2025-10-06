@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
+import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +26,7 @@ class EditNoteViewModel @Inject constructor(
      * @param noteId ID нотатки для завантаження.
      * @return Об'єкт NoteEntity або null.
      */
-    suspend fun getNoteEntityById(noteId: Int): NoteEntity? {
+    suspend fun getNoteEntityById(noteId: Int): Note? {
         return noteRepository.getNoteById(noteId)
     }
 

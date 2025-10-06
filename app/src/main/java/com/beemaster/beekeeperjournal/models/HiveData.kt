@@ -3,10 +3,9 @@ package com.beemaster.beekeeperjournal.models
 import com.beemaster.beekeeperjournal.R
 
 /**
- * Клас даних, що представляє інформацію про окремий вулик.
+ * Клас даних, що представляє інформацію про окремий вулик для відображення у UI.
  *
- * @param number Унікальний номер вулика.
- * @param name Назва вулика (наприклад, "Вулик №1").
+ * @param number Унікальний ідентифікатор/номер вулика.
  * @param color Основний колір кнопки вулика (ідентифікатор ресурсу кольору).
  * @param queenButtonColor Колір кнопки "Матка" (ідентифікатор ресурсу кольору).
  * @param notesButtonColor Колір кнопки "Примітки" (ідентифікатор ресурсу кольору).
@@ -14,10 +13,8 @@ import com.beemaster.beekeeperjournal.R
  */
 data class HiveData(
     val number: Int,
-    var name: String, // <-- Змінили на 'var'
-    var color: Int = R.color.hive_button_color,
-    var queenButtonColor: Int = R.color.nav_button_color,
-    var notesButtonColor: Int = R.color.nav_button_color,
-    var secondaryColor: Int = android.R.color.transparent
+    val color: Int = R.color.hive_button_color,
+    val queenButtonColor: Int = R.color.nav_button_color,
+    val notesButtonColor: Int = R.color.nav_button_color,
+    val secondaryColor: Int = android.R.color.transparent
 )
-
