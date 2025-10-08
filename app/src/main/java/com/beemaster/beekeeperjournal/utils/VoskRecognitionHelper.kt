@@ -1,10 +1,8 @@
-// VoskRecognitionHelper.kt Цей файл відповідає за всю логіку, пов'язану з розпізнаванням мовлення.
+// VoskRecognitionHelper.kt
 
-// VoskRecognitionHelper.kt - Виправлений файл
 package com.beemaster.beekeeperjournal.utils
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
@@ -23,8 +21,16 @@ import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 
+/**
+ * Допоміжний клас для керування розпізнаванням мовлення Vosk.
+ * Інкапсулює логіку дозволів, ініціалізації Vosk та обробки результатів.
+ *
+ * @param activity Об'єкт [AppCompatActivity], необхідний для запиту дозволів та відображення Toast-повідомлень.
+ * @param noteContentInput Поле [EditText], куди вставляється розпізнаний текст.
+ * @param microphoneBtnEditNote Кнопка [ImageButton], чий колір змінюється для відображення статусу запису.
+ */
 class VoskRecognitionHelper(
-    private val context: Context,
+    private val activity: AppCompatActivity,
     private val noteContentInput: EditText,
     private val microphoneBtnEditNote: ImageButton
 ) : RecognitionListener {
@@ -35,54 +41,83 @@ class VoskRecognitionHelper(
     }
 
     private var speechService: SpeechService? = null
+
+    /**
+     * Геттер для моделі Vosk, яка зберігається на рівні [BeekeeperApplication].
+     */
     private val voskModel: Model?
         get() = BeekeeperApplication.voskModel
 
+    /**
+     * Перевіряє, чи активний наразі процес розпізнавання.
+     *
+     * @return true, якщо Vosk слухає; false, якщо ні.
+     */
     fun isVoskListening(): Boolean {
         return speechService != null
     }
 
+    /**
+     * Налаштовує Vosk, перевіряє дозволи та починає прослуховування.
+     * Якщо дозвіл відсутній, запитує його у користувача.
+     */
     fun setupVoskAndStartListening() {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(context as AppCompatActivity, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // Запит дозволу
+            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
             return
         }
 
         if (voskModel == null) {
-            Toast.makeText(context, "Модель Vosk ще не завантажена. Зачекайте.", Toast.LENGTH_SHORT).show()
+            // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
+            Toast.makeText(activity, activity.getString(R.string.vosk_model_loading), Toast.LENGTH_SHORT).show()
             return
         }
 
         try {
             val rec = Recognizer(voskModel, 16000.0f)
             speechService = SpeechService(rec, 16000.0f)
-            // Використовуємо вбудований таймер, передаючи 10 секунд (10000 мс)
+            // Починаємо прослуховування з тайм-аутом 10 секунд (10000 мс)
             speechService?.startListening(this, 10000)
-            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(context, R.color.microphone_button_active_color)
-            Toast.makeText(context, "Слухаю...", Toast.LENGTH_SHORT).show()
+
+            // Візуалізація активного статусу
+            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.microphone_button_active_color)
+            // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
+            Toast.makeText(activity, activity.getString(R.string.vosk_listening), Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(context, "Помилка запуску розпізнавання: ${e.message}", Toast.LENGTH_LONG).show()
+            // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
+            Toast.makeText(activity, activity.getString(R.string.vosk_start_error, e.message), Toast.LENGTH_LONG).show()
             Log.e(TAG, "Error starting recognition", e)
         }
     }
 
+    /**
+     * Зупиняє прослуховування та очищає ресурси Vosk.
+     */
     fun stopListening() {
         speechService?.cancel()
         speechService?.shutdown()
         speechService = null
-        microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(context, R.color.microphone_button_color)
+
+        // Візуалізація неактивного статусу
+        microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.microphone_button_color)
     }
 
+    /**
+     * Обробляє результат запиту дозволів. Викликається з [AppCompatActivity.onRequestPermissionsResult].
+     */
     fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray) {
         if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (voskModel != null) {
+                    // Якщо дозвіл отримано, повторно викликаємо запуск розпізнавання з невеликою затримкою.
                     Handler(Looper.getMainLooper()).postDelayed({
                         setupVoskAndStartListening()
                     }, 300)
                 }
             } else {
-                Toast.makeText(context, "Дозвіл на запис аудіо відхилено. Голосовий ввід недоступний.", Toast.LENGTH_LONG).show()
+                // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
+                Toast.makeText(activity, activity.getString(R.string.audio_permission_denied), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -94,6 +129,7 @@ class VoskRecognitionHelper(
                 val text = jsonResult.optString("text", "")
                 if (text.isNotEmpty()) {
                     noteContentInput.append("$text ")
+                    // Встановлюємо курсор у кінець тексту
                     noteContentInput.setSelection(noteContentInput.text.length)
                 }
             } catch (e: Exception) {
@@ -103,26 +139,26 @@ class VoskRecognitionHelper(
     }
 
     override fun onPartialResult(hypothesis: String?) {
-        // Залишаємо порожнім, бо нам потрібен лише кінцевий результат
+        // Логіка відображення проміжних результатів відсутня.
     }
 
     override fun onFinalResult(hypothesis: String) {
-        // Залишаємо порожнім, бо onResult обробляє кінцевий результат
+        // Логіка обробки фінальних результатів відсутня.
     }
 
     override fun onError(exception: Exception?) {
         if (exception != null) {
             Log.e(TAG, "Vosk recognition error: ${exception.message}", exception)
-            Toast.makeText(context, "Помилка голосового вводу: ${exception.message}", Toast.LENGTH_LONG).show()
+            // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
+            Toast.makeText(activity, activity.getString(R.string.vosk_error, exception.message), Toast.LENGTH_LONG).show()
         }
         stopListening()
     }
 
     override fun onTimeout() {
         Log.d(TAG, "Recognition timeout. Stopping recording.")
-        // ✅ Цей метод викликається автоматично, коли проходить 10 секунд тиші.
-        // ✅ Тут ми вимикаємо розпізнавання.
         stopListening()
-        Toast.makeText(context, "Голосовий ввід вимкнено через бездіяльність.", Toast.LENGTH_SHORT).show()
+        // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
+        Toast.makeText(activity, activity.getString(R.string.vosk_timeout), Toast.LENGTH_SHORT).show()
     }
 }

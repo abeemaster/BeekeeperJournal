@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -168,7 +169,7 @@ class MainActivityViewModel @Inject constructor(
      * Імпортує список HiveEntity в базу даних.
      * @param hives Список об'єктів для імпорту.
      */
-    fun importHives(hives: List<HiveEntity>) = viewModelScope.launch(Dispatchers.IO) {
+    suspend fun importHives(hives: List<HiveEntity>) = withContext(Dispatchers.IO) {
         hiveRepository.importHives(hives)
     }
 

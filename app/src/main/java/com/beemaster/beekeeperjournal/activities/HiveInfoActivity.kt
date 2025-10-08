@@ -22,6 +22,7 @@ import com.beemaster.beekeeperjournal.adapters.NotesAdapter
 import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
+import com.beemaster.beekeeperjournal.utils.startActivityWithReverseSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveInfoViewModel
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
@@ -103,7 +104,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             R.id.nav_home -> {
                 // Перехід на головний екран
                 val intent = Intent(this, MainActivity::class.java)
-                startActivityWithSlideAnimation(intent, finishCurrentActivity = true)
+                startActivityWithReverseSlideAnimation(intent, finishCurrentActivity = true)
             }
             R.id.nav_general_notes -> {
                 // Перехід до загальних нотаток (hiveId = 0)

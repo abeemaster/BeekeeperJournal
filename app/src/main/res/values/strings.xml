@@ -18,6 +18,21 @@
 
     <string name="notes_button_text">Приміт</string>
     <string name="hive_notes_title">Примітки %s</string>
+    <!-- Рядки для Vosk -->
+    <string name="vosk_model_loading">Модель Vosk ще не завантажена. Зачекайте.</string>
+    <string name="vosk_listening">Слухаю…</string>
+    <string name="vosk_start_error">Помилка запуску розпізнавання: %1$s</string>
+    <string name="audio_permission_denied">Дозвіл на запис аудіо відхилено. Голосовий ввід недоступний.</string>
+    <string name="vosk_error">Помилка голосового вводу: %1$s</string>
+    <string name="vosk_timeout">Голосовий ввід вимкнено через бездіяльність.</string>
+    <string name="search_not_found">Записів за запитом «%1$s» не знайдено.</string>
+    <string name="vosk_model_not_loaded">Модель Vosk ще не завантажена. Зачекайте або перезапустіть додаток.</string>
+    <string name="voice_input_stopped">Голосовий ввід зупинено.</string>
+    <string name="voice_input">Голосовий ввід.</string>
+    <string name="voice_input_listening">Слухаю…</string>
+    <string name="voice_input_timeout">Тайм-аут голосового вводу. Запис зупинено.</string>
+    <string name="error_recognition_start">Помилка запуску розпізнавання: %1$s</string>
+    <string name="error_voice_input">Помилка голосового вводу: %1$s</string>
 
     <!-- Рядки для activity_main.xml -->
     <string name="app_title">Щоденник Пасічника</string>
@@ -136,15 +151,7 @@
     <string name="option_go_to_hive">Перейти у вулик</string>
     <string name="option_edit_record">Редагувати запис</string>
 
-    <string name="search_not_found">Записів за запитом «%1$s» не знайдено.</string>
-    <string name="vosk_model_loading">Vosk модель завантажується, голосовий пошук недоступний.</string>
-    <string name="vosk_model_not_loaded">Модель Vosk ще не завантажена. Зачекайте або перезапустіть додаток.</string>
-    <string name="voice_input_stopped">Голосовий ввід зупинено.</string>
-    <string name="voice_input">Голосовий ввід.</string>
-    <string name="voice_input_listening">Слухаю…</string>
-    <string name="voice_input_timeout">Тайм-аут голосового вводу. Запис зупинено.</string>
-    <string name="error_recognition_start">Помилка запуску розпізнавання: %1$s</string>
-    <string name="error_voice_input">Помилка голосового вводу: %1$s</string>
+
     <string name="general_records_type_name">Загальні записи</string>
     <string name="hive_info_type_name">Інформація по вулику</string>
     <string name="queen_record_type_name">Записи по матці</string>
@@ -166,6 +173,12 @@
     <string name="expense_deleted">Витрату видалено.</string>
     <string name="income_deleted">Запис про прибуток видалено.</string>
     <string name="hive_notes_format">Вулик %1$s | Тип: %2$s</string>
+    <string name="error_fill_all_fields">Будь ласка, заповніть усі обов\'язкові поля та вкажіть коректні значення.</string>
+    <string name="hive_number_validation_error">Номер вулика не може бути порожнім або незмінним</string>
+    <string name="actions_hidden">Дії приховано.</string>
+
+
+
 
 
 

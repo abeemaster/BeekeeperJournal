@@ -171,7 +171,6 @@ class MainActivity : AppCompatActivity() {
             onLongClick = { hive ->
                 DialogUtils.showHiveOptionsDialog(
                     context = this,
-                    hive = hive,
                     onEditNumber = {
                         DialogUtils.showEditHiveNumberDialog(
                             context = this,

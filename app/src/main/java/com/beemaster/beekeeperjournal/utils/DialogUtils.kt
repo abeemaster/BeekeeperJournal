@@ -1,3 +1,5 @@
+// DialogUtils.kt
+
 package com.beemaster.beekeeperjournal.utils
 
 import android.app.AlertDialog
@@ -10,11 +12,9 @@ import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.Toast
 import com.beemaster.beekeeperjournal.R
-import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
-// import com.beemaster.beekeeperjournal.db.entity.IncomeEntity // ❌ ВИДАЛЯЄМО
 import com.beemaster.beekeeperjournal.models.Expense
-import com.beemaster.beekeeperjournal.models.Income // ✅ ДОДАНО: Domain Model
+import com.beemaster.beekeeperjournal.models.Income
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
@@ -22,15 +22,28 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Об'єкт-утиліта, що містить статичні методи для відображення різних діалогових вікон
+ * у додатку (додавання/редагування даних, підтвердження, опції вуликів).
+ */
 object DialogUtils {
 
-    /** Загальний діалог для редагування або видалення. */
+    /**
+     * Відображає загальний діалог з опціями "Редагувати" та "Видалити".
+     *
+     * @param context Контекст для створення діалогу.
+     * @param onEdit Лямбда, що викликається при виборі "Редагувати".
+     * @param onDelete Лямбда, що викликається при виборі "Видалити".
+     */
     fun showEditDeleteDialog(
         context: Context,
         onEdit: () -> Unit,
         onDelete: () -> Unit
     ) {
-        val options = arrayOf("Редагувати", "Видалити")
+        val options = arrayOf(
+            context.getString(R.string.edit),
+            context.getString(R.string.delete)
+        )
         AlertDialog.Builder(context)
             .setTitle(R.string.choose_an_action)
             .setItems(options) { _, which ->
@@ -42,6 +55,14 @@ object DialogUtils {
             .show()
     }
 
+    /**
+     * Відображає діалог підтвердження перед виконанням деструктивної дії (видалення).
+     *
+     * @param context Контекст для створення діалогу.
+     * @param titleResId Ресурс ID для заголовка діалогу.
+     * @param messageResId Ресурс ID для тексту повідомлення.
+     * @param onConfirm Лямбда, що викликається при підтвердженні дії.
+     */
     fun showDeleteConfirmationDialog(
         context: Context,
         titleResId: Int,
@@ -59,14 +80,18 @@ object DialogUtils {
     }
 
     /**
-     * Діалог для додавання або редагування прибутку.
+     * Відображає діалог для додавання або редагування прибутку.
+     *
+     * @param context Контекст для створення діалогу.
+     * @param viewModel ViewModel для взаємодії з даними (insert/update Income).
+     * @param hiveId ID вулика, до якого прив'язаний прибуток.
      * @param incomeToEdit Опціональний об'єкт Income. Якщо не null, діалог працює в режимі редагування.
      */
     fun showAddIncomeDialog(
         context: Context,
         viewModel: ProfitabilityViewModel,
         hiveId: Int,
-        incomeToEdit: Income? = null // ✅ ЗМІНА ТИПУ НА Income?
+        incomeToEdit: Income? = null
     ) {
         val view = LayoutInflater.from(context).inflate(R.layout.income_dialog, null)
         val descriptionEditText: EditText = view.findViewById(R.id.income_description_edit_text)
@@ -85,7 +110,7 @@ object DialogUtils {
             unitEditText.setText(incomeToEdit.unitName)
             pricePerUnitEditText.setText(incomeToEdit.price.toString())
             calendar.time = Date(incomeToEdit.date)
-            saveButton.text = "Зберегти"
+            saveButton.text = context.getString(R.string.save)
         } else {
             dateEditText.setText(dateFormat.format(calendar.time))
         }
@@ -113,13 +138,11 @@ object DialogUtils {
             val unitName = unitEditText.text.toString().trim()
             val quantity = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
             val price = pricePerUnitEditText.text.toString().toDoubleOrNull() ?: 0.0
-            val date = calendar.time
-            val dateAsLong = date.time
+            val dateAsLong = calendar.time.time
 
             if (productName.isNotEmpty() && quantity > 0 && price > 0) {
                 if (incomeToEdit == null) {
-                    // ✅ СТВОРЕННЯ НОВОГО Income (Domain Model)
-                    val newIncome = Income( // 💡 Змінено з IncomeEntity на Income
+                    val newIncome = Income(
                         productName = productName,
                         quantity = quantity,
                         price = price,
@@ -130,8 +153,7 @@ object DialogUtils {
                     )
                     viewModel.insertIncome(newIncome)
                 } else {
-                    // ✅ ОНОВЛЕННЯ ІСНУЮЧОГО Income (Domain Model)
-                    val updatedIncome = incomeToEdit.copy( // incomeToEdit тепер є Income
+                    val updatedIncome = incomeToEdit.copy(
                         productName = productName,
                         quantity = quantity,
                         price = price,
@@ -143,16 +165,18 @@ object DialogUtils {
                 }
                 dialog.dismiss()
             } else {
-                Toast.makeText(context, "Будь ласка, заповніть усі поля", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     /**
-     * ✅ ОНОВЛЕНО: Тепер ця функція може працювати і для редагування існуючої витрати.
+     * Відображає діалог для додавання або редагування витрат.
      *
-     * @param expenseToEdit Опціональний об'єкт Expense.
-     * @param hiveId Ідентифікатор вулика. Необхідний лише для додавання нового запису.
+     * @param context Контекст для створення діалогу.
+     * @param viewModel ViewModel для взаємодії з даними (insert/update Expense).
+     * @param hiveId ID вулика, до якого прив'язана витрата.
+     * @param expenseToEdit Опціональний об'єкт Expense. Якщо не null, діалог працює в режимі редагування.
      */
     fun showAddExpenseDialog(
         context: Context,
@@ -176,7 +200,7 @@ object DialogUtils {
             quantityUnitsEditText.setText(expenseToEdit.nameQuantity)
             amountEditText.setText(expenseToEdit.amount.toString())
             calendar.time = Date(expenseToEdit.date)
-            saveButton.text = "Зберегти"
+            saveButton.text = context.getString(R.string.save)
         } else {
             dateEditText.setText(dateFormat.format(calendar.time))
         }
@@ -204,8 +228,7 @@ object DialogUtils {
             val quantityUnits = quantityEditText.text.toString().toDoubleOrNull() ?: 0.0
             val nameQuantity = quantityUnitsEditText.text.toString().trim()
             val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
-            val date = calendar.time
-            val dateAsLong = date.time
+            val dateAsLong = calendar.time.time
 
             if (name.isNotEmpty() && amount > 0) {
                 if (expenseToEdit == null) {
@@ -230,14 +253,23 @@ object DialogUtils {
                 }
                 dialog.dismiss()
             } else {
-                Toast.makeText(context, "Будь ласка, заповніть усі поля", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
+    /**
+     * Відображає діалог з опціями для конкретного вулика.
+     *
+     * @param context Контекст.
+     * @param hive Сутність вулика [HiveEntity].
+     * @param onEditNumber Лямбда для зміни номера.
+     * @param onSelectPrimaryColor Лямбда для вибору основного кольору.
+     * @param onSelectSecondaryColor Лямбда для вибору допоміжного кольору.
+     * @param onDeleteHive Лямбда для видалення вулика.
+     */
     fun showHiveOptionsDialog(
         context: Context,
-        hive: HiveEntity,
         onEditNumber: () -> Unit,
         onSelectPrimaryColor: () -> Unit,
         onSelectSecondaryColor: () -> Unit,
@@ -275,7 +307,13 @@ object DialogUtils {
         dialog.show()
     }
 
-
+    /**
+     * Відображає діалог для редагування номера вулика.
+     *
+     * @param context Контекст.
+     * @param currentNumber Поточний номер вулика.
+     * @param onSave Лямбда, що викликається при збереженні нового номера.
+     */
     fun showEditHiveNumberDialog(context: Context, currentNumber: String, onSave: (String) -> Unit) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_hive_number, null)
         val newNumberEditText: EditText = dialogView.findViewById(R.id.newNumberEditText)
@@ -289,19 +327,27 @@ object DialogUtils {
                 if (newNumber.isNotEmpty() && newNumber != currentNumber) {
                     onSave(newNumber)
                 } else {
-                    Toast.makeText(context, "Номер вулика не може бути порожнім або незмінним", Toast.LENGTH_SHORT).show()
+                    // ✅ ВИПРАВЛЕНО: Використання рядкового ресурсу для локалізації
+                    Toast.makeText(context, context.getString(R.string.hive_number_validation_error), Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton(context.getString(R.string.cancel), null)
             .show()
     }
 
+    /**
+     * Відображає діалог для вибору кольору вулика.
+     *
+     * @param context Контекст.
+     * @param onColorSelected Лямбда, що викликається з ID обраного кольору.
+     */
     fun showColorPickerDialog(
         context: Context,
         onColorSelected: (Int) -> Unit
     ) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_color_picker, null)
         val colorGrid: GridLayout = dialogView.findViewById(R.id.colorGrid)
+        // ... (визначення кольорів)
         val colors = intArrayOf(
             context.getColor(R.color.color_yellow),
             context.getColor(R.color.color_blue),
@@ -330,6 +376,14 @@ object DialogUtils {
 
         dialog.show()
     }
+
+    /**
+     * Відображає діалог підтвердження видалення вулика.
+     *
+     * @param context Контекст.
+     * @param hive Об'єкт вулика [HiveEntity] для відображення назви.
+     * @param onDeleteConfirmed Лямбда, що викликається після підтвердження.
+     */
     fun showDeleteHiveDialog(context: Context, hive: HiveEntity, onDeleteConfirmed: () -> Unit) {
         AlertDialog.Builder(context)
             .setTitle(context.getString(R.string.delete_hive_title))
@@ -341,6 +395,12 @@ object DialogUtils {
             .show()
     }
 
+    /**
+     * Відображає діалог для додавання нового вулика.
+     *
+     * @param context Контекст.
+     * @param onHiveAdded Лямбда, що викликається з новим номером вулика після збереження.
+     */
     fun showAddHiveDialog(
         context: Context,
         onHiveAdded: (hiveNumber: String) -> Unit
@@ -354,7 +414,6 @@ object DialogUtils {
             .setPositiveButton(context.getString(R.string.save)) { _, _ ->
                 val hiveNumber = numberEditText.text.toString().trim()
 
-
                 if (hiveNumber.isNotBlank()) {
                     onHiveAdded(hiveNumber)
                 } else {
@@ -365,6 +424,13 @@ object DialogUtils {
             .show()
     }
 
+    /**
+     * Відображає діалог з опціями синхронізації (створити/відновити резервну копію).
+     *
+     * @param context Контекст.
+     * @param onExport Лямбда, що викликається при виборі "Створити резервну копію".
+     * @param onImport Лямбда, що викликається при виборі "Відновити дані".
+     */
     fun showSyncOptionsDialog(
         context: Context,
         onExport: () -> Unit,
