@@ -17,7 +17,8 @@ data class Note(
     val id: Int,
     val text: String,
     val type: String,
-    val hiveNumber: Int,
+    val hiveId: Int,
+    val hiveNumber: String,
     val timestamp: Long,
     val title: String
 )

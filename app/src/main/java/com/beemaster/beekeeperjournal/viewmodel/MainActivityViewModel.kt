@@ -5,9 +5,9 @@ package com.beemaster.beekeeperjournal.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
-import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.models.Expense
 import com.beemaster.beekeeperjournal.models.Income
+import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
@@ -142,7 +142,7 @@ class MainActivityViewModel @Inject constructor(
      * Бере одноразовий знімок даних з потоку Flow.
      * @return Список усіх NoteEntity.
      */
-    suspend fun getAllNotesSuspend(): List<NoteEntity> {
+    suspend fun getAllNotesSuspend(): List<Note> {
         return noteRepository.getAllNotes().first()
     }
 
@@ -176,7 +176,7 @@ class MainActivityViewModel @Inject constructor(
      * Імпортує список NoteEntity в базу даних.
      * @param notes Список об'єктів для імпорту.
      */
-    fun importNotes(notes: List<NoteEntity>) = viewModelScope.launch(Dispatchers.IO) {
+    fun importNotes(notes: List<Note>) = viewModelScope.launch(Dispatchers.IO) {
         noteRepository.importNotes(notes)
     }
 

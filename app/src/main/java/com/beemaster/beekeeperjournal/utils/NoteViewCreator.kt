@@ -15,7 +15,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.beemaster.beekeeperjournal.R
-import com.beemaster.beekeeperjournal.db.getFormattedDate
+import com.beemaster.beekeeperjournal.mappers.getFormattedDate
 import com.beemaster.beekeeperjournal.models.Note
 
 /**

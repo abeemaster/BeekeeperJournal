@@ -36,6 +36,10 @@ interface NoteDao {
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNote(id: Int)
 
+
+    @Query("DELETE FROM notes WHERE hiveId = :hiveId")
+    suspend fun deleteNotesByHiveId(hiveId: Int)
+
     /**
      * Отримує нотатки, пов'язані з певним вуликом та типом запису,
      * відсортовані за датою створення.

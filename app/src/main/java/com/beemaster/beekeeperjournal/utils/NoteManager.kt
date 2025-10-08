@@ -35,7 +35,7 @@ class NoteManager @Inject constructor(
      * @return Flow зі списком об'єктів NoteEntity.
      */
     // ✅ Змінено: hiveId тепер Int
-    fun loadNotes(entryType: String, hiveId: Int): Flow<List<NoteEntity>> {
+    fun loadNotes(entryType: String, hiveId: Int): Flow<List<Note>> {
         return noteRepository.getNotesByHiveAndType(hiveId, entryType)
     }
 

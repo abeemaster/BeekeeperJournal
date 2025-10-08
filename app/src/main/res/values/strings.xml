@@ -165,6 +165,7 @@
     <string name="income_quantity_details_format">%.2f %s по %.2f грн/%s</string>
     <string name="expense_deleted">Витрату видалено.</string>
     <string name="income_deleted">Запис про прибуток видалено.</string>
+    <string name="hive_notes_format">Вулик %1$s | Тип: %2$s</string>
 
 
 

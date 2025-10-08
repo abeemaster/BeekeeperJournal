@@ -87,16 +87,20 @@ object AppModule {
      * Надає екземпляр Hive Repository.
      */
     @Provides
-    fun provideHiveRepository(hiveDao: HiveDao): HiveRepository {
-        return HiveRepository(hiveDao)
+    fun provideHiveRepository(hiveDao: HiveDao, noteDao: NoteDao): HiveRepository {
+        return HiveRepository(hiveDao, noteDao)
     }
 
     /**
      * Надає екземпляр Note Repository.
+     * Тепер приймає NoteDao ТА HiveRepository.
      */
     @Provides
-    fun provideNoteRepository(noteDao: NoteDao): NoteRepository {
-        return NoteRepository(noteDao)
+    fun provideNoteRepository(
+        noteDao: NoteDao,
+        hiveRepository: HiveRepository
+    ): NoteRepository {
+        return NoteRepository(noteDao, hiveRepository)
     }
 
     /**

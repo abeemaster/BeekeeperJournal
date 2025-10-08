@@ -42,7 +42,6 @@ class EditNoteActivity : AppCompatActivity() {
     private var noteId: Int = 0
     private var currentEntryType: String = ""
     private var currentHiveId: Int = 0
-    // ✅ НОВЕ ПОЛЕ: Використовується для відображення номера вулика (асинхронно завантажується)
     private lateinit var currentHiveDisplayTitle: String
     private var isGoogleListening = false
     private var originalCreatedAt: Long = System.currentTimeMillis()
@@ -60,7 +59,6 @@ class EditNoteActivity : AppCompatActivity() {
         bindViews()
         getIntentData()
         setupListeners()
-        // ✅ ЗМІНЕНО: Асинхронне завантаження даних та налаштування заголовка
         loadDataAndSetupTitle()
 
         voskHelper = VoskRecognitionHelper(
@@ -191,17 +189,15 @@ class EditNoteActivity : AppCompatActivity() {
      */
     private fun getIntentData() {
         noteId = intent.getIntExtra(Constants.EXTRA_NOTE_ID, 0)
-        val originalNoteText = intent.getStringExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT)
+        // val originalNoteText = intent.getStringExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT) // Текст тепер завантажується в loadDataAndSetupTitle
         currentEntryType = intent.getStringExtra(Constants.EXTRA_ENTRY_TYPE) ?: "hive"
 
-        // ❌ ВИДАЛЕНО: Якщо noteId > 0, ми не довіряємо цьому значенню з Intent.
-        // Ми завантажимо правильний hiveId асинхронно.
-        if (noteId == 0) {
-            currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
-        }
+        // ✅ ВИПРАВЛЕНО: Завжди отримуємо hiveId з Intent.
+        // Це необхідно, оскільки нова модель Note більше не містить hiveId,
+        // і ми не можемо отримати його звідти. Activity-попередник має його надати.
+        currentHiveId = intent.getIntExtra(Constants.EXTRA_HIVE_ID, 0)
 
-        // ❌ ВИДАЛЕНО: Більше не читаємо EXTRA_HIVE_NAME
-        editNoteContentInput.setText(originalNoteText)
+        // editNoteContentInput.setText(originalNoteText) // Текст тепер завантажується в loadDataAndSetupTitle
     }
 
     /**
@@ -224,25 +220,22 @@ class EditNoteActivity : AppCompatActivity() {
         lifecycleScope.launch {
 
             if (noteId > 0) {
-                // 1. ПЕРЕЙМЕНУВАННЯ: Викликаємо метод, який повертає Note, і називаємо змінну loadedNote
-                val loadedNote = viewModel.getNoteEntityById(noteId)
+                // 1. ✅ ВИПРАВЛЕНО: Викликаємо getNoteById (як у ViewModel)
+                val loadedNote = viewModel.getNoteById(noteId)
 
                 if (loadedNote != null) {
 
-                    // 2. ОНОВЛЕННЯ ПОСИЛАНЬ: Використовуємо коректні назви полів з моделі Note
+                    // 2. ✅ ВИПРАВЛЕНО: ВИДАЛЯЄМО ЗЛАМАНУ ЛОГІКУ: currentHiveId вже встановлено з Intent.
+                    // currentHiveId = loadedNote.hiveNumber // ❌ ВИДАЛЕНО
 
-                    // ✅ currentHiveId = loadedNote.hiveNumber (якщо hiveNumber зберігає ID)
-                    currentHiveId = loadedNote.hiveNumber
+                    currentEntryType = loadedNote.type // ✅ ВИПРАВЛЕНО: Unresolved reference 'type'
 
-                    currentEntryType = loadedNote.type
-
-                    // ✅ text замість content
+                    // 3. ✅ ВИПРАВЛЕНО: text замість content
                     editNoteContentInput.setText(loadedNote.text)
 
-                    // ✅ timestamp замість createdAt
+                    // 4. ✅ ВИПРАВЛЕНО: timestamp замість createdAt
                     originalCreatedAt = loadedNote.timestamp
 
-                    // Тут також можна завантажити title, якщо він використовується у формі
                 } else {
                     Toast.makeText(this@EditNoteActivity, getString(R.string.error_note_not_found), Toast.LENGTH_LONG).show()
                     finish()
@@ -255,6 +248,8 @@ class EditNoteActivity : AppCompatActivity() {
                 getString(R.string.general_notes_title)
             } else {
                 val hiveEntity = viewModel.getHiveById(currentHiveId)
+                // ✅ ВИПРАВЛЕНО: Unresolved reference 'hiveNumber' у loadedNote виправлено,
+                // але тут ми використовуємо HiveEntity, де hiveNumber коректний.
                 hiveEntity?.hiveNumber ?: getString(R.string.hive_number_not_found)
             }
             currentHiveDisplayTitle = displayTitle
@@ -271,6 +266,7 @@ class EditNoteActivity : AppCompatActivity() {
             finishSetup()
         }
     }
+
 
     /**
      * Завершує налаштування UI: встановлює курсор, фокусує поле вводу
@@ -318,10 +314,9 @@ class EditNoteActivity : AppCompatActivity() {
             noteId = noteId,
             hiveId = currentHiveId,
             type = currentEntryType,
-            title = noteTitle, // ✅ Використовуємо локалізований заголовок
+            title = noteTitle,
             content = updatedNoteText,
-            imagePath = null,
-            createdAt = saveTimestamp // ✅ ВИКОРИСТОВУЄМО ЗБЕРЕЖЕНЕ ЗНАЧЕННЯ
+            createdAt = saveTimestamp
         )
 
         finish()

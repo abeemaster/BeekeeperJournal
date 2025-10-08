@@ -12,7 +12,7 @@ import com.beemaster.beekeeperjournal.db.entity.NoteEntity
  */
 data class BackupData(
     val hives: List<HiveEntity>,
-    val notes: List<NoteEntity>,
+    val notes: List<Note>,
     val expenses: List<Expense>,
     val incomes: List<IncomeEntity>
 )

@@ -7,6 +7,7 @@
 package com.beemaster.beekeeperjournal.repository
 
 import com.beemaster.beekeeperjournal.db.dao.HiveDao
+import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -20,7 +21,8 @@ import javax.inject.Singleton
  */
 @Singleton // ✅ Додаємо Singleton для коректної роботи Hilt
 class HiveRepository @Inject constructor(
-    private val hiveDao: HiveDao
+    private val hiveDao: HiveDao,
+    private val noteDao: NoteDao
 ) {
     /**
      * Вставляє новий вулик у базу даних.
@@ -78,9 +80,13 @@ class HiveRepository @Inject constructor(
     /**
      * Видаляє вулик із бази даних.
      * @param hive Об'єкт HiveEntity для видалення.
+     * Додано каскадне видалення нотаток.
      */
     suspend fun deleteHive(hive: HiveEntity) {
-        // Припускаємо, що deleteHive приймає ID
+        // 1. Спочатку видаляємо всі залежні нотатки
+        noteDao.deleteNotesByHiveId(hive.id)
+
+        // 2. Потім видаляємо сам вулик
         hiveDao.deleteHive(hive.id)
     }
 

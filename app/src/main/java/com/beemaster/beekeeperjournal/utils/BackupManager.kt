@@ -1,5 +1,4 @@
 // BackupManager - файл що відповідає за резервне копіювання та відновлення даних.
-// BackupManager - файл що відповідає за резервне копіювання та відновлення даних.
 
 package com.beemaster.beekeeperjournal.utils
 
@@ -7,9 +6,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
-// import com.beemaster.beekeeperjournal.mappers.toExpenseEntity // ❌ ВИДАЛЯЄМО
 import com.beemaster.beekeeperjournal.mappers.toIncome
-// import com.beemaster.beekeeperjournal.mappers.toExpense // ❌ ВИДАЛЯЄМО
 import com.beemaster.beekeeperjournal.mappers.toIncomeEntity
 import com.beemaster.beekeeperjournal.models.BackupData
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
@@ -30,17 +27,16 @@ class BackupManager(
         withContext(Dispatchers.IO) {
             try {
                 val hives = viewModel.getAllHivesSuspend()       // List<HiveEntity>
-                val notes = viewModel.getAllNotesSuspend()       // List<NoteEntity>
+
+                // ✅ ВИПРАВЛЕНО: Викликаємо новий метод, який повертає List<Note>
+                val notes = viewModel.getAllNotesSuspend()       // List<Note>
+
                 val expenses = viewModel.getAllExpensesSuspend() // List<ExpenseEntity>
                 val incomes = viewModel.getAllIncomesSuspend()   // List<Income>
-
-                // ✅ ЗМІНА: Видаляємо мапінг для expenses. expenses вже List<ExpenseEntity>.
-                // val expensesToExport = expenses.map { it.toExpenseEntity() }
                 val incomesToExport = incomes.map { it.toIncomeEntity() } // Конвертуємо Income -> IncomeEntity
 
-                // ✅ ВИПРАВЛЕНО: Передаємо вихідні expenses (ExpenseEntity)
+                // BackupData тепер повинен мати notes: List<Note>
                 val backupData = BackupData(hives, notes, expenses, incomesToExport)
-
                 val json = gson.toJson(backupData)
 
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -71,14 +67,12 @@ class BackupManager(
 
                 val backupDataType = object : TypeToken<BackupData>() {}.type
                 val backupData: BackupData = gson.fromJson(json, backupDataType)
-
-                // ✅ ЗМІНА: Видаляємо мапінг для expenses. backupData.expenses вже List<ExpenseEntity>.
-                // val expensesToImport = backupData.expenses.map { it.toExpense() }
                 val incomesToImport = backupData.incomes.map { it.toIncome() } // Конвертуємо IncomeEntity -> Income
 
                 viewModel.importHives(backupData.hives)
+                // ✅ ВИПРАВЛЕНО: importNotes тепер приймає List<Note>
                 viewModel.importNotes(backupData.notes)
-                viewModel.importExpenses(backupData.expenses) // ✅ ВИПРАВЛЕНО: Передаємо List<ExpenseEntity>
+                viewModel.importExpenses(backupData.expenses) // Передаємо List<ExpenseEntity>
                 viewModel.importIncomes(incomesToImport)
 
 
