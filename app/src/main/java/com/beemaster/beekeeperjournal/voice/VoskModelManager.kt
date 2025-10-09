@@ -1,4 +1,5 @@
-// VoskModelManager.kt
+// VoskModelManager.kt Це Менеджер або Репозиторій для моделі Vosk. Його головна мета — звільнити VoskRecognitionHelper від важкої роботи з великим файлом моделі.
+
 package com.beemaster.beekeeperjournal.voice
 
 import android.content.Context
@@ -16,11 +17,11 @@ import javax.inject.Singleton
  * життєвим циклом моделі Vosk для розпізнавання мовлення.
  *
  * Використовується для забезпечення асинхронного доступу до моделі
- * та її звільнення Hilt'ом.
+ * та її звільнення Hilty.
  */
 @Singleton
 class VoskModelManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     private val TAG = "VoskModelManager"
 
@@ -83,7 +84,7 @@ class VoskModelManager @Inject constructor(
 
     /**
      * Звільняє ресурси моделі Vosk.
-     * Цей метод буде викликаний Hilt'ом при завершенні життєвого циклу (onDestroy).
+     * Цей метод буде викликаний Hilty при завершенні життєвого циклу (onDestroy).
      */
     fun release() {
         Log.d(TAG, "release: Releasing Vosk model resources.")

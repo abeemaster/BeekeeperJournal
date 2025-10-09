@@ -1,4 +1,4 @@
-// VoskModule.kt
+// VoskModule.kt Цей файл є частиною архітектури Hilt/Dagger. Це не код програми у звичному сенсі, а інструкція для фреймворку Dependency Injection.
 
 package com.beemaster.beekeeperjournal.di
 
@@ -9,8 +9,6 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 object VoskModule {
-
-
     }
 
     /**
@@ -21,6 +19,6 @@ object VoskModule {
      * Однак, для чистоти, ми можемо це залишити.
      */
     // Примітка: Room, OkHttp та інші ресурси зазвичай звільняються тут.
-    // Оскільки VoskModelManager є @Singleton і ініціалізується Hilt'ом,
+    // Оскільки VoskModelManager є @Singleton і ініціалізується Hilty,
     // ми не можемо напряму керувати його onDestroy. Залишимо це в Application.
     // Фактично, ми просто повертаємо створений менеджером об'єкт.
