@@ -1,5 +1,6 @@
 // NoteRepository.kt
 // Цей клас керуватиме доступом до даних нотаток, працюючи з бізнес-моделлю Note.
+// NoteRepository.kt (Виправлено)
 
 package com.beemaster.beekeeperjournal.repository
 
@@ -10,6 +11,8 @@ import com.beemaster.beekeeperjournal.mappers.toNoteList
 import kotlinx.coroutines.flow.Flow
 import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity
 import com.beemaster.beekeeperjournal.models.Note
+import com.beemaster.beekeeperjournal.models.NoteDisplayModel // ✅ НОВИЙ ІМПОРТ
+import com.beemaster.beekeeperjournal.mappers.toNoteDisplayModel // ✅ НОВИЙ ІМПОРТ
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -39,19 +42,38 @@ class NoteRepository @Inject constructor(
      * @param noteType Тип нотатки.
      * @return Flow, що містить відфільтрований список Note.
      */
-    fun getNotesByHiveAndType(hiveId: Int, noteType: String): Flow<List<Note>> { // ЗМІНА ТИПУ
+    fun getNotesByHiveAndType(hiveId: Int, noteType: String): Flow<List<Note>> { // ЦЯ ФУНКЦІЯ ПОВЕРТАЄ ЧИСТУ ДОМЕННУ МОДЕЛЬ
         return noteDao.getNotesByHiveAndType(hiveId, noteType).map { entities ->
             entities.map { it.toNote() }
         }
     }
 
     /**
+     * ✅ НОВА ФУНКЦІЯ: Отримує нотатки, збагачені номером вулика, для відображення в UI.
+     * Ця функція замінює getNotesByHiveAndType для використання у HiveInfoViewModel.
+     * @param hiveId ID вулика (0 для загальних нотаток).
+     * @param noteType Тип нотатки.
+     * @return Flow, що містить відфільтрований список NoteDisplayModel.
+     */
+    fun getNotesForHiveDisplay(hiveId: Int, noteType: String): Flow<List<NoteDisplayModel>> {
+        // Використовуємо searchNotes (який робить JOIN і повертає NoteSearchResultEntity)
+        return noteDao.searchNotes(query = "")
+            .map { searchResults ->
+                searchResults
+                    // Фільтруємо на рівні репозиторію за hiveId та type.
+                    .filter { it.hiveId == hiveId && it.type == noteType }
+                    // ✅ КОНВЕРТУЄМО: Використовуємо мапер для перетворення на NoteDisplayModel
+                    .map { it.toNoteDisplayModel() }
+            }
+    }
+
+
+    /**
      * Додає нову нотатку або оновлює існуючу.
-     * ✅ ОБ'ЄДНАНО: Тепер ця функція відповідає за вставку (через insert, що замінює OnConflict).
      * @param note Об'єкт Note для вставки/оновлення.
      */
     suspend fun insertNote(note: Note) {
-        noteDao.insertNote(note.toNoteEntity()) // Конвертуємо Model у Entity
+        noteDao.insertNote(note.toNoteEntity())
     }
 
     /**
@@ -59,11 +81,12 @@ class NoteRepository @Inject constructor(
      * @param note Об'єкт Note для оновлення.
      */
     suspend fun updateNote(note: Note) {
-        noteDao.updateNote(note.toNoteEntity()) // Конвертуємо Model у Entity
+        noteDao.updateNote(note.toNoteEntity())
     }
 
+
     /**
-     * Видаляє нотатку за її унікальним ID. (Не вимагає конвертації).
+     * Видаляє нотатку за її унікальним ID.
      */
     suspend fun deleteNote(id: Int) {
         noteDao.deleteNote(id)
@@ -76,16 +99,11 @@ class NoteRepository @Inject constructor(
      */
     suspend fun getNoteById(id: Int): Note? {
         val noteEntity = noteDao.getNoteById(id)
-        // ✅ ВИКОРИСТАННЯ: Конвертуємо Entity у Model
         return noteEntity?.toNote()
     }
 
     /**
-     * ✅ ДОДАНО: Виконує ефективний пошук нотаток через DAO.
-     * Цей метод є винятком, оскільки він повертає спеціальну сутність
-     * `NoteSearchResultEntity` (яка містить назву вулика) для відображення у UI.
-     * У цьому випадку ми не мапимо її на чисту Domain Model, оскільки вона
-     * є *специфічною UI-моделлю*.
+     * Виконує ефективний пошук нотаток через DAO.
      */
     fun searchNotes(query: String): Flow<List<NoteSearchResultEntity>> {
         @Suppress("UNCHECKED_CAST")
@@ -98,8 +116,7 @@ class NoteRepository @Inject constructor(
      * @param notes Список Note для імпорту.
      */
     suspend fun importNotes(notes: List<Note>) {
-        // Конвертуємо Model у Entity
-        val noteEntities = notes.map { it.toNoteEntity() } // Конвертуємо Model у Entity
+        val noteEntities = notes.map { it.toNoteEntity() }
         noteDao.clearAndInsertNotes(noteEntities)
     }
 
@@ -108,8 +125,7 @@ class NoteRepository @Inject constructor(
      * Отримує всі нотатки для експорту або створення бекапу.
      * @return Список об'єктів Note.
      */
-    suspend fun getAllNotesForExport(): List<Note> { // ✅ ЗМІНА ТИПУ
-        // Конвертуємо Entity у Model
+    suspend fun getAllNotesForExport(): List<Note> {
         return noteDao.getAllNotesSuspend().map { it.toNote() }
     }
 }

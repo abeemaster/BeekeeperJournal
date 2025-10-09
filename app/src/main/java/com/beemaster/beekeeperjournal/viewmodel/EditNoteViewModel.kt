@@ -52,8 +52,7 @@ class EditNoteViewModel @Inject constructor(
                 title = title,
                 text = content,
                 hiveId = hiveId,
-                timestamp = createdAt,
-                hiveNumber = hiveNumber
+                timestamp = createdAt
             )
 
             // Репозиторій тепер приймає Note

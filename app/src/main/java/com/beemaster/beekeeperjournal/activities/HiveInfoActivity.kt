@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.NotesAdapter
-import com.beemaster.beekeeperjournal.models.Note
+import com.beemaster.beekeeperjournal.models.NoteDisplayModel
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.utils.startActivityWithReverseSlideAnimation
@@ -79,6 +79,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
      */
     private fun setupRecyclerView() {
         notesAdapter = NotesAdapter(
+            // ✅ ВИПРАВЛЕНО: Адаптер тепер приймає NoteDisplayModel
             onLongClick = { note ->
                 showNoteOptionsDialog(note)
             }
@@ -232,6 +233,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
      */
     private fun observeNotes() {
         lifecycleScope.launch {
+            // ✅ УВАГА: ViewModel.notes тепер має надавати List<NoteDisplayModel>
             viewModel.notes.collect { notes ->
                 notesAdapter.submitList(notes)
 
@@ -267,6 +269,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         val intent = Intent(this, EditNoteActivity::class.java).apply {
             putExtra(Constants.EXTRA_ENTRY_TYPE, currentEntryType)
             putExtra(Constants.EXTRA_HIVE_ID, currentHiveId)
+            // Використовуємо локально завантажений номер вулика (НЕ з моделі Note)
             putExtra(Constants.EXTRA_HIVE_NUMBER, currentHiveNumber)
             putExtra(Constants.EXTRA_START_VOICE_INPUT, startVoiceInput)
         }
@@ -275,9 +278,9 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
     /**
      * Відображає діалог з опціями "Редагувати" та "Видалити" для обраної нотатки.
-     * @param note Доменна модель [Note], яку обрано.
+     * @param note Модель відображення [NoteDisplayModel], яку обрано.
      */
-    private fun showNoteOptionsDialog(note: Note) {
+    private fun showNoteOptionsDialog(note: NoteDisplayModel) { // Приймаємо NoteDisplayModel
         DialogUtils.showEditDeleteDialog(
             context = this,
             onEdit = {
@@ -286,35 +289,35 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                     putExtra(Constants.EXTRA_NOTE_ID, note.id)
                     putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
 
-                    // ✅ ВИПРАВЛЕНО: Тепер ми використовуємо коректний ID нотатки, який знаходиться в моделі Note
+                    // Використовуємо коректний ID нотатки
                     putExtra(Constants.EXTRA_HIVE_ID, note.hiveId)
 
-                    // Ми також можемо передати hiveNumber для відображення
-                    putExtra(Constants.EXTRA_HIVE_NUMBER, note.hiveNumber)
+                    // Передаємо hiveDisplayNumber, який ми отримали через NoteDisplayModel
+                    putExtra(Constants.EXTRA_HIVE_NUMBER, note.hiveDisplayNumber)
 
                     putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
                 }
                 startActivityWithSlideAnimation(intent)
             },
             onDelete = {
-                showDeleteConfirmationDialog(note)
+                // Передаємо ID нотатки для видалення
+                showDeleteConfirmationDialog(note.id) // Передаємо ID
             }
         )
     }
 
-
     /**
      * Відображає діалог підтвердження перед видаленням нотатки.
-     * @param note Доменна модель [Note], яку потрібно видалити.
+     * @param noteId ID нотатки, яку потрібно видалити.
      */
-    private fun showDeleteConfirmationDialog(note: Note) {
+    private fun showDeleteConfirmationDialog(noteId: Int) { // Приймаємо ID
         DialogUtils.showDeleteConfirmationDialog(
             context = this,
             titleResId = R.string.confirm_delete,
             messageResId = R.string.delete_confirm_message,
             onConfirm = {
-                // Викликаємо видалення у ViewModel. Припускаємо, що ViewModel вже приймає Note.
-                viewModel.deleteNote(note)
+                // Викликаємо видалення у ViewModel.
+                viewModel.deleteNote(noteId) //  Передаємо ID
                 Toast.makeText(this, getString(R.string.note_deleted), Toast.LENGTH_SHORT).show()
             }
         )

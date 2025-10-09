@@ -1,5 +1,3 @@
-// NoteMappers.kt
-
 package com.beemaster.beekeeperjournal.mappers
 
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
@@ -8,26 +6,34 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.beemaster.beekeeperjournal.adapters.NoteSearchResult
 import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity
+import com.beemaster.beekeeperjournal.models.NoteDisplayModel
 
 /**
  * Функції-розширення для перетворення об'єктів між шарами бази даних та домену.
  */
-
+// Функція-розширення для перетворення NoteSearchResultEntity на NoteDisplayModel
+fun NoteSearchResultEntity.toNoteDisplayModel(): NoteDisplayModel {
+    return NoteDisplayModel(
+        id = this.id,
+        text = this.content,
+        type = this.type,
+        hiveId = this.hiveId,
+        // ✅ ВИПРАВЛЕНО: Використовуємо коректну назву поля з Entity
+        hiveDisplayNumber = this.currentHiveNumber ?: "N/A",
+        timestamp = this.createdAt,
+        title = this.title
+    )
+}
 /**
  * Перетворює сутність бази даних [NoteEntity] на доменну модель [Note].
- *
- * ПРИМІТКА: Цей мапер зараз використовує заглушку для 'hiveNumber' ("?")
- * оскільки репозиторій повертає лише NoteEntity, яка не містить рядкового номера вулика.
- * Усі нотатки, які йдуть до UI, мають бути 'збагачені' номером вулика
- * пізніше (наприклад, у репозиторії або ViewModel).
  */
 fun NoteEntity.toNote(): Note {
     return Note(
         id = this.id,
         text = this.content, // 'content' в Entity відповідає 'text' у Domain
         type = this.type,
-        hiveId = this.hiveId, // ✅ ПРАВИЛЬНЕ ПЕРЕТВОРЕННЯ
-        hiveNumber = "?", // ЗАГЛУШКА: Рядковий номер вулика не зберігається в Entity
+        hiveId = this.hiveId,
+        // ❌ ВИПРАВЛЕНО: Видалено 'hiveNumber', оскільки його немає у Note.kt
         timestamp = this.createdAt,
         title = this.title
     )
@@ -40,7 +46,7 @@ fun NoteEntity.toNote(): Note {
 fun Note.toNoteEntity(): NoteEntity {
     return NoteEntity(
         id = this.id,
-        hiveId = this.hiveId, // ✅ ПРАВИЛЬНЕ ПЕРЕТВОРЕННЯ
+        hiveId = this.hiveId,
         type = this.type,
         title = this.title,
         content = this.text, // 'text' у Domain відповідає 'content' в Entity
@@ -58,36 +64,31 @@ fun List<NoteEntity>.toNoteList(): List<Note> {
 
 /**
  * Допоміжна функція для форматування дати нотатки у формат "dd.MM.yyyy".
- * Це функція-розширення для доменної моделі [Note].
- * @return Відформатований рядок дати.
  */
 fun Note.getFormattedDate(): String {
     val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-    // Note.timestamp має бути Long (мілісекунди)
     return dateFormat.format(Date(this.timestamp))
 }
 
 /**
  * Конвертує об'єкт NoteSearchResultEntity (результат DAO-запиту з JOIN)
  * у модель NoteSearchResult для відображення в адаптері результатів пошуку.
- * @return Об'єкт NoteSearchResult з об'єднаними даними.
  */
 fun NoteSearchResultEntity.toSearchResult(): NoteSearchResult {
 
     // 1. Створюємо модель Note з полів Entity
-    // ПРИМІТКА: Ми використовуємо NoteSearchResultEntity напряму, оскільки він містить
-    // спеціальні поля для пошуку (наприклад, номер вулика).
     val noteModel = Note(
         id = this.id,
         text = this.content,
         type = this.type,
-        hiveId = this.hiveId, // ✅ ВИКОРИСТОВУЄМО ПРАВИЛЬНИЙ ID!
-        hiveNumber = this.currentHiveNumber ?: this.hiveId.toString(), // Використовуємо реальний номер або ID як заглушку
+        hiveId = this.hiveId,
+        // ❌ ВИПРАВЛЕНО: Видалено 'hiveNumber', оскільки його немає у Note.kt
         timestamp = this.createdAt,
         title = this.title
     )
 
     // 2. Визначаємо відображуваний номер вулика.
+    // ✅ ВИПРАВЛЕНО: Використовуємо коректну назву поля з Entity
     val displayHiveNumber: String = this.currentHiveNumber
         ?: this.hiveId.toString()
 

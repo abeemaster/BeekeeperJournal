@@ -1,8 +1,9 @@
 //  NoteDiffCallback.kt  DiffUtil — це допоміжний клас, який обчислює різницю між двома списками даних (старим і новим)
 //  і надає список конкретних оновлень. Замість того, щоб перемальовувати весь список, він каже RecyclerView,
 //  які саме елементи були додані, видалені чи змінені. Це значно покращує продуктивність і прибирає блимання.
-// NotesAdapter.kt
 // Адаптер для RecyclerView, який відображає список нотаток.
+// NotesAdapter.kt
+
 package com.beemaster.beekeeperjournal.adapters
 
 import android.view.LayoutInflater
@@ -13,23 +14,25 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
-// import com.beemaster.beekeeperjournal.db.entity.NoteEntity // Більше не потрібен
-import com.beemaster.beekeeperjournal.models.Note
+// import com.beemaster.beekeeperjournal.models.Note // Більше не потрібна у деяких місцях
+import com.beemaster.beekeeperjournal.models.NoteDisplayModel // ✅ ВИКОРИСТОВУЄМО ТУТ
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
- * Адаптер для відображення списку об'єктів [Note] у RecyclerView.
+ * Адаптер для відображення списку об'єктів [NoteDisplayModel] у RecyclerView.
  * Використовує [ListAdapter] та [NoteDiffCallback] для ефективного оновлення списку.
  *
- * @property onLongClick Лямбда-функція, що викликається при довгому натисканні на елемент.
+ * @property onLongClick Лямбда-функція, що викликається при довгому натисканні на елемент. Приймає [NoteDisplayModel].
  */
-// ✅ ВИПРАВЛЕНО: Адаптер вже коректно використовує ListAdapter<Note, ...>
+
 class NotesAdapter(
-    private val onLongClick: (Note) -> Unit,
+    // ✅ ВИПРАВЛЕНО: onLongClick тепер приймає NoteDisplayModel
+    private val onLongClick: (NoteDisplayModel) -> Unit,
     private val showHiveInfo: Boolean = false
-) : ListAdapter<Note, NotesAdapter.NoteViewHolder>(NoteDiffCallback()) {
+// ✅ ВИПРАВЛЕНО: ListAdapter тепер працює з NoteDisplayModel
+) : ListAdapter<NoteDisplayModel, NotesAdapter.NoteViewHolder>(NoteDiffCallback()) {
 
     /**
      * Внутрішній клас, що представляє елемент списку нотаток (ViewHolder).
@@ -42,20 +45,24 @@ class NotesAdapter(
         private val dateFormat = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
 
         /**
-         * Прив'язує об'єкт [Note] до елементів інтерфейсу.
+         * Прив'язує об'єкт [NoteDisplayModel] до елементів інтерфейсу.
          */
-        fun bind(note: Note) {
-            // ✅ ВИПРАВЛЕНО: Використовуємо 'timestamp' замість 'createdAt'
+        // ✅ ВИПРАВЛЕНО: Прив'язка до NoteDisplayModel
+        fun bind(note: NoteDisplayModel) {
+            // Використовуємо 'timestamp'
             dateTextView.text = dateFormat.format(Date(note.timestamp))
 
-            // ✅ ВИПРАВЛЕНО: Використовуємо 'text' замість 'content'
+            // Використовуємо 'text'
             contentTextView.text = note.text
 
             // Керуємо видимістю залежно від прапорця
             if (showHiveInfo) {
-                // ПРИКЛАД: Відображаємо номер вулика та тип запису, якщо це потрібно.
-                // Припускаємо, що R.string.hive_note_info_format існує.
-                hiveInfoTextView.text = itemView.context.getString(R.string.hive_notes_format, note.hiveNumber, note.title)
+                // Використовуємо агреговане поле hiveDisplayNumber (String), яке містить назву вулика
+                hiveInfoTextView.text = itemView.context.getString(
+                    R.string.hive_notes_format,
+                    note.hiveDisplayNumber, // ✅ ВИКОРИСТОВУЄМО ТЕ, ЩО ТРЕБА (Назва вулика)
+                    note.title
+                )
             }
             hiveInfoTextView.visibility = if (showHiveInfo) View.VISIBLE else View.GONE
 
@@ -86,20 +93,22 @@ class NotesAdapter(
 /**
  * Допоміжний клас для обчислення різниці між списками нотаток.
  */
-// ✅ ВИПРАВЛЕНО: Успадковуємося від DiffUtil.ItemCallback<Note>
-private class NoteDiffCallback : DiffUtil.ItemCallback<Note>() {
+// ✅ ВИПРАВЛЕНО: DiffUtil.ItemCallback тепер працює з NoteDisplayModel
+private class NoteDiffCallback : DiffUtil.ItemCallback<NoteDisplayModel>() {
 
     /**
      * Порівнюємо за унікальним ID.
      */
-    override fun areItemsTheSame(oldItem: Note, newItem: Note): Boolean {
+    // ✅ ВИПРАВЛЕНО: Порівняння NoteDisplayModel
+    override fun areItemsTheSame(oldItem: NoteDisplayModel, newItem: NoteDisplayModel): Boolean {
         return oldItem.id == newItem.id
     }
 
     /**
      * Порівнюємо весь вміст (якщо ID однакові).
      */
-    override fun areContentsTheSame(oldItem: Note, newItem: Note): Boolean {
+    // ✅ ВИПРАВЛЕНО: Порівняння NoteDisplayModel
+    override fun areContentsTheSame(oldItem: NoteDisplayModel, newItem: NoteDisplayModel): Boolean {
         return oldItem == newItem
     }
 }

@@ -5,6 +5,7 @@ package com.beemaster.beekeeperjournal.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beemaster.beekeeperjournal.models.Note
+import com.beemaster.beekeeperjournal.models.NoteDisplayModel
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,12 +34,12 @@ class HiveInfoViewModel @Inject constructor(
      * MutableStateFlow для зберігання списку нотаток ([Note]).
      * Використовується для оновлення RecyclerView в Activity/Fragment.
      */
-    private val _notes = MutableStateFlow<List<Note>>(emptyList())
+    private val _notes = MutableStateFlow<List<NoteDisplayModel>>(emptyList())
 
     /**
      * StateFlow, який UI може безпечно збирати (collect) для відображення нотаток.
      */
-    val notes: StateFlow<List<Note>> = _notes.asStateFlow()
+    val notes: StateFlow<List<NoteDisplayModel>> = _notes.asStateFlow()
 
     // ------------------------------------
     // ФУНКЦІЇ ОТРИМАННЯ ДАНИХ
@@ -60,8 +61,8 @@ class HiveInfoViewModel @Inject constructor(
      */
     fun getNotesForHive(hiveId: Int, noteType: String) {
         viewModelScope.launch {
-            // Отримуємо Flow<List<Note>> з репозиторію та збираємо його
-            noteRepository.getNotesByHiveAndType(hiveId, noteType)
+            // ✅ ВИПРАВЛЕНО: Використовуємо нову функцію репозиторію, яка повертає NoteDisplayModel
+            noteRepository.getNotesForHiveDisplay(hiveId, noteType)
                 .collect { notesList ->
                     _notes.value = notesList // Оновлюємо StateFlow
                 }
@@ -79,10 +80,10 @@ class HiveInfoViewModel @Inject constructor(
      * ⚠️ ПРИМІТКА: Репозиторій видаляє за ID. Якщо NoteRepository.deleteNote()
      * очікує лише ID, тоді цей метод коректний.
      */
-    fun deleteNote(note: Note) {
+    fun deleteNote(noteId: Int) {
         viewModelScope.launch {
             // Викликаємо функцію репозиторію для видалення за ID нотатки
-            noteRepository.deleteNote(note.id)
+            noteRepository.deleteNote(noteId)
         }
     }
 }

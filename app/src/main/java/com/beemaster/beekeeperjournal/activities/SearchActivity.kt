@@ -145,7 +145,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             .setTitle(getString(R.string.dialog_choose_action))
             .setItems(options) { dialog, which ->
                 // ✅ Використовуємо коректний ID вулика: note.hiveNumber
-                val targetHiveId = note.hiveNumber
+                val targetHiveId = note.hiveId
 
                 when (which) {
                     0 -> { // Перейти у вулик
@@ -157,7 +157,6 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
                         startActivity(intent)
                     }
                     1 -> { // Редагувати запис
-                        // ❌ ВИПРАВЛЕНО: Також використовуємо targetHiveId для редагування
                         val intent = Intent(this, EditNoteActivity::class.java).apply {
                             // Передача ID нотатки для завантаження всього вмісту
                             putExtra(Constants.EXTRA_NOTE_ID, note.id)
