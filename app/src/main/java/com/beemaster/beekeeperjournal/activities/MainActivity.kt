@@ -20,20 +20,23 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.HiveAdapter
+import com.beemaster.beekeeperjournal.data.HiveCreator
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.DialogUtils
-import com.beemaster.beekeeperjournal.utils.createDefaultHiveEntity
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveAddResult
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.launch
+
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
+    @Inject
+    lateinit var hiveCreator: HiveCreator
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
     private lateinit var drawerToggleButton: ImageButton
@@ -76,8 +79,7 @@ class MainActivity : AppCompatActivity() {
             if (existingHive == null) {
                 val defaultHiveNumber = "1"
 
-                val newHive = createDefaultHiveEntity(
-                    this@MainActivity,
+                val newHive = hiveCreator.createDefaultHiveEntity(
                     defaultHiveNumber
                 )
                 viewModel.addHive(newHive)
@@ -279,7 +281,7 @@ class MainActivity : AppCompatActivity() {
             onHiveAdded = { hiveNumber ->
                 lifecycleScope.launch {
                     // Створення об'єкта HiveEntity зі стандартними налаштуваннями кольорів.
-                    val newHive = createDefaultHiveEntity(this@MainActivity, hiveNumber)
+                    val newHive = hiveCreator.createDefaultHiveEntity(hiveNumber)
                     // Делегуємо бізнес-логіку (перевірки) ViewModel.
                     viewModel.addNewHive(newHive)
                 }
