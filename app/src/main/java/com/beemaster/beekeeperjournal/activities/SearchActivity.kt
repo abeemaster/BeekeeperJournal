@@ -18,14 +18,15 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.beemaster.beekeeperjournal.BeekeeperApplication
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SearchResultsAdapter
 import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.viewmodel.SearchViewModel
+import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import org.vosk.Recognizer
@@ -45,6 +46,8 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         private const val RECORD_AUDIO_PERMISSION_CODE = 1
     }
 
+    @Inject
+    lateinit var voskModelManager: VoskModelManager
     private lateinit var searchQueryInput: EditText
     private lateinit var microphoneBtnSearch: ImageButton
     private lateinit var searchExecuteButton: MaterialButton
@@ -194,11 +197,20 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      */
     private fun setupVosk() {
         microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_color)
-        if (BeekeeperApplication.voskModel != null) {
+
+        // ✅ ВИПРАВЛЕНО: Перевіряємо через VoskModelManager
+        if (voskModelManager.isModelReady) {
             microphoneBtnSearch.isEnabled = true
         } else {
             microphoneBtnSearch.isEnabled = false
             Toast.makeText(this, getString(R.string.vosk_model_loading), Toast.LENGTH_LONG).show()
+
+            // Додаємо слухача, який активує кнопку, коли модель буде готова
+            voskModelManager.addModelReadyListener {
+                // Виклик буде виконано у головному потоці, тож можна безпечно оновлювати UI
+                microphoneBtnSearch.isEnabled = true
+                Toast.makeText(this, getString(R.string.vosk_model_loaded), Toast.LENGTH_SHORT).show()
+            }
         }
         searchQueryInput.requestFocus()
     }
@@ -225,13 +237,16 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      * Запускає процес прослуховування Vosk.
      */
     private fun startListening() {
-        val currentVoskModel = BeekeeperApplication.voskModel
+        // Отримуємо модель через VoskModelManager
+        val currentVoskModel = voskModelManager.getModel()
+
         if (currentVoskModel == null) {
             Toast.makeText(this, getString(R.string.vosk_model_not_loaded), Toast.LENGTH_SHORT).show()
             microphoneBtnSearch.isEnabled = false
             return
         }
         try {
+            // currentVoskModel тепер має коректний тип Model!
             val rec = Recognizer(currentVoskModel, 16000.0f)
             speechService = SpeechService(rec, 16000.0f)
             speechService?.startListening(this)

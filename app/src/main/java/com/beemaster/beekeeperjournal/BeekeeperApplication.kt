@@ -5,11 +5,9 @@ package com.beemaster.beekeeperjournal
 
 import android.app.Application
 import android.util.Log
+import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import dagger.hilt.android.HiltAndroidApp
-import org.vosk.LibVosk
-import org.vosk.LogLevel
-import org.vosk.Model
-import org.vosk.android.StorageService
+import javax.inject.Inject
 
 // Анотація @HiltAndroidApp дозволяє Hilt
 // розпочати генерацію коду для ін'єкції залежностей.
@@ -17,55 +15,26 @@ import org.vosk.android.StorageService
 @HiltAndroidApp
 class BeekeeperApplication : Application() {
 
+    // Hilt сам створить синглтон VoskModelManager
+    @Inject
+    lateinit var voskModelManager: VoskModelManager
+
     companion object {
         private const val TAG = "BeekeeperApplication"
-        var voskModel: Model? = null
-            private set
 
-        private val voskModelReadyListeners = mutableListOf<() -> Unit>()
-
-        fun addVoskModelReadyListener(listener: () -> Unit) {
-            if (voskModel != null) {
-                listener.invoke()
-            } else {
-                voskModelReadyListeners.add(listener)
-            }
-        }
-
-        private fun notifyVoskModelReady() {
-            voskModelReadyListeners.forEach { it.invoke() }
-            voskModelReadyListeners.clear()
-        }
     }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "onCreate: BeekeeperApplication started. Initializing Vosk model globally.")
-        initVoskModel()
+        Log.d(TAG, "onCreate: BeekeeperApplication started.")
+        // initVoskModel() більше не викликається тут.
+        // Він викликається в конструкторі VoskModelManager.
     }
 
     override fun onTerminate() {
         super.onTerminate()
-        // Важливо звільнити ресурси Vosk при завершенні роботи додатку
-        Log.d(TAG, "onTerminate: Releasing Vosk model resources.")
-        voskModel?.close()
-        voskModel = null
-    }
-
-    private fun initVoskModel() {
-        LibVosk.setLogLevel(LogLevel.INFO)
-        Log.d(TAG, "initVoskModel: Starting Vosk model initialization.")
-        Log.d(TAG, "initVoskModel: Attempting to unpack model from assets: 'vosk-model-small-uk-v3-small'")
-
-        StorageService.unpack(this, "vosk-model-small-uk-v3-small", "model",
-            { unpackedModel ->
-                voskModel = unpackedModel
-                notifyVoskModelReady()
-                Log.d(TAG, "initVoskModel: Vosk model successfully loaded and unpacked globally.")
-            },
-            { exception ->
-                val errorMessage = exception.message ?: "Невідома помилка розпакування моделі."
-                Log.e(TAG, "initVoskModel: Error unpacking Vosk model: $errorMessage", exception)
-            })
+        // ВИКОРИСТОВУЄМО МЕНЕДЖЕР для звільнення ресурсів
+        Log.d(TAG, "onTerminate: Releasing Vosk model resources via manager.")
+        voskModelManager.release()
     }
 }

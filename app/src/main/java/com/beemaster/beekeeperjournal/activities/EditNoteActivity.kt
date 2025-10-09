@@ -21,8 +21,10 @@ import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.utils.VoskRecognitionHelper
 import com.beemaster.beekeeperjournal.viewmodel.EditNoteViewModel
+import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -32,6 +34,8 @@ class EditNoteActivity : AppCompatActivity() {
         private const val TAG = "EditNoteActivity"
     }
 
+    @Inject
+    lateinit var voskModelManager: VoskModelManager
     private lateinit var voskHelper: VoskRecognitionHelper
     private lateinit var editNoteScreenTitle: TextView
     private lateinit var editNoteContentInput: EditText
@@ -64,7 +68,8 @@ class EditNoteActivity : AppCompatActivity() {
         voskHelper = VoskRecognitionHelper(
             this,
             editNoteContentInput,
-            microphoneBtnEditNote
+            microphoneBtnEditNote,
+            voskModelManager
         )
 
         setupSpeechRecognizer()

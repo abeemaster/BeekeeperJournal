@@ -1,4 +1,5 @@
 // VoskRecognitionHelper.kt
+// VoskRecognitionHelper.kt (Виправлено)
 
 package com.beemaster.beekeeperjournal.utils
 
@@ -13,8 +14,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.beemaster.beekeeperjournal.BeekeeperApplication
 import com.beemaster.beekeeperjournal.R
+import com.beemaster.beekeeperjournal.voice.VoskModelManager // Залишаємо імпорт
 import org.json.JSONObject
 import org.vosk.Model
 import org.vosk.Recognizer
@@ -28,11 +29,14 @@ import org.vosk.android.SpeechService
  * @param activity Об'єкт [AppCompatActivity], необхідний для запиту дозволів та відображення Toast-повідомлень.
  * @param noteContentInput Поле [EditText], куди вставляється розпізнаний текст.
  * @param microphoneBtnEditNote Кнопка [ImageButton], чий колір змінюється для відображення статусу запису.
+ * @param voskModelManager Ін'єктований менеджер моделі Vosk. // ✅ НОВИЙ ПАРАМЕТР
  */
 class VoskRecognitionHelper(
     private val activity: AppCompatActivity,
     private val noteContentInput: EditText,
-    private val microphoneBtnEditNote: ImageButton
+    private val microphoneBtnEditNote: ImageButton,
+    // ✅ ДОДАНО: Приймаємо VoskModelManager, інжектований у Activity
+    private val voskModelManager: VoskModelManager
 ) : RecognitionListener {
 
     companion object {
@@ -43,10 +47,10 @@ class VoskRecognitionHelper(
     private var speechService: SpeechService? = null
 
     /**
-     * Геттер для моделі Vosk, яка зберігається на рівні [BeekeeperApplication].
+     * Геттер для моделі Vosk.
      */
     private val voskModel: Model?
-        get() = BeekeeperApplication.voskModel
+        get() = voskModelManager.getModel() // ✅ ВИПРАВЛЕНО: Використовуємо ін'єктований менеджер
 
     /**
      * Перевіряє, чи активний наразі процес розпізнавання.
@@ -68,13 +72,23 @@ class VoskRecognitionHelper(
             return
         }
 
-        if (voskModel == null) {
-            // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
+        // ✅ ВИПРАВЛЕНО: Перевіряємо готовність моделі через менеджер
+        if (!voskModelManager.isModelReady) {
             Toast.makeText(activity, activity.getString(R.string.vosk_model_loading), Toast.LENGTH_SHORT).show()
+
+            // Додаємо слухача. Якщо модель стане готова, викликаємо setupVoskAndStartListening ще раз.
+            voskModelManager.addModelReadyListener {
+                Handler(Looper.getMainLooper()).post {
+                    if (isVoskListening()) return@post // Уникнути повторного запуску
+                    setupVoskAndStartListening()
+                    Toast.makeText(activity, activity.getString(R.string.vosk_model_loaded), Toast.LENGTH_SHORT).show()
+                }
+            }
             return
         }
 
         try {
+            // voskModel тепер коректно викликає voskModelManager.getModel(), тому він не null
             val rec = Recognizer(voskModel, 16000.0f)
             speechService = SpeechService(rec, 16000.0f)
             // Починаємо прослуховування з тайм-аутом 10 секунд (10000 мс)
@@ -82,10 +96,8 @@ class VoskRecognitionHelper(
 
             // Візуалізація активного статусу
             microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.microphone_button_active_color)
-            // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
             Toast.makeText(activity, activity.getString(R.string.vosk_listening), Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
             Toast.makeText(activity, activity.getString(R.string.vosk_start_error, e.message), Toast.LENGTH_LONG).show()
             Log.e(TAG, "Error starting recognition", e)
         }
@@ -109,14 +121,14 @@ class VoskRecognitionHelper(
     fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray) {
         if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (voskModel != null) {
+                // ✅ ВИПРАВЛЕНО: Перевіряємо готовність моделі через менеджер
+                if (voskModelManager.isModelReady) {
                     // Якщо дозвіл отримано, повторно викликаємо запуск розпізнавання з невеликою затримкою.
                     Handler(Looper.getMainLooper()).postDelayed({
                         setupVoskAndStartListening()
                     }, 300)
                 }
             } else {
-                // ✅ ВИПРАВЛЕНО: Жорстко закодований рядок замінено на ресурс
                 Toast.makeText(activity, activity.getString(R.string.audio_permission_denied), Toast.LENGTH_LONG).show()
             }
         }

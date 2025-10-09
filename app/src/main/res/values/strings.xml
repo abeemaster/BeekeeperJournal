@@ -33,6 +33,8 @@
     <string name="voice_input_timeout">Тайм-аут голосового вводу. Запис зупинено.</string>
     <string name="error_recognition_start">Помилка запуску розпізнавання: %1$s</string>
     <string name="error_voice_input">Помилка голосового вводу: %1$s</string>
+    <string name="vosk_model_loaded">Vosk модель завантажена</string>
+
 
     <!-- Рядки для activity_main.xml -->
     <string name="app_title">Щоденник Пасічника</string>
