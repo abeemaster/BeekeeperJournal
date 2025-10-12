@@ -7,152 +7,64 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/dialogTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="16dp"
-        android:text="Опції для вулика"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        style="@style/Widget.BeekeeperJournal.DialogTitle"
+        android:text="@string/hive_options" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/editNumberCard"
+        style="@style/Widget.BeekeeperJournal.DialogOptionCard"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="@color/green_50">
+        android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_edit"
-                android:contentDescription="Редагувати номер" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="16dp"
-                android:text="Редагувати номер"
-                android:textSize="16sp" />
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/editNumberText"
+            style="@style/Widget.BeekeeperJournal.DialogCompoundOption"
+            android:text="@string/edit_number"
+            android:contentDescription="@string/edit_number"
+            app:drawableStartCompat="@drawable/ic_edit" />
     </com.google.android.material.card.MaterialCardView>
-
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/selectPrimaryColorCard"
+        style="@style/Widget.BeekeeperJournal.DialogOptionCard"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="@color/green_50">
+        android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_color_lens"
-                android:contentDescription="Вибрати основний колір" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="16dp"
-                android:text="Вибрати основний колір"
-                android:textSize="16sp" />
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/selectPrimaryColorText"
+            style="@style/Widget.BeekeeperJournal.DialogCompoundOption"
+            android:text="@string/select_base_color"
+            android:contentDescription="@string/select_base_color"
+            app:drawableStartCompat="@drawable/ic_color_lens" />
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/selectSecondaryColorCard"
+        style="@style/Widget.BeekeeperJournal.DialogOptionCard"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="@color/green_50">
+        android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_color_lens"
-                android:contentDescription="Вибрати додатковий колір" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="16dp"
-                android:text="Вибрати додатковий колір"
-                android:textSize="16sp" />
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/selectSecondaryColorText"
+            style="@style/Widget.BeekeeperJournal.DialogCompoundOption"
+            android:text="@string/select_additional_color"
+            android:contentDescription="@string/select_additional_color"
+            app:drawableStartCompat="@drawable/ic_color_lens" />
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/deleteHiveCard"
+        style="@style/Widget.BeekeeperJournal.DialogOptionCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
         app:cardBackgroundColor="@android:color/holo_red_light">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_delete"
-                android:contentDescription="Видалити вулик"
-                app:tint="@color/white" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="16dp"
-                android:text="Видалити вулик"
-                android:textSize="16sp"
-                android:textColor="@color/white" />
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/deleteHiveCardText"
+            style="@style/Widget.BeekeeperJournal.DialogCompoundOption"
+            android:text="@string/delete_hive"
+            android:contentDescription="@string/delete_hive"
+            app:drawableStartCompat="@drawable/ic_delete" />
     </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

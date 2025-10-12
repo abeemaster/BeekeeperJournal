@@ -17,14 +17,18 @@
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
-    <style name="Theme.NewNoteActivity" parent="Theme.BeekeeperJournal">
-        <item name="android:windowBackground">@android:color/white</item>
+    <!-- Моя власна тема -->
+
+    <style name="AppTheme.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorPrimary">@color/background_dark_green</item>
+        <item name="android:colorBackground">@color/color_white</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/AlertDialogTitleTextStyle</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.MaterialComponents.MediumComponent</item>
     </style>
 
-    <!-- Моя власна тема -->
-    <style name="Theme.YourAppName" parent="Theme.Material3.DayNight">
-        <item name="materialButtonStyle">@style/YourCustomButtonStyle</item>
-    </style>
+
+
+
 
     <style name="Theme.BeekeeperJournal.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 

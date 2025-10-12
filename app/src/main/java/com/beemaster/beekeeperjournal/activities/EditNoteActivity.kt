@@ -225,20 +225,13 @@ class EditNoteActivity : AppCompatActivity() {
         lifecycleScope.launch {
 
             if (noteId > 0) {
-                // 1. ✅ ВИПРАВЛЕНО: Викликаємо getNoteById (як у ViewModel)
+
                 val loadedNote = viewModel.getNoteById(noteId)
 
                 if (loadedNote != null) {
 
-                    // 2. ✅ ВИПРАВЛЕНО: ВИДАЛЯЄМО ЗЛАМАНУ ЛОГІКУ: currentHiveId вже встановлено з Intent.
-                    // currentHiveId = loadedNote.hiveNumber // ❌ ВИДАЛЕНО
-
-                    currentEntryType = loadedNote.type // ✅ ВИПРАВЛЕНО: Unresolved reference 'type'
-
-                    // 3. ✅ ВИПРАВЛЕНО: text замість content
+                    currentEntryType = loadedNote.type
                     editNoteContentInput.setText(loadedNote.text)
-
-                    // 4. ✅ ВИПРАВЛЕНО: timestamp замість createdAt
                     originalCreatedAt = loadedNote.timestamp
 
                 } else {
@@ -253,8 +246,7 @@ class EditNoteActivity : AppCompatActivity() {
                 getString(R.string.general_notes_title)
             } else {
                 val hiveEntity = viewModel.getHiveById(currentHiveId)
-                // ✅ ВИПРАВЛЕНО: Unresolved reference 'hiveNumber' у loadedNote виправлено,
-                // але тут ми використовуємо HiveEntity, де hiveNumber коректний.
+
                 hiveEntity?.hiveNumber ?: getString(R.string.hive_number_not_found)
             }
             currentHiveDisplayTitle = displayTitle

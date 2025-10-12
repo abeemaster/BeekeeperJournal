@@ -8,10 +8,9 @@
     android:background="@drawable/rounded_dialog_background">
 
     <TextView
-        android:id="@+id/colorPickerDialogTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Вибрати колір"
+        android:text="@string/select_color"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/title_dark_green"

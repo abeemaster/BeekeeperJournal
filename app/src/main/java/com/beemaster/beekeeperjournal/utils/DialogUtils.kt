@@ -319,7 +319,7 @@ object DialogUtils {
         val newNumberEditText: EditText = dialogView.findViewById(R.id.newNumberEditText)
         newNumberEditText.setText(currentNumber)
 
-        AlertDialog.Builder(context)
+        AlertDialog.Builder(context, R.style.AppTheme_AlertDialog)
             .setTitle(context.getString(R.string.edit_hive_number_title))
             .setView(dialogView)
             .setPositiveButton(context.getString(R.string.save)) { _, _ ->

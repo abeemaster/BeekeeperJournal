@@ -1,21 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Щоденник Пасічника</string>
-
-    <string name="hive_info_title_default">Інформація Вулик №1</string>
-    <string name="new_note_hint">Введіть новий запис</string>
     <string name="voice_input_description">Голосовий ввід</string>
-    <string name="add_note_button_text">Додати запис</string>
-    <string name="add_record_button_text">Зберегти запис</string>
-
     <string name="queen_button_text">Матка</string>
     <string name="queen_title">Матка %s</string>
-
     <string name="hive_button_text">Вулик</string>
     <string name="hive_info_title">Вулик %s</string>
     <string name="hive_name_format">Вулик %s</string>
     <string name="hive_name">Вулик_Імя</string>
-
     <string name="notes_button_text">Приміт</string>
     <string name="hive_notes_title">Примітки %s</string>
     <!-- Рядки для Vosk -->
@@ -34,38 +26,15 @@
     <string name="error_recognition_start">Помилка запуску розпізнавання: %1$s</string>
     <string name="error_voice_input">Помилка голосового вводу: %1$s</string>
     <string name="vosk_model_loaded">Vosk модель завантажена</string>
-
-
     <!-- Рядки для activity_main.xml -->
-    <string name="app_title">Щоденник Пасічника</string>
     <string name="general_notes_button_text">Загальні записи</string>
-    <string name="add_hive_button_text">Вулик+</string>
-    <string name="sync_button_text">Синхр.</string>
-    <string name="hive_options_title">Опції для %s</string>
-
-    <string name="sync_button_short_text">Синхр.</string>
     <string name="new_record_button_text">Новий запис</string>
-
-    <string name="hive_added_message">Додано Вулик №%d!</string>
     <string name="hive_added_success">Додано Вулик!</string>
-
-    <string name="save_record_button_text">Зберегти запис</string>
-
     <string name="hive_count">Вулики: %d</string>
-
-    <string name="navigation_drawer_open">Відкрити бічну панель</string>
-    <string name="navigation_drawer_close">Закрити бічну панель</string>
-
-    <string name="general_notes_text">Загальні записи</string>
-
     <string name="hive_name_default">Вулик №1</string>
     <string name="options_description">Опції</string>
-
     <string name="open_drawer">Відкрити бічну панель</string>
-
     <string name="search_notes">Пошук записів</string>
-
-
 
     <string name="menu_home">Головна</string>
     <string name="menu_search">Пошук</string>
@@ -74,10 +43,8 @@
     <string name="menu_settings">Налаштування</string>
     <string name="menu_exit">Вихід</string>
 
-    <string name="edit_name_title">Редагувати назву</string>
     <string name="delete_hive_title">Видалити вулик</string>
     <string name="delete_hive_message">Ви впевнені, що хочете видалити %s? Цю дію неможливо скасувати.</string>
-    <string name="hive_name_hint">Введіть нову назву</string>
     <string name="hive_number_hint">Введіть новий номер</string>
     <string name="save">Зберегти</string>
     <string name="delete">Видалити</string>
@@ -85,8 +52,6 @@
     <string name="cancel">Скасувати</string>
     <string name="add_hive_title">Додати новий вулик</string>
     <string name="menu_profitability">Рентабельність</string>
-    <string name="total_incomes">Загальні прибутки</string>
-    <string name="total_expenses">Загальні витрати</string>
     <string name="add_expense_title">Кнопка для додавання нової витрати</string>
     <string name="add_income_title">Кнопка для додавання нового прибутку</string>
     <string name="income_description_hint">Опис (наприклад, \"Продаж меду\")</string>
@@ -96,7 +61,6 @@
     <string name="date_hint">Дата (наприклад, 25.10.2025)</string>
     <string name="expense_description_hint">Опис (наприклад, \"Цукор для підгодівлі\")</string>
     <string name="expense_total_price_hint">Загальна сума витрат (наприклад, 500)</string>
-    <string name="color_picker_title">Оберіть колір</string>
     <string name="expense_quantity_hint">Кількість</string>
     <string name="expense_units_hint">Одиниці виміру</string>
     <string name="total_income_text">Загальний прибуток: %1$s</string>
@@ -110,17 +74,11 @@
     <string name="create_backup">Створити резервну копію?</string>
     <string name="restore_backup">Відновити з резервної копії?</string>
     <string name="hive_number_updated">Номер вулика оновлено!</string>
-    <string name="hive_name_updated">Назву вулика оновлено!</string>
     <string name="primary_color_updated">Основний колір оновлено!</string>
     <string name="secondary_color_updated">Додатковий колір оновлено!</string>
     <string name="hive_deleted">Вулик видалено.</string>
     <string name="max_hives_reached">Досягнуто максимальну кількість вуликів</string>
-    <string name="backup_filename">beekeeper_backup.json</string>
     <string name="hive_number_exists">Вулик з таким номером вже існує.</string>
-    <string name="home_page">Головна сторінка.</string>
-    <string name="delete_expense_title">Видалити витрату?</string>
-    <string name="delete_expense_message">Ви впевнені, що хочете видалити цю витрату?</string>
-    <string name="expense_deleted_success">Витрату видалено</string>
     <string name="hive_number_required">Номер вулика є обов`язковим</string>
 
     <string name="general_record_title">Загальний запис</string>
@@ -155,12 +113,7 @@
 
 
     <string name="general_records_type_name">Загальні записи</string>
-    <string name="hive_info_type_name">Інформація по вулику</string>
-    <string name="queen_record_type_name">Записи по матці</string>
-    <string name="notes_record_type_name">Примітки по вулику</string>
 
-    <string name="note_type_and_hive_name">%1$s – %2$s</string>
-    <string name="hive_number_prefix">Вулик №%s</string>
     <string name="hive_display_number">Вулик №%s</string>
     <string name="error_hive_not_found_placeholder">Вулик (Не знайдено)</string>
     <string name="error_hive_loading">Помилка завантаження даних вулика.</string>
@@ -172,16 +125,16 @@
     <string name="quantity_format">%.2f</string>
     <string name="income_amount_format">+%.2f грн</string>
     <string name="income_quantity_details_format">%.2f %s по %.2f грн/%s</string>
-    <string name="expense_deleted">Витрату видалено.</string>
-    <string name="income_deleted">Запис про прибуток видалено.</string>
     <string name="hive_notes_format">Вулик %1$s | Тип: %2$s</string>
     <string name="error_fill_all_fields">Будь ласка, заповніть усі обов\'язкові поля та вкажіть коректні значення.</string>
     <string name="hive_number_validation_error">Номер вулика не може бути порожнім або незмінним</string>
-    <string name="actions_hidden">Дії приховано.</string>
-
-
-
-
+    <string name="select_color">Вибрати колір</string>
+    <string name="hive_options">Опції для вулика</string>
+    <string name="edit_number">Редагувати номер</string>
+    <string name="select_base_color">Вибрати основний колір</string>
+    <string name="select_additional_color">Вибрати додатковий колір</string>
+    <string name="delete_hive">Видалити вулик</string>
+    <string name="hive_number">Номер вулика</string>
 
 
 </resources>

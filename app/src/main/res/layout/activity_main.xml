@@ -37,7 +37,6 @@
             app:layout_constraintBottom_toBottomOf="parent" />
 
         <TextView
-            android:id="@+id/newNoteScreenTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
