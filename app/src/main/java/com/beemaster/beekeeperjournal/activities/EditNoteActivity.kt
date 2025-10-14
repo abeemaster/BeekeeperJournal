@@ -326,10 +326,10 @@ class EditNoteActivity : AppCompatActivity() {
      */
     private fun updateMicrophoneButtonState(isListening: Boolean) {
         if (isListening) {
-            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_active_color)
+            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.status_red)
             isGoogleListening = true
         } else {
-            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_color)
+            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.color_primary)
             isGoogleListening = false
         }
     }

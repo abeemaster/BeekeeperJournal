@@ -34,7 +34,7 @@
             android:label="Інформація про Вулик"
             android:screenOrientation="unspecified"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.HiveInfoActivity"
+            android:theme="@style/Theme.BeekeeperJournal"
             tools:ignore="DiscouragedApi" />
         <activity
             android:name=".activities.EditNoteActivity"
@@ -56,7 +56,7 @@
             android:label="Рентабельність пасіки"
             android:screenOrientation="unspecified"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.HiveInfoActivity"
+            android:theme="@style/Theme.BeekeeperJournal"
             tools:ignore="DiscouragedApi" />
         <activity
             android:name=".activities.SettingsActivity"

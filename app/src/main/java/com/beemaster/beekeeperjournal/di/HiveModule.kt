@@ -23,6 +23,6 @@ object HiveModule {
     @Named("DefaultHiveColor")
     fun provideDefaultHiveColor(@ApplicationContext context: Context): Int {
         // Отримуємо значення кольору тут, де це дозволено (в DI Module)
-        return ContextCompat.getColor(context, R.color.color_white)
+        return ContextCompat.getColor(context, R.color.white)
     }
 }

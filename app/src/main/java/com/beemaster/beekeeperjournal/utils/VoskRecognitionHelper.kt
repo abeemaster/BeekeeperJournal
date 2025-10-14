@@ -106,7 +106,7 @@ class VoskRecognitionHelper(
             silenceTimerHandler.postDelayed(silenceTimeoutRunnable, SILENCE_TIMEOUT_MS)
 
             // Візуалізація активного статусу
-            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.microphone_button_active_color)
+            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.status_red)
             Toast.makeText(activity, activity.getString(R.string.vosk_listening), Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(activity, activity.getString(R.string.vosk_start_error, e.message), Toast.LENGTH_LONG).show()
@@ -123,7 +123,7 @@ class VoskRecognitionHelper(
         speechService = null
 
         // Візуалізація неактивного статусу
-        microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.microphone_button_color)
+        microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.color_primary)
     }
 
     /**

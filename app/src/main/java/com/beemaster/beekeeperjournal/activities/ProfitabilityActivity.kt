@@ -71,13 +71,13 @@ class ProfitabilityActivity : AppCompatActivity() {
 
                 if (profitability > 0) {
                     amountText = String.format(Locale.getDefault(), "+%.2f", profitability)
-                    colorId = R.color.profit_positive
+                    colorId = R.color.color_primary
                 } else if (profitability < 0) {
                     amountText = String.format(Locale.getDefault(), "%.2f", profitability)
-                    colorId = R.color.profit_negative
+                    colorId = R.color.status_red
                 } else {
                     amountText = String.format(Locale.getDefault(), "%.2f", profitability)
-                    colorId = R.color.profit_zero
+                    colorId = R.color.status_blue
                 }
 
                 // ✅ Використовуємо форматний рядок для локалізації

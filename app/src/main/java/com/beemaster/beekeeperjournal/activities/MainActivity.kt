@@ -21,8 +21,11 @@ import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.HiveAdapter
 import com.beemaster.beekeeperjournal.data.HiveCreator
+import com.beemaster.beekeeperjournal.db.entity.HiveEntity // ✅ ДОДАНО: Необхідний імпорт
+import com.beemaster.beekeeperjournal.fragments.EditHiveNumberDialogFragment
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.DialogUtils
+import com.beemaster.beekeeperjournal.fragments.HiveOptionsDialogFragment
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveAddResult
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
@@ -171,56 +174,8 @@ class MainActivity : AppCompatActivity() {
                 startActivityWithSlideAnimation(intent)
             },
             onLongClick = { hive ->
-                DialogUtils.showHiveOptionsDialog(
-                    context = this,
-                    onEditNumber = {
-                        DialogUtils.showEditHiveNumberDialog(
-                            context = this,
-                            currentNumber = hive.hiveNumber,
-                            onSave = { newNumber ->
-                                lifecycleScope.launch {
-                                    val existingHive = viewModel.getHiveByNumber(newNumber)
-                                    // Логіка перевірки існування вулика (бізнес-логіка, яку слід винести)
-                                    if (existingHive != null && existingHive.id != hive.id) {
-                                        Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
-                                    } else {
-                                        val updatedHive = hive.copy(hiveNumber = newNumber, name = newNumber)
-                                        viewModel.updateHive(updatedHive)
-                                        Toast.makeText(this@MainActivity, R.string.hive_number_updated, Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            }
-                        )
-                    },
-                    onSelectPrimaryColor = {
-                        DialogUtils.showColorPickerDialog(
-                            context = this
-                        ) { newColor ->
-                            val updatedHive = hive.copy(color = newColor)
-                            viewModel.updateHive(updatedHive)
-                            Toast.makeText(this, R.string.primary_color_updated, Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    onSelectSecondaryColor = {
-                        DialogUtils.showColorPickerDialog(
-                            context = this
-                        ) { newColor ->
-                            val updatedHive = hive.copy(secondaryColor = newColor)
-                            viewModel.updateHive(updatedHive)
-                            Toast.makeText(this, R.string.secondary_color_updated, Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    onDeleteHive = {
-                        DialogUtils.showDeleteHiveDialog(
-                            context = this,
-                            hive = hive,
-                            onDeleteConfirmed = {
-                                viewModel.deleteHive(hive)
-                                Toast.makeText(this, R.string.hive_deleted, Toast.LENGTH_SHORT).show()
-                            }
-                        )
-                    }
-                )
+                // ✅ ВИПРАВЛЕННЯ: Замінюємо стару, громіздку логіку на чистий виклик нового DialogFragment
+                showHiveOptionsDialog(hive)
             }
         )
         hiveRecyclerView.adapter = hiveAdapter
@@ -296,5 +251,97 @@ class MainActivity : AppCompatActivity() {
     private fun openSettingsActivity() {
         val intent = Intent(this, SettingsActivity::class.java)
         startActivityWithSlideAnimation(intent)
+    }
+
+    // ---------------------------------------------------------------------
+    // ✅ НОВІ МЕТОДИ ДЛЯ ЧИСТОЇ АРХІТЕКТУРИ DIALOGFRAGMENT
+    // ---------------------------------------------------------------------
+
+    /**
+     * Відображає діалогове вікно опцій вулика (через DialogFragment)
+     * та обробляє обрану дію.
+     */
+    private fun showHiveOptionsDialog(hive: HiveEntity) {
+        // Передаємо дані для того, щоб Fragment міг працювати з конкретним вуликом.
+        val dialog = HiveOptionsDialogFragment.newInstance(
+            hive.id.toLong(),
+            hive.hiveNumber,
+            hive.color,
+            hive.secondaryColor
+        )
+
+        // Реалізуємо слухача для обробки натискань опцій
+        dialog.setHiveOptionListener(object : HiveOptionsDialogFragment.HiveOptionListener {
+
+            // ✅ ЦЕЙ МЕТОД ТЕПЕР ПРАВИЛЬНО НЕ ПРИЙМАЄ АРГУМЕНТІВ (ПОТРІБНО ВИПРАВИТИ ІНТЕРФЕЙС!)
+            override fun onEditNumberClicked() {
+                // Викликаємо функцію для редагування номера, передаючи об'єкт hive, який у нас вже є.
+                showEditNumberDialog(hive)
+            }
+
+            override fun onSelectPrimaryColorClicked() {
+                // Тимчасово залишаємо DialogUtils для ColorPicker
+                DialogUtils.showColorPickerDialog(
+                    context = this@MainActivity
+                ) { newColor ->
+                    val updatedHive = hive.copy(color = newColor)
+                    viewModel.updateHive(updatedHive)
+                    Toast.makeText(this@MainActivity, R.string.primary_color_updated, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onSelectSecondaryColorClicked() {
+                // Тимчасово залишаємо DialogUtils для ColorPicker
+                DialogUtils.showColorPickerDialog(
+                    context = this@MainActivity
+                ) { newColor ->
+                    val updatedHive = hive.copy(secondaryColor = newColor)
+                    viewModel.updateHive(updatedHive)
+                    Toast.makeText(this@MainActivity, R.string.secondary_color_updated, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onDeleteHiveClicked() {
+                // Тимчасово залишаємо DialogUtils для підтвердження видалення
+                DialogUtils.showDeleteHiveDialog(
+                    context = this@MainActivity,
+                    hive = hive,
+                    onDeleteConfirmed = {
+                        viewModel.deleteHive(hive)
+                        Toast.makeText(this@MainActivity, R.string.hive_deleted, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+        })
+
+        // Викликаємо діалог через FragmentManager
+        dialog.show(supportFragmentManager, HiveOptionsDialogFragment.TAG)
+    }
+
+    /**
+     * Відображає діалогове вікно для редагування номера вулика.
+     * Замінює стару логіку DialogUtils на EditHiveNumberDialogFragment.
+     */
+    private fun showEditNumberDialog(hive: HiveEntity) {
+        val editDialog = EditHiveNumberDialogFragment.newInstance(hive.hiveNumber)
+
+        editDialog.setEditNumberListener(object : EditHiveNumberDialogFragment.EditNumberListener {
+            override fun onNumberSaved(newNumber: String) {
+                // Бізнес-логіка, яка раніше була у DialogUtils, тепер тут
+                lifecycleScope.launch {
+                    val existingHive = viewModel.getHiveByNumber(newNumber)
+
+                    if (existingHive != null && existingHive.id != hive.id) {
+                        Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
+                    } else {
+                        val updatedHive = hive.copy(hiveNumber = newNumber, name = newNumber)
+                        viewModel.updateHive(updatedHive)
+                        Toast.makeText(this@MainActivity, R.string.hive_number_updated, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
+
+        editDialog.show(supportFragmentManager, EditHiveNumberDialogFragment.TAG)
     }
 }

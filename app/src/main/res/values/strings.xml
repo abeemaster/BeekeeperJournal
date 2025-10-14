@@ -110,7 +110,7 @@
     <string name="dialog_choose_action">Оберіть дію</string>
     <string name="option_go_to_hive">Перейти у вулик</string>
     <string name="option_edit_record">Редагувати запис</string>
-
+    <string name="dialog_title_edit_hive_number">Редагувати номер вулика</string>
 
     <string name="general_records_type_name">Загальні записи</string>
 

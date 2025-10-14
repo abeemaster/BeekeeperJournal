@@ -313,7 +313,7 @@ object DialogUtils {
      * @param context Контекст.
      * @param currentNumber Поточний номер вулика.
      * @param onSave Лямбда, що викликається при збереженні нового номера.
-     */
+
     fun showEditHiveNumberDialog(context: Context, currentNumber: String, onSave: (String) -> Unit) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_hive_number, null)
         val newNumberEditText: EditText = dialogView.findViewById(R.id.newNumberEditText)
@@ -334,6 +334,9 @@ object DialogUtils {
             .setNegativeButton(context.getString(R.string.cancel), null)
             .show()
     }
+     */
+
+
 
     /**
      * Відображає діалог для вибору кольору вулика.
@@ -350,13 +353,13 @@ object DialogUtils {
         // ... (визначення кольорів)
         val colors = intArrayOf(
             context.getColor(R.color.color_yellow),
-            context.getColor(R.color.color_blue),
-            context.getColor(R.color.color_white),
-            context.getColor(R.color.color_orange),
-            context.getColor(R.color.color_purple),
-            context.getColor(R.color.color_green),
-            context.getColor(R.color.color_red),
-            context.getColor(R.color.color_transparent)
+            context.getColor(R.color.status_blue),
+            context.getColor(R.color.white),
+            context.getColor(R.color.status_orange),
+            context.getColor(R.color.status_purple),
+            context.getColor(R.color.color_primary),
+            context.getColor(R.color.status_red),
+            context.getColor(R.color.transparent)
         )
         val dialog = AlertDialog.Builder(context)
             .setView(dialogView)

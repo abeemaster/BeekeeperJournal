@@ -1,37 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.BeekeeperJournal" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary_green</item>
-        <item name="colorPrimaryVariant">@color/dark_green</item>
+    <style name="Theme.BeekeeperJournal" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorPrimaryVariant">@color/color_primary_dark</item>
         <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/accent_yellow</item>
-        <item name="colorSecondaryVariant">@color/dark_yellow</item>
+
+        <item name="colorSecondary">@color/color_secondary</item>
+        <item name="colorSecondaryVariant">@color/color_secondary_dark</item>
         <item name="colorOnSecondary">@color/black</item>
+
+        <item name="colorPrimaryContainer">@color/color_primary</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+        <item name="colorSurface">@color/color_surface</item>
+
+        <item name="textInputStyle">@style/Widget.Material3.TextInputLayout.OutlinedBox</item>
+
+        <item name="textAppearanceBodyMedium">@style/BeekeeperJournal.TextAppearance.BodyMedium</item>
+        <item name="textAppearanceTitleMedium">@style/BeekeeperJournal.TextAppearance.TitleMedium</item>
+
+
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-
-        <item name="android:windowBackground">@android:color/white</item>
-        <item name="android:colorBackground">@android:color/white</item>
+        <item name="android:windowBackground">@color/white</item>
     </style>
 
-    <style name="Theme.HiveInfoActivity" parent="Theme.BeekeeperJournal">
-        <item name="android:windowBackground">@android:color/white</item>
-    </style>
+    <style name="Theme.BeekeeperJournal.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorOnSurface">@color/black</item>
 
-    <!-- Моя власна тема -->
-
-    <style name="AppTheme.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
-        <item name="colorPrimary">@color/background_dark_green</item>
-        <item name="android:colorBackground">@color/color_white</item>
         <item name="materialAlertDialogTitleTextStyle">@style/AlertDialogTitleTextStyle</item>
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.MaterialComponents.MediumComponent</item>
+
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.Medium</item>
     </style>
 
-
-
-
-
-    <style name="Theme.BeekeeperJournal.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="Theme.BeekeeperJournal.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <!-- Стиль для заголовку теми AppTheme.AlertDialog. -->
+    <style name="AlertDialogTitleTextStyle" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 
 </resources>

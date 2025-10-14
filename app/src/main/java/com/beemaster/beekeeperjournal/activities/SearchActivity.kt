@@ -196,7 +196,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      * Налаштовує компоненти для голосового розпізнавання Vosk.
      */
     private fun setupVosk() {
-        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_color)
+        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.color_primary)
 
         // ✅ ВИПРАВЛЕНО: Перевіряємо через VoskModelManager
         if (voskModelManager.isModelReady) {
@@ -228,7 +228,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             } else {
                 startListening()
                 Toast.makeText(this, getString(R.string.voice_input_listening), Toast.LENGTH_SHORT).show()
-                microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_active_color)
+                microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.status_red)
             }
         }
     }
@@ -264,7 +264,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         speechService?.cancel()
         speechService?.shutdown()
         speechService = null
-        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.microphone_button_color)
+        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.color_primary)
     }
 
     // --------------------------------------------------------------------------

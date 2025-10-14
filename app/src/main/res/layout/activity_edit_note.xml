@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="@dimen/screen_padding"
-    android:background="@color/background_light_green"
+    android:background="@color/background_light_green_soft"
     android:gravity="center_horizontal"
     tools:context=".activities.EditNoteActivity">
 
@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="@color/title_dark_green"
+        android:textColor="@color/text_dark_green"
         android:layout_marginBottom="@dimen/spacing_large"/>
     <!-- ЗМІНЕНО: Текст заголовка буде встановлено програмно -->
 
@@ -30,8 +30,8 @@
         android:gravity="top"
         android:padding="@dimen/content_padding"
         android:background="@drawable/notes_area_background"
-        android:textColor="@color/note_text_color"
-        android:textColorHint="@color/note_date_text"
+        android:textColor="@color/text_note"
+        android:textColorHint="@color/text_date_gray"
         android:layout_marginBottom="@dimen/spacing_medium"
         android:elevation="2dp"
         android:inputType="textMultiLine|textCapSentences"
@@ -56,7 +56,7 @@
             android:textSize="12sp"
             android:textStyle="bold"
             android:textColor="@android:color/white"
-            android:backgroundTint="@color/add_note_button_color"
+            android:backgroundTint="@color/button_add_note"
             android:paddingVertical="8dp"
             app:cornerRadius="12dp"
             android:stateListAnimator="@null"

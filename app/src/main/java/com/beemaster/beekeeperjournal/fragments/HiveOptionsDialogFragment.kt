@@ -17,6 +17,7 @@ class HiveOptionsDialogFragment : DialogFragment() {
     interface HiveOptionListener {
         fun onEditNumberClicked()
         fun onSelectPrimaryColorClicked()
+        fun onSelectSecondaryColorClicked()
         fun onDeleteHiveClicked()
     }
 
@@ -46,12 +47,15 @@ class HiveOptionsDialogFragment : DialogFragment() {
             dismiss()
         }
 
+        view.findViewById<MaterialCardView>(R.id.selectSecondaryColorCard).setOnClickListener {
+            listener?.onSelectSecondaryColorClicked()
+            dismiss()
+        }
+
         view.findViewById<MaterialCardView>(R.id.deleteHiveCard).setOnClickListener {
             listener?.onDeleteHiveClicked()
             dismiss()
         }
-
-        // Тут можна додати логіку для selectSecondaryColorCard
     }
 
     // Метод для встановлення слухача з Activity/Fragment
@@ -64,9 +68,28 @@ class HiveOptionsDialogFragment : DialogFragment() {
         super.onStart()
         dialog?.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
-
     companion object {
         const val TAG = "HiveOptionsDialog"
-        fun newInstance() = HiveOptionsDialogFragment()
+
+        // Додайте константи для ключів аргументів
+        private const val ARG_HIVE_ID = "hive_id"
+        private const val ARG_HIVE_NUMBER = "hive_number"
+        private const val ARG_COLOR = "color"
+        private const val ARG_SECONDARY_COLOR = "secondary_color"
+
+        // ✅ ВИПРАВЛЕНА ФУНКЦІЯ newInstance
+        fun newInstance(
+            id: Long,
+            hiveNumber: String,
+            color: Int,
+            secondaryColor: Int
+        ) = HiveOptionsDialogFragment().apply {
+            arguments = Bundle().apply {
+                putLong(ARG_HIVE_ID, id)
+                putString(ARG_HIVE_NUMBER, hiveNumber)
+                putInt(ARG_COLOR, color)
+                putInt(ARG_SECONDARY_COLOR, secondaryColor)
+            }
+        }
     }
 }

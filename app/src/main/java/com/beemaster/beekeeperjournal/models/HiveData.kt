@@ -13,8 +13,8 @@ import com.beemaster.beekeeperjournal.R
  */
 data class HiveData(
     val number: Int,
-    val color: Int = R.color.hive_button_color,
-    val queenButtonColor: Int = R.color.nav_button_color,
-    val notesButtonColor: Int = R.color.nav_button_color,
+    val color: Int = R.color.button_hive,
+    val queenButtonColor: Int = R.color.button_nav,
+    val notesButtonColor: Int = R.color.button_nav,
     val secondaryColor: Int = android.R.color.transparent
 )

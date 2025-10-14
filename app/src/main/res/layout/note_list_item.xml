@@ -14,7 +14,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:textSize="12sp"
-            android:textColor="@color/green_700"
+            android:textColor="@color/color_primary_dark"
             android:text="27-09-2025"
             />
 
@@ -31,7 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="@color/note_type_text"
+            android:textColor="@color/color_primary_dark"
             android:textStyle="italic"
             android:layout_marginTop="@dimen/spacing_small"
             android:text="Тип: Вулик №1 (Інформація)"/>

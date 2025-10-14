@@ -13,7 +13,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background_light_green"
+        android:background="@color/background_light_green_soft"
         android:paddingTop="@dimen/screen_padding"
         android:paddingBottom="@dimen/screen_padding"
         android:paddingStart="@dimen/screen_padding"
@@ -44,7 +44,7 @@
                 android:layout_marginEnd="8dp"
                 android:gravity="center"
                 android:text="@string/search_notes"
-                android:textColor="@color/title_dark_green"
+                android:textColor="@color/text_dark_green"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@+id/drawer_toggle_button"
@@ -61,8 +61,8 @@
                 android:inputType="text"
                 android:padding="12dp"
                 android:background="@drawable/edittext_background"
-                android:textColor="@color/note_text_color"
-                android:textColorHint="@color/note_date_text"
+                android:textColor="@color/text_note"
+                android:textColorHint="@color/text_date_gray"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/drawer_toggle_button" />
@@ -84,7 +84,7 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
                     android:text="Пошук"
-                    android:textColor="@color/white"
+                    android:textColor="@color/color_surface"
                     app:cornerRadius="12dp" />
 
                 <ImageButton
