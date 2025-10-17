@@ -124,7 +124,7 @@
     <string name="expense_format_with_currency">-%1$.2f грн</string>
     <string name="quantity_format">%.2f</string>
     <string name="income_amount_format">+%.2f грн</string>
-    <string name="income_quantity_details_format">%.2f %s по %.2f грн/%s</string>
+    <string name="income_quantity_details_format">%1$.2f %2$s по %3$.2f грн/%4$s</string>
     <string name="hive_notes_format">Вулик %1$s | Тип: %2$s</string>
     <string name="error_fill_all_fields">Будь ласка, заповніть усі обов\'язкові поля та вкажіть коректні значення.</string>
     <string name="hive_number_validation_error">Номер вулика не може бути порожнім або незмінним</string>

@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@drawable/rounded_dialog_background">
-
+    android:padding="@dimen/spacing_medium">
     <TextView
+        android:id="@+id/dialog_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/select_color"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_dark_green"
+        android:layout_marginBottom="@dimen/spacing_medium"
         android:gravity="center_horizontal"
-        android:layout_marginBottom="16dp"/>
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
 
     <GridLayout
         android:id="@+id/colorGrid"
@@ -26,8 +24,9 @@
         android:rowCount="2"
         android:orientation="horizontal"
         android:alignmentMode="alignMargins"
-        android:columnOrderPreserved="false">
-        <!-- Кольорові кружечки будуть додані програмно сюди -->
+        android:columnOrderPreserved="false"
+        android:layout_marginBottom="@dimen/spacing_medium">
+
     </GridLayout>
 
 </LinearLayout>

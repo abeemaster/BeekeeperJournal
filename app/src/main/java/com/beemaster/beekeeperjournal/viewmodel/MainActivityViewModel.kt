@@ -2,6 +2,7 @@
 
 package com.beemaster.beekeeperjournal.viewmodel
 
+import androidx.annotation.ColorInt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
@@ -110,14 +111,56 @@ class MainActivityViewModel @Inject constructor(
             hiveRepository.updateHive(hiveEntity)
         }
     }
+    /**
+     * Оновлює номер вулика у базі даних.
+     */
+    fun updateHiveNumber(hiveId: Long, newNumber: String) {
+        viewModelScope.launch {
+            hiveRepository.updateHiveNumber(hiveId, newNumber) // ⚠️ ПЕРЕВІРТЕ РЕПОЗИТОРІЙ!
+        }
+    }
+
+    /**
+     * Оновлює номер вулика з перевіркою на конфлікт номерів.
+     * @param hiveId ID вулика, який оновлюється.
+     * @param newNumber Новий номер.
+     */
+    // Файл: MainActivityViewModel.kt
+
+    fun updateHiveNumberWithValidation(hiveId: Long, newNumber: String) = viewModelScope.launch {
+        // 1. Перевірка існування (чи існує ВЖЕ інший вулик з цим номером)
+        val existingHive = hiveRepository.getHiveByNumber(newNumber)
+
+        // Якщо вулик існує І його ID не збігається з ID поточного вулика
+        // ✅ ВИПРАВЛЕННЯ: Приводимо existingHive.id до Long для порівняння.
+        if (existingHive != null && existingHive.id.toLong() != hiveId) {
+            // ❌ КОНФЛІКТ: Надсилаємо помилку про існування номера
+            _hiveEventChannel.send(HiveAddResult.EXISTS)
+            return@launch
+        }
+
+        // 2. Оновлення, якщо конфлікту немає
+        hiveRepository.updateHiveNumber(hiveId, newNumber)
+        // _hiveEventChannel.send(HiveAddResult.SUCCESS) // Надсилаємо успіх
+    }
+
 
     /**
      * Видаляє об'єкт HiveEntity з бази даних.
      * @param hiveEntity Об'єкт вулику для видалення.
      */
-    fun deleteHive(hiveEntity: HiveEntity) {
+    // ✅ ПЕРЕПИСАНА ФУНКЦІЯ: ТЕПЕР ПРИЙМАЄ ID
+    fun deleteHive(hiveId: Long) { // Змінили параметр з HiveEntity на Long
         viewModelScope.launch {
-            hiveRepository.deleteHive(hiveEntity)
+
+            // 1. Знаходимо HiveEntity за ID (вимагає hiveRepository.getHiveById)
+            val hiveEntity = hiveRepository.getHiveById(hiveId)
+
+            // 2. Якщо об'єкт знайдено, викликаємо функцію видалення у репозиторії,
+            // яка, у свою чергу, викликає Room @Delete.
+            hiveEntity?.let {
+                hiveRepository.deleteHive(it)
+            }
         }
     }
 
@@ -195,5 +238,16 @@ class MainActivityViewModel @Inject constructor(
      */
     fun importIncomes(incomes: List<Income>) = viewModelScope.launch(Dispatchers.IO) {
         incomeRepository.importIncomes(incomes)
+    }
+    fun updateHivePrimaryColor(hiveId: Long, @ColorInt color: Int) {
+        viewModelScope.launch {
+            hiveRepository.updatePrimaryColor(hiveId, color)
+        }
+    }
+
+    fun updateHiveSecondaryColor(hiveId: Long, @ColorInt color: Int) {
+        viewModelScope.launch {
+            hiveRepository.updateSecondaryColor(hiveId, color)
+        }
     }
 }

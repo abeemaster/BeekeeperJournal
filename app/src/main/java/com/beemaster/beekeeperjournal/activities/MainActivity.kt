@@ -22,10 +22,10 @@ import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.HiveAdapter
 import com.beemaster.beekeeperjournal.data.HiveCreator
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity // ✅ ДОДАНО: Необхідний імпорт
-import com.beemaster.beekeeperjournal.fragments.EditHiveNumberDialogFragment
+import com.beemaster.beekeeperjournal.dialogs.EditHiveNumberDialogFragment
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.DialogUtils
-import com.beemaster.beekeeperjournal.fragments.HiveOptionsDialogFragment
+import com.beemaster.beekeeperjournal.dialogs.HiveOptionsDialogFragment
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveAddResult
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
@@ -198,14 +198,55 @@ class MainActivity : AppCompatActivity() {
      * Обробляє одноразові події додавання вуликів, надіслані з ViewModel.
      * Відображає відповідні повідомлення Toast для користувача (успіх/помилка/ліміт).
      */
+    // Файл: MainActivity.kt
+
+    /**
+     * Обробляє одноразові події додавання та оновлення вуликів, надіслані з ViewModel.
+     * Відображає відповідні повідомлення Toast для користувача.
+     */
     private fun collectHiveEvents() {
         lifecycleScope.launch {
             viewModel.hiveEvents.collect { result ->
+                // Визначаємо ідентифікатор рядка, що відповідає результату
                 val messageResId = when (result) {
-                    HiveAddResult.SUCCESS -> R.string.hive_added_success
+                    // Логіка додавання
+                    HiveAddResult.SUCCESS -> R.string.hive_added_success // Успішно додано
+
+                    // ✅ НОВИЙ ФУНКЦІОНАЛ: Успішно оновлено номер (якщо ви викликали його через updateHiveNumberWithValidation)
+                    // Можна використати інший рядок, якщо у вас є окремий ресурс для успішного оновлення
+                    // Якщо його немає, припускаємо, що це успішне ДОДАВАННЯ
+                    // або використовуємо інший рядок для успішного оновлення.
+                    // Припускаю, що вам потрібен окремий Toast для оновлення номера.
+                    // Якщо є такий ресурс, використовуйте його.
+                    // Якщо його немає, можете використати R.string.hive_added_success, але це неточно.
+                    // Давайте створимо тимчасовий рядок для оновлення номера, якщо його немає:
+                    // R.string.hive_number_updated (як було у старому коді)
+
+                    // ✅ ОБРОБКА КОНФЛІКТУ НОМЕРА ПРИ ДОДАВАННІ/РЕДАГУВАННІ
                     HiveAddResult.EXISTS -> R.string.hive_number_exists
+
+                    // Логіка ліміту
                     HiveAddResult.LIMIT_REACHED -> R.string.max_hives_reached
                 }
+
+                // Оскільки HiveAddResult.SUCCESS використовується як для додавання, так і для успішного оновлення
+                // (якщо у вас немає окремого ENUM), ми повинні бути обережні.
+                // Припустімо, що R.string.hive_added_success буде працювати як загальний "успіх".
+
+                // Якщо ви хочете мати окремий Toast для успішного оновлення номера, вам треба:
+                // 1. Створити окремий ENUM (наприклад, HiveUpdateResult.NUMBER_SUCCESS)
+                // 2. Або додати в ресурси R.string.hive_number_updated.
+
+                // Якщо R.string.hive_number_updated є у ваших ресурсах:
+                val toastMessageId = if (result == HiveAddResult.SUCCESS) {
+                    // Це не ідеально, але працюватиме, якщо ViewModel надсилає SUCCESS після оновлення номера
+                    // Або якщо ви впевнені, що HiveAddResult.SUCCESS тут завжди означає успішне оновлення номера
+                    R.string.hive_number_updated // Або використовуйте R.string.hive_added_success
+                } else {
+                    messageResId
+                }
+
+
                 Toast.makeText(this@MainActivity, messageResId, Toast.LENGTH_LONG).show()
             }
         }
@@ -269,79 +310,7 @@ class MainActivity : AppCompatActivity() {
             hive.color,
             hive.secondaryColor
         )
-
-        // Реалізуємо слухача для обробки натискань опцій
-        dialog.setHiveOptionListener(object : HiveOptionsDialogFragment.HiveOptionListener {
-
-            // ✅ ЦЕЙ МЕТОД ТЕПЕР ПРАВИЛЬНО НЕ ПРИЙМАЄ АРГУМЕНТІВ (ПОТРІБНО ВИПРАВИТИ ІНТЕРФЕЙС!)
-            override fun onEditNumberClicked() {
-                // Викликаємо функцію для редагування номера, передаючи об'єкт hive, який у нас вже є.
-                showEditNumberDialog(hive)
-            }
-
-            override fun onSelectPrimaryColorClicked() {
-                // Тимчасово залишаємо DialogUtils для ColorPicker
-                DialogUtils.showColorPickerDialog(
-                    context = this@MainActivity
-                ) { newColor ->
-                    val updatedHive = hive.copy(color = newColor)
-                    viewModel.updateHive(updatedHive)
-                    Toast.makeText(this@MainActivity, R.string.primary_color_updated, Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onSelectSecondaryColorClicked() {
-                // Тимчасово залишаємо DialogUtils для ColorPicker
-                DialogUtils.showColorPickerDialog(
-                    context = this@MainActivity
-                ) { newColor ->
-                    val updatedHive = hive.copy(secondaryColor = newColor)
-                    viewModel.updateHive(updatedHive)
-                    Toast.makeText(this@MainActivity, R.string.secondary_color_updated, Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onDeleteHiveClicked() {
-                // Тимчасово залишаємо DialogUtils для підтвердження видалення
-                DialogUtils.showDeleteHiveDialog(
-                    context = this@MainActivity,
-                    hive = hive,
-                    onDeleteConfirmed = {
-                        viewModel.deleteHive(hive)
-                        Toast.makeText(this@MainActivity, R.string.hive_deleted, Toast.LENGTH_SHORT).show()
-                    }
-                )
-            }
-        })
-
         // Викликаємо діалог через FragmentManager
         dialog.show(supportFragmentManager, HiveOptionsDialogFragment.TAG)
-    }
-
-    /**
-     * Відображає діалогове вікно для редагування номера вулика.
-     * Замінює стару логіку DialogUtils на EditHiveNumberDialogFragment.
-     */
-    private fun showEditNumberDialog(hive: HiveEntity) {
-        val editDialog = EditHiveNumberDialogFragment.newInstance(hive.hiveNumber)
-
-        editDialog.setEditNumberListener(object : EditHiveNumberDialogFragment.EditNumberListener {
-            override fun onNumberSaved(newNumber: String) {
-                // Бізнес-логіка, яка раніше була у DialogUtils, тепер тут
-                lifecycleScope.launch {
-                    val existingHive = viewModel.getHiveByNumber(newNumber)
-
-                    if (existingHive != null && existingHive.id != hive.id) {
-                        Toast.makeText(this@MainActivity, R.string.hive_number_exists, Toast.LENGTH_LONG).show()
-                    } else {
-                        val updatedHive = hive.copy(hiveNumber = newNumber, name = newNumber)
-                        viewModel.updateHive(updatedHive)
-                        Toast.makeText(this@MainActivity, R.string.hive_number_updated, Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        })
-
-        editDialog.show(supportFragmentManager, EditHiveNumberDialogFragment.TAG)
     }
 }

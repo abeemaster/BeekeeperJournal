@@ -6,6 +6,7 @@
 
 package com.beemaster.beekeeperjournal.repository
 
+import androidx.annotation.ColorInt
 import com.beemaster.beekeeperjournal.db.dao.HiveDao
 import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
@@ -66,7 +67,10 @@ class HiveRepository @Inject constructor(
     suspend fun updateHive(hive: HiveEntity) {
         hiveDao.updateHive(hive)
     }
-
+    suspend fun updateHiveNumber(hiveId: Long, newNumber: String) {
+        // Виклик методу DAO
+        hiveDao.updateHiveNumber(hiveId, newNumber)
+    }
     /**
      * Отримує об'єкт вулика за його унікальним номером.
      * Використовується для перевірки унікальності при додаванні нового вулика.
@@ -89,7 +93,9 @@ class HiveRepository @Inject constructor(
         // 2. Потім видаляємо сам вулик
         hiveDao.deleteHive(hive.id)
     }
-
+    suspend fun getHiveById(hiveId: Long): HiveEntity? {
+        return hiveDao.getHiveById(hiveId)
+    }
     /**
      * Отримує всі об'єкти вулика. Використовується у синхронному контексті (наприклад, для експорту).
      * @return Список усіх HiveEntity.
@@ -107,5 +113,20 @@ class HiveRepository @Inject constructor(
         // ВИКОРИСТОВУЙТЕ DAO-метод, що виконує очищення та вставку в ОДНІЙ транзакції.
         // Це забезпечує надійне відновлення/імпорт даних.
         hiveDao.clearAndInsertHives(hives)
+    }
+    /**
+     * Оновлює основний колір вулика за ID.
+     */
+    suspend fun updatePrimaryColor(hiveId: Long, @ColorInt color: Int) {
+        // Виклик методу DAO
+        hiveDao.updatePrimaryColor(hiveId, color)
+    }
+
+    /**
+     * Оновлює додатковий колір вулика за ID.
+     */
+    suspend fun updateSecondaryColor(hiveId: Long, @ColorInt color: Int) {
+        // Виклик методу DAO
+        hiveDao.updateSecondaryColor(hiveId, color)
     }
 }

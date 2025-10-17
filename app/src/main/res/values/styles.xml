@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- NavButton:
+    <!-- NavButton
         Універсальний стиль для навігаційних кнопок, встановлює розміри, вагу, колір та Material3-вигляд. -->
     <style name="NavButton" parent="Widget.Material3.Button.ElevatedButton">
         <item name="android:layout_width">0dp</item>
@@ -16,7 +16,7 @@
         <item name="android:textSize">@dimen/nav_button_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
 
         <item name="backgroundTint">@color/button_nav</item>
         <item name="cornerRadius">@dimen/nav_button_corner_radius</item>
@@ -24,7 +24,7 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
-    <!-- MainActionButton:
+    <!-- MainActionButton
         Стиль для кнопок головної дії, успадковує NavButton, але змінює розмір, скидає вагу та використовує інший колір для виділення. -->
     <style name="MainActionButton" parent="NavButton">
         <item name="android:layout_height">62dp</item>
@@ -34,7 +34,7 @@
         <item name="android:textSize">@dimen/main_action_button_text_size</item>
     </style>
 
-    <!-- Widget.BeekeeperJournal.DialogOptionCard:
+    <!-- Widget.BeekeeperJournal.DialogOptionCard
        Стиль для карток MaterialCardView (діалогового вікна), що використовуються як клікабельні опції у діалогах,
        забезпечуючи уніфікований вигляд та ефект натискання. -->
     <style name="Widget.BeekeeperJournal.DialogOptionCard" parent="Widget.Material3.CardView.Elevated">
@@ -47,7 +47,7 @@
         <item name="cardBackgroundColor">@color/green_50</item>
     </style>
 
-    <!-- Widget.BeekeeperJournal.DialogCompoundOption:
+    <!-- Widget.BeekeeperJournal.DialogCompoundOption
      Стиль для вмісту тексту та іконки діалогового вікна. -->
     <style name="Widget.BeekeeperJournal.DialogCompoundOption" parent="Widget.MaterialComponents.TextView">
         <item name="android:layout_width">match_parent</item>
@@ -59,7 +59,7 @@
         <item name="android:drawablePadding">16dp</item>
     </style>
 
-    <!-- Widget.BeekeeperJournal.DialogOptionContainer:
+    <!-- Widget.BeekeeperJournal.DialogOptionContainer
        Стиль для LinearLayout всередині опцій, уніфікує відступи та вирівнювання іконок та тексту. -->
     <style name="Widget.BeekeeperJournal.DialogOptionContainer" parent="">
         <item name="android:layout_width">match_parent</item>
@@ -69,7 +69,7 @@
         <item name="android:padding">16dp</item>
     </style>
 
-    <!-- Widget.BeekeeperJournal.DialogOptionText:
+    <!-- Widget.BeekeeperJournal.DialogOptionText
     Стиль для тексту опції, встановлює розмір шрифту, відступ та вагу для заповнення простору поруч з іконкою. -->
     <style name="Widget.BeekeeperJournal.DialogOptionText" parent="Widget.MaterialComponents.TextView">
         <item name="android:layout_width">0dp</item>
@@ -79,7 +79,7 @@
         <item name="android:textSize">16sp</item>
     </style>
 
-    <!-- Стилі для тексту: BodyMedium - середній в текстових полях; TitleMedium - середній для заголовка. -->
+    <!-- Стилі для тексту BodyMedium - середній в текстових полях; TitleMedium - середній для заголовка. -->
     <style name="BeekeeperJournal.TextAppearance.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textColor">@color/text_note</item>
     </style>

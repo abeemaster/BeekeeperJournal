@@ -1,5 +1,6 @@
 package com.beemaster.beekeeperjournal.db.dao
 
+import androidx.annotation.ColorInt
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -29,12 +30,30 @@ interface HiveDao {
     @Update
     suspend fun updateHive(hive: HiveEntity)
 
+    // Файл: HiveDao.kt (приблизно)
+
+    @Query("UPDATE hives SET hiveNumber = :newNumber WHERE id = :hiveId")
+    suspend fun updateHiveNumber(hiveId: Long, newNumber: String)
+    /**
+     * Оновлення кольору: встановлює нове значення primaryColor для заданого вулика.
+     */
+    @Query("UPDATE hives SET color = :color WHERE id = :hiveId")
+    suspend fun updatePrimaryColor(hiveId: Long, @ColorInt color: Int)
+
+    /**
+     * Оновлення кольору: встановлює нове значення secondaryColor для заданого вулика.
+     */
+    @Query("UPDATE hives SET secondaryColor = :color WHERE id = :hiveId")
+    suspend fun updateSecondaryColor(hiveId: Long, @ColorInt color: Int)
     /**
      * Видаляє вулик за його унікальним ID.
      * @param hiveId ID вулика для видалення.
      */
     @Query("DELETE FROM hives WHERE id = :hiveId")
     suspend fun deleteHive(hiveId: Int)
+
+    @Query("SELECT * FROM hives WHERE id = :hiveId")
+    suspend fun getHiveById(hiveId: Long): HiveEntity?
 
     /**
      * Отримує всі вулики, відсортовані за номером. Повертає потік даних (Flow).
@@ -98,4 +117,5 @@ interface HiveDao {
         deleteAllHives()
         insertAllHives(hives)
     }
+
 }

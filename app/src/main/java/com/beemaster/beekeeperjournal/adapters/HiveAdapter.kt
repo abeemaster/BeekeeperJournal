@@ -71,17 +71,19 @@ class HiveAdapter(
 
             hiveNameTextView.text = itemView.context.getString(R.string.hive_name_format, hive.hiveNumber)
 
+            // Встановлення ОСНОВНОГО кольору
             hivePrimaryColorView.setBackgroundColor(hive.color)
 
-            if (hive.secondaryColor != 0) {
-                // ВАЖЛИВО: .mutate() дозволяє модифікувати Drawable без впливу на інші елементи.
+            if (hive.secondaryColor != 0 && hive.secondaryColor != hive.color) {
+
                 val drawable = secondaryColorView.background.mutate() as GradientDrawable
                 drawable.setColor(hive.secondaryColor)
                 secondaryColorView.visibility = View.VISIBLE
+
             } else {
+                // Приховуємо, якщо колір чорний/не встановлений АБО збігається з основним
                 secondaryColorView.visibility = View.INVISIBLE
             }
-
         }
     }
 
@@ -113,6 +115,7 @@ class HiveAdapter(
         override fun areContentsTheSame(oldItem: HiveEntity, newItem: HiveEntity): Boolean {
             // Перевіряємо лише ті поля, які можуть змінити відображення елемента
             return oldItem.name == newItem.name &&
+                    oldItem.hiveNumber == newItem.hiveNumber &&
                     oldItem.color == newItem.color &&
                     oldItem.secondaryColor == newItem.secondaryColor
         }
