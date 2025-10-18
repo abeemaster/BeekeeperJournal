@@ -86,8 +86,7 @@ interface NoteDao {
         LEFT JOIN hives AS H ON N.hiveId = H.id
         WHERE N.content LIKE '%' || :query || '%' 
         OR N.title LIKE '%' || :query || '%' 
-        OR N.type LIKE '%' || :query || '%' 
-        OR H.name LIKE '%' || :query || '%' 
+        OR N.type LIKE '%' || :query || '%'
         OR H.hiveNumber LIKE '%' || :query || '%'
         ORDER BY N.createdAt DESC
     """)

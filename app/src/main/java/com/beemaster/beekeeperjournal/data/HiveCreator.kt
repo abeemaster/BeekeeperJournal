@@ -24,7 +24,6 @@ class HiveCreator @Inject constructor(
     fun createDefaultHiveEntity(number: String) = HiveEntity(
         // ID буде встановлено базою даних (0 або автогенерація)
         hiveNumber = number,
-        name = number,
         // ✅ Використовуємо ін'єктовану константу
         color = defaultColor,
         // 0 = колір за замовчуванням / прозорий / не встановлений

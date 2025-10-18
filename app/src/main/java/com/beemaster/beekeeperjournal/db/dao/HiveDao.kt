@@ -30,8 +30,6 @@ interface HiveDao {
     @Update
     suspend fun updateHive(hive: HiveEntity)
 
-    // Файл: HiveDao.kt (приблизно)
-
     @Query("UPDATE hives SET hiveNumber = :newNumber WHERE id = :hiveId")
     suspend fun updateHiveNumber(hiveId: Long, newNumber: String)
     /**

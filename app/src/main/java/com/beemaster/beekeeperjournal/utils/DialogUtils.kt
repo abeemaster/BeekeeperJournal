@@ -9,14 +9,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.GridLayout
 import android.widget.Toast
 import com.beemaster.beekeeperjournal.R
-import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.models.Expense
 import com.beemaster.beekeeperjournal.models.Income
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
-import com.google.android.material.card.MaterialCardView
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -256,146 +253,6 @@ object DialogUtils {
                 Toast.makeText(context, context.getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    /**
-     * Відображає діалог з опціями для конкретного вулика.
-     *
-     * @param context Контекст.
-     * @param hive Сутність вулика [HiveEntity].
-     * @param onEditNumber Лямбда для зміни номера.
-     * @param onSelectPrimaryColor Лямбда для вибору основного кольору.
-     * @param onSelectSecondaryColor Лямбда для вибору допоміжного кольору.
-     * @param onDeleteHive Лямбда для видалення вулика.
-     */
-    fun showHiveOptionsDialog(
-        context: Context,
-        onEditNumber: () -> Unit,
-        onSelectPrimaryColor: () -> Unit,
-        onSelectSecondaryColor: () -> Unit,
-        onDeleteHive: () -> Unit
-    ) {
-        val dialogView = View.inflate(context, R.layout.dialog_hive_options, null)
-        val dialog = AlertDialog.Builder(context)
-            .setView(dialogView)
-            .create()
-
-        val editNumberCard: MaterialCardView = dialogView.findViewById(R.id.editNumberCard)
-        editNumberCard.setOnClickListener {
-            onEditNumber()
-            dialog.dismiss()
-        }
-
-        val selectPrimaryColorCard: MaterialCardView = dialogView.findViewById(R.id.selectPrimaryColorCard)
-        selectPrimaryColorCard.setOnClickListener {
-            onSelectPrimaryColor()
-            dialog.dismiss()
-        }
-
-        val selectSecondaryColorCard: MaterialCardView = dialogView.findViewById(R.id.selectSecondaryColorCard)
-        selectSecondaryColorCard.setOnClickListener {
-            onSelectSecondaryColor()
-            dialog.dismiss()
-        }
-
-        val deleteHiveCard: MaterialCardView = dialogView.findViewById(R.id.deleteHiveCard)
-        deleteHiveCard.setOnClickListener {
-            onDeleteHive()
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
-    /**
-     * Відображає діалог для редагування номера вулика.
-     *
-     * @param context Контекст.
-     * @param currentNumber Поточний номер вулика.
-     * @param onSave Лямбда, що викликається при збереженні нового номера.
-
-    fun showEditHiveNumberDialog(context: Context, currentNumber: String, onSave: (String) -> Unit) {
-        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_edit_hive_number, null)
-        val newNumberEditText: EditText = dialogView.findViewById(R.id.newNumberEditText)
-        newNumberEditText.setText(currentNumber)
-
-        AlertDialog.Builder(context, R.style.AppTheme_AlertDialog)
-            .setTitle(context.getString(R.string.edit_hive_number_title))
-            .setView(dialogView)
-            .setPositiveButton(context.getString(R.string.save)) { _, _ ->
-                val newNumber = newNumberEditText.text.toString().trim()
-                if (newNumber.isNotEmpty() && newNumber != currentNumber) {
-                    onSave(newNumber)
-                } else {
-                    // ✅ ВИПРАВЛЕНО: Використання рядкового ресурсу для локалізації
-                    Toast.makeText(context, context.getString(R.string.hive_number_validation_error), Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton(context.getString(R.string.cancel), null)
-            .show()
-    }
-     */
-
-
-
-    /**
-     * Відображає діалог для вибору кольору вулика.
-     *
-     * @param context Контекст.
-     * @param onColorSelected Лямбда, що викликається з ID обраного кольору.
-     */
-    fun showColorPickerDialog(
-        context: Context,
-        onColorSelected: (Int) -> Unit
-    ) {
-        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_color_picker, null)
-        val colorGrid: GridLayout = dialogView.findViewById(R.id.colorGrid)
-        // ... (визначення кольорів)
-        val colors = intArrayOf(
-            context.getColor(R.color.color_yellow),
-            context.getColor(R.color.status_blue),
-            context.getColor(R.color.white),
-            context.getColor(R.color.status_orange),
-            context.getColor(R.color.status_purple),
-            context.getColor(R.color.color_primary),
-            context.getColor(R.color.status_red),
-            context.getColor(R.color.transparent)
-        )
-        val dialog = AlertDialog.Builder(context)
-            .setView(dialogView)
-            .create()
-
-        colors.forEach { color ->
-            val colorView = LayoutInflater.from(context).inflate(R.layout.color_grid_item, colorGrid, false)
-            val colorCircle: View = colorView.findViewById(R.id.colorView)
-            colorCircle.setBackgroundColor(color)
-
-            colorCircle.setOnClickListener {
-                onColorSelected(color)
-                dialog.dismiss()
-            }
-            colorGrid.addView(colorView)
-        }
-
-        dialog.show()
-    }
-
-    /**
-     * Відображає діалог підтвердження видалення вулика.
-     *
-     * @param context Контекст.
-     * @param hive Об'єкт вулика [HiveEntity] для відображення назви.
-     * @param onDeleteConfirmed Лямбда, що викликається після підтвердження.
-     */
-    fun showDeleteHiveDialog(context: Context, hive: HiveEntity, onDeleteConfirmed: () -> Unit) {
-        AlertDialog.Builder(context)
-            .setTitle(context.getString(R.string.delete_hive_title))
-            .setMessage(context.getString(R.string.delete_hive_message, hive.name))
-            .setPositiveButton(context.getString(R.string.delete)) { _, _ ->
-                onDeleteConfirmed()
-            }
-            .setNegativeButton(context.getString(R.string.cancel), null)
-            .show()
     }
 
     /**

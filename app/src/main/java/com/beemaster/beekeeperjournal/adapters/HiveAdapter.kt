@@ -114,8 +114,7 @@ class HiveAdapter(
 
         override fun areContentsTheSame(oldItem: HiveEntity, newItem: HiveEntity): Boolean {
             // Перевіряємо лише ті поля, які можуть змінити відображення елемента
-            return oldItem.name == newItem.name &&
-                    oldItem.hiveNumber == newItem.hiveNumber &&
+            return  oldItem.hiveNumber == newItem.hiveNumber &&
                     oldItem.color == newItem.color &&
                     oldItem.secondaryColor == newItem.secondaryColor
         }

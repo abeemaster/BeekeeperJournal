@@ -84,6 +84,36 @@ val MIGRATION_6_7: Migration = object : Migration(6, 7) {
     }
 }
 
+/**
+ * Міграція з версії 7 на 8.
+ * Видалення стовпця 'name' з таблиці 'hives'.
+ */
+val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 1. Створюємо тимчасову таблицю hives_new, яка відповідає новій HiveEntity
+        db.execSQL(
+            "CREATE TABLE hives_new (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                    "hiveNumber TEXT NOT NULL," +
+                    "color INTEGER NOT NULL," +
+                    "secondaryColor INTEGER NOT NULL" +
+                    ")"
+        )
+
+        // 2. Копіюємо дані зі старої таблиці 'hives' (version 7) в нову 'hives_new' (version 8),
+        // виключаючи стовпець 'name'.
+        db.execSQL(
+            "INSERT INTO hives_new (id, hiveNumber, color, secondaryColor) " +
+                    "SELECT id, hiveNumber, color, secondaryColor FROM hives"
+        )
+
+        // 3. Видаляємо стару таблицю
+        db.execSQL("DROP TABLE hives")
+
+        // 4. Перейменовуємо нову таблицю на оригінальну назву
+        db.execSQL("ALTER TABLE hives_new RENAME TO hives")
+    }
+}
 
 // --------------------------------------------------------------------------
 //  Масив усіх міграцій (Оголошується після всіх об'єктів)
@@ -99,10 +129,12 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_4_5,
     MIGRATION_5_6,
     MIGRATION_6_7,
+    MIGRATION_7_8,
 
 )
 
 /** УВАГА!!!
  * При створенні кожної нової міграції потрібно не забути змінити version у AppDatabase.
  * Також треба додати міграцію у масив ALL_MIGRATIONS.
+ * При додаванні нового стовпчика треба не забути додати його дані у поле пошуку
  */

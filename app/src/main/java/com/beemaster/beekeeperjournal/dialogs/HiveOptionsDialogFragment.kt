@@ -102,17 +102,18 @@ class HiveOptionsDialogFragment : DialogFragment() {
         ) { _, bundle ->
 
             val newNumber = bundle.getString(EditHiveNumberDialogFragment.KEY_NEW_NUMBER)
-            val hiveId = bundle.getLong(EditHiveNumberDialogFragment.KEY_HIVE_ID_RESULT)
+            val hiveId = bundle.getLong(EditHiveNumberDialogFragment.KEY_HIVE_ID)
 
             if (hiveId != 0L && !newNumber.isNullOrBlank()) {
 
-                // ✅ ЗАЛИШАЄМО ТІЛЬКИ ОДИН ВИКЛИК: З ВАЛІДАЦІЄЮ
+                // ЗАЛИШАЄМО ТІЛЬКИ ОДИН ВИКЛИК: З ВАЛІДАЦІЄЮ
                 viewModel.updateHiveNumberWithValidation(hiveId, newNumber)
-                // ✅ ЗАКРИВАЄМО HiveOptionsDialogFragment ТУТ (після відправки даних)
+                // ЗАКРИВАЄМО HiveOptionsDialogFragment ТУТ (після відправки даних)
                 dismiss() // Закриваємо (бо успішно збережено)
             } else {
-                // ❌ КОРИСТУВАЧ НАТИСНУВ "СКАСУВАТИ"
-                dialog?.show() // ✅ ВІДНОВЛЮЄМО ВИДИМІСТЬ (повертаємося до опцій)
+                // КОРИСТУВАЧ НАТИСНУВ "СКАСУВАТИ"
+                //dialog?.show() // ВІДНОВЛЮЄМО ВИДИМІСТЬ (повертаємося до опцій)
+                dismiss()
             }
         }
     }

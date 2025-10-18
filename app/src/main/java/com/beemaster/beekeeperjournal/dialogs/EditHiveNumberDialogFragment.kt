@@ -23,16 +23,14 @@ class EditHiveNumberDialogFragment : DialogFragment() {
         // Ключі для Fragment Result API
         const val KEY_REQUEST = "editNumberRequest"
         const val KEY_NEW_NUMBER = "newHiveNumber"
-
-        // Ключі для аргументів
-        private const val ARG_HIVE_ID = "hiveId"
+        const val KEY_HIVE_ID = "hiveId"
         private const val ARG_CURRENT_NUMBER = "currentNumber"
-        const val KEY_HIVE_ID_RESULT = "hiveIdResult"
+
 
         fun newInstance(hiveId: Long, currentNumber: String): EditHiveNumberDialogFragment {
             return EditHiveNumberDialogFragment().apply {
                 arguments = bundleOf(
-                    ARG_HIVE_ID to hiveId,
+                    KEY_HIVE_ID to hiveId,
                     ARG_CURRENT_NUMBER to currentNumber
                 )
             }
@@ -41,12 +39,14 @@ class EditHiveNumberDialogFragment : DialogFragment() {
 
     // Отримуємо ID вулика для повернення його у результаті
     private val hiveId: Long
-        get() = arguments?.getLong(ARG_HIVE_ID) ?: 0L
+        get() = arguments?.getLong(KEY_HIVE_ID) ?: 0L
 
     // Отримуємо поточний номер для відображення
     private val currentNumber: String
         get() = arguments?.getString(ARG_CURRENT_NUMBER) ?: ""
 
+
+    // Файл: EditHiveNumberDialogFragment.kt (у onCreateDialog)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val editText = EditText(requireContext()).apply {
@@ -57,7 +57,7 @@ class EditHiveNumberDialogFragment : DialogFragment() {
             setPadding(50, 50, 50, 50)
         }
 
-        return AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle("Редагувати номер вулика")
             .setView(editText)
 
@@ -65,16 +65,11 @@ class EditHiveNumberDialogFragment : DialogFragment() {
             .setPositiveButton("Зберегти") { _, _ ->
                 val newNumber = editText.text.toString()
 
-                // ✅ ВСТАНОВЛЮЄМО РЕЗУЛЬТАТ З ВИКОРИСТАННЯМ НОВОГО ПУБЛІЧНОГО КЛЮЧА
+                // ВСТАНОВЛЮЄМО РЕЗУЛЬТАТ
                 setFragmentResult(KEY_REQUEST, bundleOf(
                     KEY_NEW_NUMBER to newNumber,
-                    KEY_HIVE_ID_RESULT to hiveId // ✅ Використовуйте цей ключ!
+                    KEY_HIVE_ID to hiveId
                 ))
-                // Встановлюємо результат, повертаючи ID вулика та новий номер
-                //setFragmentResult(KEY_REQUEST, bundleOf(
-                //    KEY_NEW_NUMBER to newNumber,
-                //    ARG_HIVE_ID to hiveId
-                //))
             }
 
             // Кнопка "Скасувати"
@@ -82,5 +77,10 @@ class EditHiveNumberDialogFragment : DialogFragment() {
                 // Нічого не робимо, просто закриваємо діалог
             }
             .create()
+
+        // ✅ ВИПРАВЛЕННЯ: ЗАБОРОНЯЄМО ЗАКРИТТЯ ПРИ НАТИСКАННІ ЗОВНІ
+        dialog.setCanceledOnTouchOutside(false)
+
+        return dialog
     }
 }
