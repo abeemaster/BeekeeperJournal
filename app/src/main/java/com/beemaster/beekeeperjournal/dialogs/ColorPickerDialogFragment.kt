@@ -18,6 +18,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
 import com.beemaster.beekeeperjournal.R
 import dagger.hilt.android.AndroidEntryPoint
+import android.content.DialogInterface
 
 
 /**
@@ -30,14 +31,11 @@ class ColorPickerDialogFragment : DialogFragment() {
     companion object {
         const val TAG = "ColorPickerDialog"
         const val KEY_COLOR = "selectedColor"
-        // Використовуватимемо ці ключі для Fragment Result API
         const val KEY_PRIMARY_REQUEST = "primary_color_request"
         const val KEY_SECONDARY_REQUEST = "secondary_color_request"
-
-        // НОВИЙ АРГУМЕНТ ДЛЯ ЗБЕРЕЖЕННЯ КЛЮЧА, ЯКИЙ ПОТРІБНО ПОВЕРНУТИ
         private const val ARG_REQUEST_KEY = "requestKey"
         private const val ARG_INITIAL_COLOR = "initialColor"
-
+        const val KEY_CANCELED = "is_canceled"
         private const val COLOR_CIRCLE_SIZE_DP = 48
         private const val COLOR_CIRCLE_MARGIN_DP = 8
         private const val SELECTED_OUTLINE_WIDTH_DP = 4
@@ -197,5 +195,15 @@ class ColorPickerDialogFragment : DialogFragment() {
             // Запасний варіант
             (view.background as? android.graphics.drawable.GradientDrawable)?.setStroke(outlinePx, android.graphics.Color.RED)
         }
+    }
+    override fun onCancel(dialog: DialogInterface) {
+        super.onCancel(dialog)
+
+        // ✅ ВИПРАВЛЕННЯ: Використовуємо Fragment Result API для передачі скасування.
+        // Навіть при скасуванні ми надсилаємо результат (порожній колір та флаг скасування).
+        setFragmentResult(requestKey, bundleOf(
+            KEY_COLOR to initialColor, // Можна повернути початковий колір або Color.TRANSPARENT
+            KEY_CANCELED to true
+        ))
     }
 }

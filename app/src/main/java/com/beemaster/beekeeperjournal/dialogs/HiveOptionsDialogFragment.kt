@@ -14,8 +14,8 @@ import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * [DialogFragment] для відображення опцій конкретного вулика.
- * * Клас використовує Hilt для отримання [HiveDetailViewModel] та [Fragment Result API]
- * для взаємодії з діалогами вибору кольору (ColorPickerDialogFragment).
+ * Клас використовує Hilt для отримання [MainActivityViewModel] та [Fragment Result API]
+ * для взаємодії з діалогами вибору кольору та редагування номера.
  */
 @AndroidEntryPoint
 class HiveOptionsDialogFragment : DialogFragment() {
@@ -37,10 +37,10 @@ class HiveOptionsDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Тепер слухаємо обидва ключі
+        // Налаштування слухачів Fragment Result API для всіх дочірніх діалогів
         setupColorPickerResultListeners()
-        setupDeleteConfirmationListener() // ДОДАЄМО ВИКЛИК СЛУХАЧА ВИДАЛЕННЯ
-        setupEditNumberResultListener()   // ДОДАЄМО ВИКЛИК НОВОГО СЛУХАЧА
+        setupDeleteConfirmationListener()
+        setupEditNumberResultListener()
 
         // Отримання ID та поточних кольорів з аргументів.
         val hiveId = arguments?.getLong(ARG_HIVE_ID) ?: 0L
@@ -55,8 +55,8 @@ class HiveOptionsDialogFragment : DialogFragment() {
             val currentNumber = arguments?.getString(ARG_HIVE_NUMBER) ?: ""
 
             if (hiveId != 0L) {
-                dialog?.hide() // ✅ ПРИХОВУЄМО БАГАТЬКІВСЬКИЙ ДІАЛОГ!
-                // ✅ ВІДКРИВАЄМО ДІАЛОГ РЕДАГУВАННЯ
+                dialog?.hide() // ✅ ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
+                // ВІДКРИВАЄМО ДІАЛОГ РЕДАГУВАННЯ
                 EditHiveNumberDialogFragment.newInstance(
                     hiveId,
                     currentNumber
@@ -66,16 +66,14 @@ class HiveOptionsDialogFragment : DialogFragment() {
 
         /** * Опція: Змінити Основний Колір. */
         view.findViewById<MaterialCardView>(R.id.selectPrimaryColorCard).setOnClickListener {
-            // ВИКЛИКАЄМО НОВУ ФУНКЦІЮ ДЛЯ ОСНОВНОГО КОЛЬОРУ
+            dialog?.hide() // ✅ ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
             showPrimaryColorPicker(hiveId, primaryColor)
-            dialog?.hide() // ✅ ПРИХОВУЄМО БАГАТЬКІВСЬКИЙ ДІАЛОГ!
         }
 
         /** * Опція: Змінити Додатковий Колір. */
         view.findViewById<MaterialCardView>(R.id.selectSecondaryColorCard).setOnClickListener {
-            // ВИКЛИКАЄМО НОВУ ФУНКЦІЮ ДЛЯ ДОДАТКОВОГО КОЛЬОРУ
+            dialog?.hide() // ✅ ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
             showSecondaryColorPicker(hiveId, secondaryColor)
-            dialog?.hide() // ✅ ПРИХОВУЄМО БАГАТЬКІВСЬКИЙ ДІАЛОГ!
         }
 
         /** * Опція: Видалити Вулик. */
@@ -102,42 +100,35 @@ class HiveOptionsDialogFragment : DialogFragment() {
         ) { _, bundle ->
 
             val newNumber = bundle.getString(EditHiveNumberDialogFragment.KEY_NEW_NUMBER)
+            // Використовуємо уніфікований ключ
             val hiveId = bundle.getLong(EditHiveNumberDialogFragment.KEY_HIVE_ID)
 
             if (hiveId != 0L && !newNumber.isNullOrBlank()) {
-
-                // ЗАЛИШАЄМО ТІЛЬКИ ОДИН ВИКЛИК: З ВАЛІДАЦІЄЮ
+                // УСПІХ/ЗБЕРЕЖЕННЯ
                 viewModel.updateHiveNumberWithValidation(hiveId, newNumber)
-                // ЗАКРИВАЄМО HiveOptionsDialogFragment ТУТ (після відправки даних)
-                dismiss() // Закриваємо (бо успішно збережено)
-            } else {
-                // КОРИСТУВАЧ НАТИСНУВ "СКАСУВАТИ"
-                //dialog?.show() // ВІДНОВЛЮЄМО ВИДИМІСТЬ (повертаємося до опцій)
-                dismiss()
             }
+
+            // ✅ ЗАКРИВАЄМО В БУДЬ-ЯКОМУ ВИПАДКУ (УСПІХ, БЕЗ ЗМІН, АБО СКАСУВАННЯ)
+            // Це видаляє діалог з FragmentManager і запобігає "оживанню".
+            dismiss()
         }
     }
+
     /**
      * Відображає діалог вибору кольору для Основного кольору.
-     * Передає KEY_PRIMARY_REQUEST.
      */
     private fun showPrimaryColorPicker(hiveId: Long, initialColor: Int) {
-        // ВИКОРИСТОВУЄМО КЛЮЧ PRIMARY
         val picker = ColorPickerDialogFragment.newInstance(
             initialColor,
             ColorPickerDialogFragment.KEY_PRIMARY_REQUEST
         )
-        // Нам більше не потрібно додавати ARG_HIVE_ID, оскільки ми його отримуємо
-        // з аргументів поточного діалогу у слухачах
         picker.show(parentFragmentManager, ColorPickerDialogFragment.TAG)
     }
 
     /**
      * Відображає діалог вибору кольору для Додаткового кольору.
-     * Передає KEY_SECONDARY_REQUEST.
      */
     private fun showSecondaryColorPicker(hiveId: Long, initialColor: Int) {
-        // ВИКОРИСТОВУЄМО КЛЮЧ SECONDARY
         val picker = ColorPickerDialogFragment.newInstance(
             initialColor,
             ColorPickerDialogFragment.KEY_SECONDARY_REQUEST
@@ -147,28 +138,43 @@ class HiveOptionsDialogFragment : DialogFragment() {
 
     /**
      * Налаштовує ДВА окремих [Fragment Result Listener] для Основного та Додаткового кольорів.
+     * Обробляє як успішний вибір, так і скасування (через KEY_CANCELED).
      */
     private fun setupColorPickerResultListeners() {
-        val hiveId = arguments?.getLong(ARG_HIVE_ID) ?: return // Hive ID для оновлення
+        val hiveId = arguments?.getLong(ARG_HIVE_ID) ?: return
 
         // 1. СЛУХАЧ ДЛЯ ОСНОВНОГО КОЛЬОРУ
         parentFragmentManager.setFragmentResultListener(
-            ColorPickerDialogFragment.KEY_PRIMARY_REQUEST, // СЛУХАЄМО PRIMARY
+            ColorPickerDialogFragment.KEY_PRIMARY_REQUEST,
             viewLifecycleOwner
         ) { _, bundle ->
             val selectedColor = bundle.getInt(ColorPickerDialogFragment.KEY_COLOR)
-            viewModel.updateHivePrimaryColor(hiveId, selectedColor) // ВИКЛИКАЄМО ТІЛЬКИ PRIMARY
-            dismiss() // Закриваємо поточний діалог після обробки результату
+            // ✅ Отримуємо прапорець скасування
+            val isCanceled = bundle.getBoolean(ColorPickerDialogFragment.KEY_CANCELED, false)
+
+            if (!isCanceled) {
+                viewModel.updateHivePrimaryColor(hiveId, selectedColor)
+            }
+
+            // ✅ БЕЗУМОВНО ЗАКРИВАЄМО ПІСЛЯ ОТРИМАННЯ РЕЗУЛЬТАТУ
+            dismiss()
         }
 
         // 2. СЛУХАЧ ДЛЯ ДОДАТКОВОГО КОЛЬОРУ
         parentFragmentManager.setFragmentResultListener(
-            ColorPickerDialogFragment.KEY_SECONDARY_REQUEST, // СЛУХАЄМО SECONDARY
+            ColorPickerDialogFragment.KEY_SECONDARY_REQUEST,
             viewLifecycleOwner
         ) { _, bundle ->
             val selectedColor = bundle.getInt(ColorPickerDialogFragment.KEY_COLOR)
-            viewModel.updateHiveSecondaryColor(hiveId, selectedColor) // ВИКЛИКАЄМО ТІЛЬКИ SECONDARY
-            dismiss() // Закриваємо поточний діалог після обробки результату
+            // ✅ Отримуємо прапорець скасування
+            val isCanceled = bundle.getBoolean(ColorPickerDialogFragment.KEY_CANCELED, false)
+
+            if (!isCanceled) {
+                viewModel.updateHiveSecondaryColor(hiveId, selectedColor)
+            }
+
+            // ✅ БЕЗУМОВНО ЗАКРИВАЄМО ПІСЛЯ ОТРИМАННЯ РЕЗУЛЬТАТУ
+            dismiss()
         }
     }
 
@@ -190,6 +196,8 @@ class HiveOptionsDialogFragment : DialogFragment() {
             dismiss()
         }
     }
+
+    // ✅ МЕТОД setupColorPickerCancelListener ТА onActivityResult БІЛЬШЕ НЕ ПОТРІБНІ І ВИДАЛЕНІ
 
     override fun onStart() {
         super.onStart()

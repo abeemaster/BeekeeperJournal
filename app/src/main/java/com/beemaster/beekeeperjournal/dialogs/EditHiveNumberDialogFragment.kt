@@ -74,7 +74,12 @@ class EditHiveNumberDialogFragment : DialogFragment() {
 
             // Кнопка "Скасувати"
             .setNegativeButton("Скасувати") { _, _ ->
-                // Нічого не робимо, просто закриваємо діалог
+                // ✅ ВИПРАВЛЕННЯ: Надсилаємо порожній результат, щоб HiveOptionsDialogFragment закрився
+                setFragmentResult(KEY_REQUEST, bundleOf(
+                    KEY_NEW_NUMBER to null, // Надсилаємо null, бо скасували
+                    KEY_HIVE_ID to hiveId
+                ))
+                // Не потрібно викликати dialog.cancel() чи dialog.dismiss(), бо AlertDialog це зробить сам
             }
             .create()
 
