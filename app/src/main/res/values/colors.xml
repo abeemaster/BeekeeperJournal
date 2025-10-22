@@ -21,12 +21,12 @@
     <color name="border_note">#D1D5DB</color>
 
     <color name="status_blue">#2196F3</color>
-    <color name="button_nav">#0284C7</color>
+    <color name="button_nav">#0079B0</color>
     <color name="status_purple">#9C27B0</color>
 
     <color name="text_dark_green">#14532D</color>
-    <color name="button_add_note">#16A34A</color>
-    <color name="button_microphone">#4CAF50</color>
+    <color name="button_add_note">#337B37</color>
+    <color name="button_microphone">#337B37</color>
     <color name="button_hive">#65A30D</color>
     <color name="green_200">#C5E1A5</color>
     <color name="green_50">#F1F8E9</color>

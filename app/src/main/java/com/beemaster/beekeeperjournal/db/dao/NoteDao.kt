@@ -115,4 +115,9 @@ interface NoteDao {
         deleteAllNotes()
         insertAllNotes(notes)
     }
+    @Query("SELECT * FROM notes INNER JOIN hives ON notes.hiveId = hives.id WHERE notes.id = :noteId")
+    suspend fun getNoteSearchResultById(noteId: Int): NoteSearchResultEntity?
+
+    @Query("UPDATE notes SET content = :newContent WHERE id = :noteId")
+    suspend fun updateNoteContent(noteId: Int, newContent: String)
 }

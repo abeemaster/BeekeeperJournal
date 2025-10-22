@@ -4,12 +4,12 @@ package com.beemaster.beekeeperjournal.dialogs
 
 import android.app.Dialog
 import android.os.Bundle
-import android.text.InputType
-import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
+import com.beemaster.beekeeperjournal.R
+import com.google.android.material.textfield.TextInputEditText
 
 /**
  * Діалогове вікно для редагування номера вулика.
@@ -19,8 +19,6 @@ class EditHiveNumberDialogFragment : DialogFragment() {
 
     companion object {
         const val TAG = "EditNumberDialog"
-
-        // Ключі для Fragment Result API
         const val KEY_REQUEST = "editNumberRequest"
         const val KEY_NEW_NUMBER = "newHiveNumber"
         const val KEY_HIVE_ID = "hiveId"
@@ -37,55 +35,67 @@ class EditHiveNumberDialogFragment : DialogFragment() {
         }
     }
 
-    // Отримуємо ID вулика для повернення його у результаті
     private val hiveId: Long
         get() = arguments?.getLong(KEY_HIVE_ID) ?: 0L
 
-    // Отримуємо поточний номер для відображення
     private val currentNumber: String
         get() = arguments?.getString(ARG_CURRENT_NUMBER) ?: ""
 
-
-    // Файл: EditHiveNumberDialogFragment.kt (у onCreateDialog)
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val editText = EditText(requireContext()).apply {
-            inputType = InputType.TYPE_CLASS_TEXT
-            setText(currentNumber)
-            setHint("Введіть новий номер вулика")
-            // Додаємо невеликий відступ для кращого вигляду
-            setPadding(50, 50, 50, 50)
-        }
 
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Редагувати номер вулика")
-            .setView(editText)
+        val view = layoutInflater.inflate(R.layout.dialog_edit_hive_number, null)
+        val editText = view.findViewById<TextInputEditText>(R.id.numberEditText)
 
-            // Кнопка "Зберегти"
-            .setPositiveButton("Зберегти") { _, _ ->
-                val newNumber = editText.text.toString()
+        editText.setText(currentNumber)
 
-                // ВСТАНОВЛЮЄМО РЕЗУЛЬТАТ
-                setFragmentResult(KEY_REQUEST, bundleOf(
-                    KEY_NEW_NUMBER to newNumber,
-                    KEY_HIVE_ID to hiveId
-                ))
-            }
+        // ВИКОРИСТОВУЄМО ТЕМУ ДЛЯ КРАСИВИХ КНОПОК
+        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_BeekeeperJournal_AlertDialog)
+            // .setTitle("Редагувати номер вулика") // <-- ВИДАЛЕНО, щоб уникнути подвійного заголовка
+            .setView(view)
 
-            // Кнопка "Скасувати"
-            .setNegativeButton("Скасувати") { _, _ ->
-                // ✅ ВИПРАВЛЕННЯ: Надсилаємо порожній результат, щоб HiveOptionsDialogFragment закрився
-                setFragmentResult(KEY_REQUEST, bundleOf(
-                    KEY_NEW_NUMBER to null, // Надсилаємо null, бо скасували
-                    KEY_HIVE_ID to hiveId
-                ))
-                // Не потрібно викликати dialog.cancel() чи dialog.dismiss(), бо AlertDialog це зробить сам
-            }
+            // Створюємо кнопки з текстом, але без стандартного слухача (використовуємо 'null')
+            // Це дозволяє AlertDialog стилізувати кнопки Material Design.
+            .setPositiveButton("Зберегти", null)
+            .setNegativeButton("Скасувати", null)
             .create()
 
-        // ✅ ВИПРАВЛЕННЯ: ЗАБОРОНЯЄМО ЗАКРИТТЯ ПРИ НАТИСКАННІ ЗОВНІ
         dialog.setCanceledOnTouchOutside(false)
 
         return dialog
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // Отримуємо AlertDialog для доступу до його елементів
+        val alertDialog = dialog as? AlertDialog ?: return
+
+        // 1. НАЛАШТУВАННЯ КНОПКИ "ЗБЕРЕГТИ" (позитивна)
+        val positiveButton = alertDialog.getButton(Dialog.BUTTON_POSITIVE)
+        positiveButton.setOnClickListener {
+            // Отримуємо посилання на поле вводу
+            val editText = alertDialog.findViewById<TextInputEditText>(R.id.numberEditText)
+            val newNumber = editText?.text?.toString()?.trim()
+
+            // Тут може бути логіка валідації...
+
+            // ПЕРЕДАЄМО РЕЗУЛЬТАТ
+            setFragmentResult(KEY_REQUEST, bundleOf(
+                KEY_NEW_NUMBER to newNumber,
+                KEY_HIVE_ID to hiveId
+            ))
+            dismiss()
+        }
+
+        // 2. НАЛАШТУВАННЯ КНОПКИ "СКАСУВАТИ" (негативна)
+        val negativeButton = alertDialog.getButton(Dialog.BUTTON_NEGATIVE)
+        negativeButton.setOnClickListener {
+            // Передаємо результат скасування (null)
+            setFragmentResult(KEY_REQUEST, bundleOf(
+                KEY_NEW_NUMBER to null,
+                KEY_HIVE_ID to hiveId
+            ))
+            dismiss()
+        }
     }
 }

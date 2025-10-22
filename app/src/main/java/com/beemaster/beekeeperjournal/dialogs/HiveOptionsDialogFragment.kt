@@ -11,6 +11,7 @@ import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.card.MaterialCardView
 import dagger.hilt.android.AndroidEntryPoint
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 /**
  * [DialogFragment] для відображення опцій конкретного вулика.
@@ -18,12 +19,13 @@ import dagger.hilt.android.AndroidEntryPoint
  * для взаємодії з діалогами вибору кольору та редагування номера.
  */
 @AndroidEntryPoint
-class HiveOptionsDialogFragment : DialogFragment() {
+class HiveOptionsDialogFragment : BottomSheetDialogFragment() {
 
     private val viewModel: MainActivityViewModel by activityViewModels()
 
+    /** Використання теми та стилю CustomBottomSheetDialogTheme */
     override fun getTheme(): Int {
-        return R.style.Theme_BeekeeperJournal_AlertDialog
+    return R.style.CustomBottomSheetDialogTheme
     }
 
     override fun onCreateView(
@@ -55,7 +57,7 @@ class HiveOptionsDialogFragment : DialogFragment() {
             val currentNumber = arguments?.getString(ARG_HIVE_NUMBER) ?: ""
 
             if (hiveId != 0L) {
-                dialog?.hide() // ✅ ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
+                dialog?.hide() // ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
                 // ВІДКРИВАЄМО ДІАЛОГ РЕДАГУВАННЯ
                 EditHiveNumberDialogFragment.newInstance(
                     hiveId,
@@ -66,13 +68,13 @@ class HiveOptionsDialogFragment : DialogFragment() {
 
         /** * Опція: Змінити Основний Колір. */
         view.findViewById<MaterialCardView>(R.id.selectPrimaryColorCard).setOnClickListener {
-            dialog?.hide() // ✅ ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
+            dialog?.hide() // ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
             showPrimaryColorPicker(hiveId, primaryColor)
         }
 
         /** * Опція: Змінити Додатковий Колір. */
         view.findViewById<MaterialCardView>(R.id.selectSecondaryColorCard).setOnClickListener {
-            dialog?.hide() // ✅ ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
+            dialog?.hide() // ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
             showSecondaryColorPicker(hiveId, secondaryColor)
         }
 
@@ -104,12 +106,8 @@ class HiveOptionsDialogFragment : DialogFragment() {
             val hiveId = bundle.getLong(EditHiveNumberDialogFragment.KEY_HIVE_ID)
 
             if (hiveId != 0L && !newNumber.isNullOrBlank()) {
-                // УСПІХ/ЗБЕРЕЖЕННЯ
                 viewModel.updateHiveNumberWithValidation(hiveId, newNumber)
             }
-
-            // ✅ ЗАКРИВАЄМО В БУДЬ-ЯКОМУ ВИПАДКУ (УСПІХ, БЕЗ ЗМІН, АБО СКАСУВАННЯ)
-            // Це видаляє діалог з FragmentManager і запобігає "оживанню".
             dismiss()
         }
     }
@@ -149,14 +147,12 @@ class HiveOptionsDialogFragment : DialogFragment() {
             viewLifecycleOwner
         ) { _, bundle ->
             val selectedColor = bundle.getInt(ColorPickerDialogFragment.KEY_COLOR)
-            // ✅ Отримуємо прапорець скасування
+
             val isCanceled = bundle.getBoolean(ColorPickerDialogFragment.KEY_CANCELED, false)
 
             if (!isCanceled) {
                 viewModel.updateHivePrimaryColor(hiveId, selectedColor)
             }
-
-            // ✅ БЕЗУМОВНО ЗАКРИВАЄМО ПІСЛЯ ОТРИМАННЯ РЕЗУЛЬТАТУ
             dismiss()
         }
 
@@ -166,14 +162,11 @@ class HiveOptionsDialogFragment : DialogFragment() {
             viewLifecycleOwner
         ) { _, bundle ->
             val selectedColor = bundle.getInt(ColorPickerDialogFragment.KEY_COLOR)
-            // ✅ Отримуємо прапорець скасування
             val isCanceled = bundle.getBoolean(ColorPickerDialogFragment.KEY_CANCELED, false)
 
             if (!isCanceled) {
                 viewModel.updateHiveSecondaryColor(hiveId, selectedColor)
             }
-
-            // ✅ БЕЗУМОВНО ЗАКРИВАЄМО ПІСЛЯ ОТРИМАННЯ РЕЗУЛЬТАТУ
             dismiss()
         }
     }
@@ -197,16 +190,15 @@ class HiveOptionsDialogFragment : DialogFragment() {
         }
     }
 
-    // ✅ МЕТОД setupColorPickerCancelListener ТА onActivityResult БІЛЬШЕ НЕ ПОТРІБНІ І ВИДАЛЕНІ
 
+/** Закоментовано при внесенні змін у зовнішній вигляд. Треба буде видалити.
     override fun onStart() {
         super.onStart()
         dialog?.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
-
+*/
     companion object {
         const val TAG = "HiveOptionsDialog"
-
         // Ключі для аргументів Fragment.
         private const val ARG_HIVE_ID = "hive_id"
         private const val ARG_HIVE_NUMBER = "hive_number"

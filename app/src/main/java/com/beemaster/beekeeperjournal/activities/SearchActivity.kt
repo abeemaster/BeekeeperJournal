@@ -11,7 +11,6 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -21,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SearchResultsAdapter
+import com.beemaster.beekeeperjournal.dialogs.SearchResultActionsDialogFragment
 import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.viewmodel.SearchViewModel
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
@@ -129,52 +129,66 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this)
         searchResultsAdapter = SearchResultsAdapter(
             onItemLongClick = { note ->
-                showNoteOptionsDialog(note)
+                // ✅ ВИКЛИКАЄМО НОВИЙ УНІФІКОВАНИЙ ДІАЛОГ
+                showNoteActionsDialog(note)
             }
         )
         searchResultsRecyclerView.adapter = searchResultsAdapter
+
+        // ✅ ВСТАНОВЛЮЄМО СЛУХАЧА РЕЗУЛЬТАТУ
+        setupNoteActionsListener()
+    }
+
+    // Файл: SearchActivity.kt
+
+    /**
+     * Відображає BottomSheetDialogFragment з опціями для нотатки з результатів пошуку.
+     * @param note Об'єкт Note, який було натиснуто.
+     */
+    private fun showNoteActionsDialog(note: Note) {
+        // note.id та note.hiveId є Int у вашому коді
+        SearchResultActionsDialogFragment.newInstance(
+            noteId = note.id,
+            hiveId = note.hiveId
+        ).show(supportFragmentManager, SearchResultActionsDialogFragment.TAG)
     }
 
     /**
-     * Відображає діалог з опціями для обраної нотатки (перехід до вулика або редагування).
-     * @param note Об'єкт Note, який було натиснуто.
+     * Встановлює слухача для обробки результату з SearchResultActionsDialogFragment.
      */
-    private fun showNoteOptionsDialog(note: Note) {
-        val options = arrayOf(
-            getString(R.string.option_go_to_hive),
-            getString(R.string.option_edit_record)
-        )
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.dialog_choose_action))
-            .setItems(options) { dialog, which ->
-                // ✅ Використовуємо коректний ID вулика: note.hiveNumber
-                val targetHiveId = note.hiveId
+    private fun setupNoteActionsListener() {
+        supportFragmentManager.setFragmentResultListener(
+            SearchResultActionsDialogFragment.KEY_REQUEST,
+            this
+        ) { _, bundle ->
+            val noteId = bundle.getInt(SearchResultActionsDialogFragment.KEY_NOTE_ID)
+            val targetHiveId = bundle.getInt(SearchResultActionsDialogFragment.KEY_HIVE_ID)
+            val action = bundle.getString(SearchResultActionsDialogFragment.KEY_ACTION)
+            val searchResult = viewModel.searchResults.value.find { it.note.id == noteId }
+            val note = searchResult?.note
+            val noteType = note?.type ?: Constants.TYPE_HIVE
 
-                when (which) {
-                    0 -> { // Перейти у вулик
-                        val intent = Intent(this, HiveInfoActivity::class.java).apply {
-                            // Передаємо ID вулика, до якого належить нотатка
-                            putExtra(Constants.EXTRA_HIVE_ID, targetHiveId)
-                            putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
-                        }
-                        startActivity(intent)
+            when (action) {
+                SearchResultActionsDialogFragment.ACTION_GO_TO_HIVE -> {
+                    // Перейти у вулик
+                    val intent = Intent(this, HiveInfoActivity::class.java).apply {
+                        putExtra(Constants.EXTRA_HIVE_ID, targetHiveId)
+                        putExtra(Constants.EXTRA_ENTRY_TYPE, noteType)
                     }
-                    1 -> { // Редагувати запис
-                        val intent = Intent(this, EditNoteActivity::class.java).apply {
-                            // Передача ID нотатки для завантаження всього вмісту
-                            putExtra(Constants.EXTRA_NOTE_ID, note.id)
-                            // Передача тексту нотатки
-                            putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
-                            // Передача ID вулика
-                            putExtra(Constants.EXTRA_HIVE_ID, targetHiveId) // ✅ ВИПРАВЛЕНО
-                            // Передача типу запису
-                            putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
-                        }
-                        startActivity(intent)
+                    startActivity(intent)
+                }
+                SearchResultActionsDialogFragment.ACTION_EDIT_RECORD -> {
+                    // Редагувати запис
+                    val intent = Intent(this, EditNoteActivity::class.java).apply {
+                        putExtra(Constants.EXTRA_NOTE_ID, noteId)
+                        putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, note?.text)
+                        putExtra(Constants.EXTRA_HIVE_ID, targetHiveId)
+                        putExtra(Constants.EXTRA_ENTRY_TYPE, noteType)
                     }
+                    startActivity(intent)
                 }
             }
-            .show()
+        }
     }
 
     /**

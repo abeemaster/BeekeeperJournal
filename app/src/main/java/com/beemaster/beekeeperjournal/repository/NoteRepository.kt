@@ -1,6 +1,5 @@
 // NoteRepository.kt
 // Цей клас керуватиме доступом до даних нотаток, працюючи з бізнес-моделлю Note.
-// NoteRepository.kt (Виправлено)
 
 package com.beemaster.beekeeperjournal.repository
 
@@ -84,6 +83,20 @@ class NoteRepository @Inject constructor(
         noteDao.updateNote(note.toNoteEntity())
     }
 
+    /**
+     * Оновлює вміст (текст) нотатки за її ID.
+     * @param noteId ID нотатки, яку потрібно оновити.
+     * @param newContent Новий текст нотатки.
+     */
+    suspend fun updateNoteContent(noteId: Int, newContent: String) {
+        noteDao.updateNoteContent(noteId, newContent)
+    }
+
+    /**
+     * Видаляє нотатку за її унікальним ID.
+     */
+// ...
+
 
     /**
      * Видаляє нотатку за її унікальним ID.
@@ -101,6 +114,22 @@ class NoteRepository @Inject constructor(
         val noteEntity = noteDao.getNoteById(id)
         return noteEntity?.toNote()
     }
+
+    /**
+     * Отримує повну модель відображення нотатки, збагачену номером вулика, за її ID.
+     * @param id ID нотатки.
+     * @return Об'єкт [NoteDisplayModel] або null.
+     */
+    suspend fun getNoteDisplayModelById(id: Int): NoteDisplayModel? {
+        // Ми припускаємо, що NoteDao має метод для отримання NoteSearchResultEntity за ID.
+        // Якщо такого методу в DAO немає, вам потрібно буде його створити,
+        // або отримати NoteEntity та самостійно додати hiveNumber з HiveRepository.
+
+        // Для спрощення, припустимо, що DAO повертає NoteSearchResultEntity
+        val searchResult = noteDao.getNoteSearchResultById(id)
+        return searchResult?.toNoteDisplayModel()
+    }
+// ...
 
     /**
      * Виконує ефективний пошук нотаток через DAO.

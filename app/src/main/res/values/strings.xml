@@ -135,6 +135,9 @@
     <string name="select_additional_color">Вибрати додатковий колір</string>
     <string name="delete_hive">Видалити вулик</string>
     <string name="hive_number">Номер вулика</string>
+    <string name="error_entry_not_found">Помилка: Запис не знайдено для обраної дії.</string>
+    <string name="expense_deleted">Витрату успішно видалено.</string>
+    <string name="income_deleted">Прибуток успішно видалено.</string>
 
 
 </resources>

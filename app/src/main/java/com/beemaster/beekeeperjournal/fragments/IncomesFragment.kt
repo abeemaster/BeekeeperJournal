@@ -1,7 +1,5 @@
 // IncomesFragment.kt
 // Фрагмент, що відображає список прибутків.
-// IncomesFragment.kt
-// Фрагмент, що відображає список прибутків.
 
 package com.beemaster.beekeeperjournal.fragments
 
@@ -19,13 +17,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.IncomeAdapter
 import com.beemaster.beekeeperjournal.databinding.FragmentIncomesBinding
-// import com.beemaster.beekeeperjournal.db.entity.IncomeEntity // ❌ ВИДАЛИТИ: більше не використовується напряму
-import com.beemaster.beekeeperjournal.models.Income // ✅ ЗАЛИШАЄМО: Чиста Domain Model
+import com.beemaster.beekeeperjournal.models.Income
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Locale
+import com.beemaster.beekeeperjournal.Constants // Для TYPE_INCOME
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ACTION
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_EDIT
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_DELETE
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ENTRY_ID
+
 
 /**
  * Фрагмент, відповідальний за відображення списку всіх прибутків та загальної суми прибутку.
@@ -53,6 +57,16 @@ class IncomesFragment : Fragment() {
     }
 
     /**
+     * Відображає BottomSheetDialogFragment для вибору дій над записом.
+     */
+    private fun showProfitabilityActionsDialog(income: Income) {
+        ProfitabilityActionsDialogFragment.newInstance(
+            entryId = income.id.toLong(),
+            entryType = Constants.TYPE_INCOME
+        ).show(parentFragmentManager, ProfitabilityActionsDialogFragment.TAG)
+    }
+
+    /**
      * Ініціалізує UI-компоненти, налаштовує RecyclerView,
      * починає спостереження за LiveData/Flow та встановлює обробники подій.
      */
@@ -76,16 +90,66 @@ class IncomesFragment : Fragment() {
     private fun setupRecyclerView() {
         incomeAdapter = IncomeAdapter(
             onClick = { /* Обробка звичайного натискання (якщо потрібна) */ },
-            onLongClick = { income -> // ✅ ВИПРАВЛЕНО: Parameter now uses 'income' which is of type Income (as defined in IncomeAdapter)
-                showEditDeleteDialog(income)
+            onLongClick = { income ->
+                // ВИКЛИКАЄМО НОВИЙ УНІФІКОВАНИЙ ДІАЛОГ
+                showProfitabilityActionsDialog(income)
             }
         )
         binding.incomesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = incomeAdapter
         }
+
+        // ВСТАНОВЛЮЄМО СЛУХАЧА РЕЗУЛЬТАТУ
+        setupProfitabilityActionsListener()
     }
 
+    /**
+     * Встановлює слухача для обробки результату з ProfitabilityActionsDialogFragment (Редагувати/Видалити).
+     */
+    private fun setupProfitabilityActionsListener() {
+        parentFragmentManager.setFragmentResultListener(
+            ProfitabilityActionsDialogFragment.KEY_REQUEST,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val entryIdLong = bundle.getLong(KEY_ENTRY_ID)
+            val entryIdInt = entryIdLong.toInt() // Приведення Long до Int
+            val action = bundle.getString(KEY_ACTION)
+            // entryType тут має бути "income"
+
+            // Знаходимо об'єкт Income, який потрібно редагувати/видалити.
+            val incomeToHandle = viewModel.incomes.value.find { it.id == entryIdInt }
+
+            if (incomeToHandle == null) {
+                Toast.makeText(requireContext(), R.string.error_entry_not_found, Toast.LENGTH_SHORT).show()
+                return@setFragmentResultListener
+            }
+
+            when (action) {
+                ACTION_EDIT -> {
+                    // 1. РЕДАГУВАННЯ: Використовуємо існуючу логіку DialogUtils
+                    DialogUtils.showAddIncomeDialog(
+                        requireContext(),
+                        viewModel,
+                        hiveId = incomeToHandle.hiveId,
+                        incomeToEdit = incomeToHandle
+                    )
+                }
+                ACTION_DELETE -> {
+                    // 2. ВИДАЛЕННЯ: Використовуємо існуючу логіку DialogUtils
+                    DialogUtils.showDeleteConfirmationDialog(
+                        context = requireContext(),
+                        titleResId = R.string.confirm_delete,
+                        messageResId = R.string.delete_confirm_message,
+                        onConfirm = {
+                            viewModel.deleteIncome(incomeToHandle.id)
+                            Toast.makeText(requireContext(), R.string.income_deleted, Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            }
+        }
+    }
     /**
      * Спостерігає за потоком [ProfitabilityViewModel.incomes] та оновлює адаптер.
      * Використовує [repeatOnLifecycle] для безпечного збору даних.
@@ -114,33 +178,6 @@ class IncomesFragment : Fragment() {
                 }
             }
         }
-    }
-
-    /**
-     * Відображає діалог редагування або видалення для обраного запису про прибуток.
-     * @param income [Income] запис, який потрібно редагувати або видалити.
-     */
-    private fun showEditDeleteDialog(income: Income) {
-        DialogUtils.showEditDeleteDialog(
-            context = requireContext(),
-            onEdit = {
-                // Викликаємо діалог додавання/редагування, передаючи об'єкт для редагування
-                DialogUtils.showAddIncomeDialog(requireContext(), viewModel, hiveId = income.hiveId, incomeToEdit = income)
-            },
-            onDelete = {
-                // Відображаємо діалог підтвердження видалення
-                DialogUtils.showDeleteConfirmationDialog(
-                    context = requireContext(),
-                    titleResId = R.string.confirm_delete,
-                    messageResId = R.string.delete_confirm_message,
-                    onConfirm = {
-                        viewModel.deleteIncome(income.id)
-                        // ✅ ПОКРАЩЕННЯ: Рекомендується використовувати R.string.income_deleted для консистентності UX
-                        Toast.makeText(requireContext(), (R.string.note_deleted), Toast.LENGTH_SHORT).show()
-                    }
-                )
-            }
-        )
     }
 
     /**

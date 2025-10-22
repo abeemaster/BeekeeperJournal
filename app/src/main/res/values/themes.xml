@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Моя головна тема. -->
     <style name="Theme.BeekeeperJournal" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryVariant">@color/color_primary_dark</item>
@@ -23,7 +24,10 @@
         <item name="android:windowBackground">@color/white</item>
     </style>
 
+    <!-- Стиль для діалогових вікон.AlertDialog. -->
     <style name="Theme.BeekeeperJournal.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.BeekeeperJournal.DialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.BeekeeperJournal.DialogButton</item>
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorOnSurface">@color/black</item>
 
@@ -37,6 +41,33 @@
         <item name="android:textColor">@color/black</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Стиль для теми вікна редагування вулика. Bottom Sheets. -->
+    <style name="CustomBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/CustomRoundedBottomSheetStyle</item>
+    </style>
+
+    <style name="CustomRoundedBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="shapeAppearance">@style/CustomShapeAppearance</item>
+    </style>
+
+    <style name="CustomShapeAppearance" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">16dp</item>
+        <item name="cornerSizeTopLeft">16dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+
+    <!-- Стиль для кнопок DialogButton. -->
+    <style name="TextAppearance.BeekeeperJournal.DialogButton" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget.BeekeeperJournal.DialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textAppearance">@style/TextAppearance.BeekeeperJournal.DialogButton</item>
     </style>
 
 

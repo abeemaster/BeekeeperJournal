@@ -27,6 +27,7 @@ import com.beemaster.beekeeperjournal.viewmodel.HiveInfoViewModel
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.beemaster.beekeeperjournal.dialogs.NoteActionsDialogFragment
 
 /**
  * Активиті для відображення детальної інформації та нотаток конкретного вулика
@@ -79,12 +80,15 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
      */
     private fun setupRecyclerView() {
         notesAdapter = NotesAdapter(
-            // ✅ ВИПРАВЛЕНО: Адаптер тепер приймає NoteDisplayModel
+            // Адаптер тепер приймає NoteDisplayModel
             onLongClick = { note ->
-                showNoteOptionsDialog(note)
+                showNoteActionsDialog(note) // ✅ ВИКЛИК НОВОГО ДІАЛОГУ ДІЙ
             }
         )
         notesRecyclerView.adapter = notesAdapter
+
+        // ✅ Встановлюємо слухача для обробки результату з діалогу дій
+        setupNoteActionsListener()
     }
 
     /**
@@ -277,33 +281,52 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     }
 
     /**
-     * Відображає діалог з опціями "Редагувати" та "Видалити" для обраної нотатки.
+     * Відображає BottomSheetDialogFragment з опціями "Редагувати" та "Видалити".
      * @param note Модель відображення [NoteDisplayModel], яку обрано.
      */
-    private fun showNoteOptionsDialog(note: NoteDisplayModel) { // Приймаємо NoteDisplayModel
-        DialogUtils.showEditDeleteDialog(
-            context = this,
-            onEdit = {
-                // Запуск редактора з даними нотатки
-                val intent = Intent(this, EditNoteActivity::class.java).apply {
-                    putExtra(Constants.EXTRA_NOTE_ID, note.id)
-                    putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, note.text)
+    private fun showNoteActionsDialog(note: NoteDisplayModel) {
+        NoteActionsDialogFragment.newInstance(
+            noteId = note.id // Передаємо ID нотатки
+        ).show(supportFragmentManager, NoteActionsDialogFragment.TAG)
+    }
 
-                    // Використовуємо коректний ID нотатки
-                    putExtra(Constants.EXTRA_HIVE_ID, note.hiveId)
+    /**
+     * Встановлює слухача для обробки результату з NoteActionsDialogFragment.
+     */
+    private fun setupNoteActionsListener() {
+        supportFragmentManager.setFragmentResultListener(
+            NoteActionsDialogFragment.KEY_REQUEST,
+            this
+        ) { _, bundle ->
+            val noteId = bundle.getInt(NoteActionsDialogFragment.KEY_NOTE_ID)
+            val action = bundle.getString(NoteActionsDialogFragment.KEY_ACTION)
 
-                    // Передаємо hiveDisplayNumber, який ми отримали через NoteDisplayModel
-                    putExtra(Constants.EXTRA_HIVE_NUMBER, note.hiveDisplayNumber)
+            // Обробка обраної дії
+            when (action) {
+                NoteActionsDialogFragment.ACTION_EDIT -> {
+                    // 1. Знаходимо нотатку (потрібно, щоб отримати content і type)
+                    lifecycleScope.launch {
+                        val noteModel = viewModel.getNoteDisplayModelById(noteId)
 
-                    putExtra(Constants.EXTRA_ENTRY_TYPE, note.type)
+                        if (noteModel != null) {
+                            // 2. Запуск редактора з даними нотатки
+                            val intent = Intent(this@HiveInfoActivity, EditNoteActivity::class.java).apply {
+                                putExtra(Constants.EXTRA_NOTE_ID, noteModel.id)
+                                putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, noteModel.text)
+                                putExtra(Constants.EXTRA_HIVE_ID, noteModel.hiveId)
+                                putExtra(Constants.EXTRA_HIVE_NUMBER, noteModel.hiveDisplayNumber)
+                                putExtra(Constants.EXTRA_ENTRY_TYPE, noteModel.type)
+                            }
+                            startActivityWithSlideAnimation(intent)
+                        }
+                    }
                 }
-                startActivityWithSlideAnimation(intent)
-            },
-            onDelete = {
-                // Передаємо ID нотатки для видалення
-                showDeleteConfirmationDialog(note.id) // Передаємо ID
+                NoteActionsDialogFragment.ACTION_DELETE -> {
+                    // Викликаємо діалог підтвердження видалення
+                    showDeleteConfirmationDialog(noteId)
+                }
             }
-        )
+        }
     }
 
     /**

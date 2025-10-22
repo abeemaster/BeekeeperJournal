@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- NavButton для широких екранів (планшетів)
+    Універсальний стиль для навігаційних кнопок, встановлює розміри, вагу, колір та Material3-вигляд. -->
+    <style name="NavButton" parent="Widget.Material3.Button.ElevatedButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:maxWidth">320dp</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:minHeight">56dp</item>
+
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+
+        <item name="android:textSize">@dimen/nav_button_text_size</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@android:color/white</item>
+
+        <item name="backgroundTint">@color/button_nav</item>
+        <item name="cornerRadius">@dimen/nav_button_corner_radius</item>
+        <item name="android:elevation">@dimen/nav_button_elevation</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+    <!-- App.Button.NewEntry для широких екранів (планшетів)
+        Універсальний стиль для навігаційних кнопок, встановлює розміри, вагу, колір та Material3-вигляд. -->
+    <style name="Widget.App.Button.NewEntry" parent="Widget.MaterialComponents.Button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:maxWidth">320dp</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:minHeight">56dp</item>
+
+        <item name="android:backgroundTint">@color/button_add_note</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+
+        <item name="android:stateListAnimator">@null</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+</resources>

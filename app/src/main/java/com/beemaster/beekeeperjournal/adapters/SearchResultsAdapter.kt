@@ -86,7 +86,7 @@ class SearchResultsAdapter(
 /**
  * Об'єкт [DiffUtil.ItemCallback] для обчислення різниці між списками [NoteSearchResult].
  */
-private class SearchResultsDiffCallback : DiffUtil.ItemCallback<NoteSearchResult>() { // ✅ Приватний клас
+private class SearchResultsDiffCallback : DiffUtil.ItemCallback<NoteSearchResult>() {
 
     override fun areItemsTheSame(oldItem: NoteSearchResult, newItem: NoteSearchResult): Boolean {
         return oldItem.note.id == newItem.note.id

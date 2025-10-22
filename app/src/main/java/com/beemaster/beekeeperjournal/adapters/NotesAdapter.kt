@@ -1,5 +1,5 @@
-//  NoteDiffCallback.kt  DiffUtil — це допоміжний клас, який обчислює різницю між двома списками даних (старим і новим)
-//  і надає список конкретних оновлень. Замість того, щоб перемальовувати весь список, він каже RecyclerView,
+//  NoteDiffCallback.kt  DiffUtil — це допоміжний клас, який обчислює різницю між двома списками даних (старим
+//  і новим) і надає список конкретних оновлень. Замість того, щоб перемальовувати весь список, він каже RecyclerView,
 //  які саме елементи були додані, видалені чи змінені. Це значно покращує продуктивність і прибирає блимання.
 // Адаптер для RecyclerView, який відображає список нотаток.
 // NotesAdapter.kt
@@ -28,10 +28,10 @@ import java.util.Locale
  */
 
 class NotesAdapter(
-    // ✅ ВИПРАВЛЕНО: onLongClick тепер приймає NoteDisplayModel
+    // onLongClick тепер приймає NoteDisplayModel
     private val onLongClick: (NoteDisplayModel) -> Unit,
     private val showHiveInfo: Boolean = false
-// ✅ ВИПРАВЛЕНО: ListAdapter тепер працює з NoteDisplayModel
+    // ListAdapter тепер працює з NoteDisplayModel
 ) : ListAdapter<NoteDisplayModel, NotesAdapter.NoteViewHolder>(NoteDiffCallback()) {
 
     /**
@@ -47,7 +47,7 @@ class NotesAdapter(
         /**
          * Прив'язує об'єкт [NoteDisplayModel] до елементів інтерфейсу.
          */
-        // ✅ ВИПРАВЛЕНО: Прив'язка до NoteDisplayModel
+        // Прив'язка до NoteDisplayModel
         fun bind(note: NoteDisplayModel) {
             // Використовуємо 'timestamp'
             dateTextView.text = dateFormat.format(Date(note.timestamp))

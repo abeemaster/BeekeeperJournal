@@ -16,7 +16,7 @@
         <item name="android:textSize">@dimen/nav_button_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textColor">@android:color/white</item>
 
         <item name="backgroundTint">@color/button_nav</item>
         <item name="cornerRadius">@dimen/nav_button_corner_radius</item>
@@ -28,9 +28,10 @@
         Стиль для кнопок головної дії, успадковує NavButton, але змінює розмір, скидає вагу та використовує інший колір для виділення. -->
     <style name="MainActionButton" parent="NavButton">
         <item name="android:layout_height">62dp</item>
-        <item name="android:layout_width">340dp</item>
+        <item name="android:layout_width">320dp</item>
         <item name="android:layout_weight">0</item>
-        <item name="backgroundTint">@color/button_hive</item>
+        <item name="android:maxWidth">320dp</item>
+        <item name="backgroundTint">@color/color_primary_dark</item>
         <item name="android:textSize">@dimen/main_action_button_text_size</item>
     </style>
 
@@ -56,6 +57,7 @@
         <item name="android:gravity">center_vertical</item>
         <item name="android:minHeight">56dp</item>
         <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/black</item>
         <item name="android:drawablePadding">16dp</item>
     </style>
 
@@ -89,6 +91,64 @@
         <item name="android:textColor">@color/text_dark_green</item>
     </style>
 
+    <!-- Стиль для заголовка -->
+    <style name="Widget.App.TextView.InfoTitle" parent="Widget.AppCompat.TextView">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_dark_green</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
+        <item name="android:layout_marginBottom">@dimen/spacing_small</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- Нові стилі -->
+    <style name="Widget.App.TextView.EmptyPlaceholder" parent="Widget.AppCompat.TextView">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_color_gray</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">@dimen/content_padding</item>
+        <item name="android:background">@drawable/notes_area_background</item>
+        <item name="android:elevation">2dp</item>
+    </style>
+    <!-- Нові стилі -->
+    <style name="Widget.App.Button.NewEntry" parent="Widget.MaterialComponents.Button">
+        <item name="android:backgroundTint">@color/button_add_note</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+
+        <item name="android:stateListAnimator">@null</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <!-- Стиль для кнопки "Назад" бічної панелі  -->
+    <style name="Widget.App.ImageButton.TouchTarget" parent="Widget.AppCompat.ImageButton">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+
+        <item name="android:padding">8dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:alpha">0.7</item>
+    </style>
+
+    <!-- Стиль для кнопки мікрофона -->
+    <style name="Widget.App.ImageButton.Microphone" parent="Widget.AppCompat.ImageButton">
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:background">@drawable/microphone_button_background</item>
+        <item name="android:elevation">@dimen/button_elevation</item>
+        <item name="android:scaleType">centerInside</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
 
 </resources>
 

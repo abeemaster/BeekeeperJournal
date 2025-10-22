@@ -14,16 +14,23 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.ExpenseAdapter
 import com.beemaster.beekeeperjournal.databinding.FragmentExpensesBinding
-// import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity // ❌ ВИДАЛЕНО
-import com.beemaster.beekeeperjournal.models.Expense // ✅ ДОДАНО: Використовуємо бізнес-модель
+import com.beemaster.beekeeperjournal.models.Expense
 import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Locale
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ACTION
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_EDIT
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_DELETE
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ENTRY_ID
+import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ENTRY_TYPE
+// ...
 
 /**
  * Фрагмент для відображення списку витрат та загальної суми витрат.
@@ -67,13 +74,66 @@ class ExpensesFragment : Fragment() {
     private fun setupRecyclerView() {
         expenseAdapter = ExpenseAdapter(
             onClick = { /* Можна додати обробку звичайного натискання, якщо потрібно */ },
-            onLongClick = { expense -> // ✅ Змінено тип аргументу на Expense
-                showEditDeleteDialog(expense)
+            onLongClick = { expense ->
+                // ✅ ВИКЛИКАЄМО НОВИЙ УНІФІКОВАНИЙ ДІАЛОГ
+                showProfitabilityActionsDialog(expense)
             }
         )
         binding.expensesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = expenseAdapter
+        }
+
+        // ✅ ВСТАНОВЛЮЄМО СЛУХАЧА РЕЗУЛЬТАТУ
+        setupProfitabilityActionsListener()
+    }
+
+    /**
+     * Встановлює слухача для обробки результату з ProfitabilityActionsDialogFragment (Редагувати/Видалити).
+     */
+    private fun setupProfitabilityActionsListener() {
+        parentFragmentManager.setFragmentResultListener(
+            ProfitabilityActionsDialogFragment.KEY_REQUEST,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            // ✅ ВИПРАВЛЕННЯ 1: Отримуємо Long, але одразу приводимо до Int
+            val entryIdLong = bundle.getLong(KEY_ENTRY_ID)
+            val entryIdInt = entryIdLong.toInt() // <-- ПРИВЕДЕННЯ ТИПУ
+
+            val action = bundle.getString(KEY_ACTION)
+
+            // ✅ ВИПРАВЛЕННЯ 2: Порівнюємо Int з Int
+            val expenseToHandle = viewModel.expenses.value.find { it.id == entryIdInt }
+
+            if (expenseToHandle == null) {
+                Toast.makeText(requireContext(), R.string.error_entry_not_found, Toast.LENGTH_SHORT).show()
+                return@setFragmentResultListener
+            }
+
+            when (action) {
+                ACTION_EDIT -> {
+                    // 1. РЕДАГУВАННЯ: Використовуємо існуючу логіку DialogUtils
+                    // note: тут ми використовуємо expenseToHandle.hiveId, який може бути 0
+                    DialogUtils.showAddExpenseDialog(
+                        requireContext(),
+                        viewModel,
+                        hiveId = expenseToHandle.hiveId, // Передаємо hiveId (може бути 0)
+                        expenseToEdit = expenseToHandle
+                    )
+                }
+                ACTION_DELETE -> {
+                    // 2. ВИДАЛЕННЯ: Використовуємо існуючу логіку DialogUtils
+                    DialogUtils.showDeleteConfirmationDialog(
+                        context = requireContext(),
+                        titleResId = R.string.confirm_delete,
+                        messageResId = R.string.delete_confirm_message,
+                        onConfirm = {
+                            viewModel.deleteExpense(expenseToHandle.id)
+                            Toast.makeText(requireContext(), R.string.expense_deleted, Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -105,6 +165,16 @@ class ExpensesFragment : Fragment() {
         }
     }
 
+    /**
+     * Відображає BottomSheetDialogFragment для вибору дій над записом.
+     */
+    private fun showProfitabilityActionsDialog(expense: Expense) {
+        // ✅ ВИПРАВЛЕНО: Приводимо Int до Long, щоб відповідати сигнатурі newInstance
+        ProfitabilityActionsDialogFragment.newInstance(
+            entryId = expense.id.toLong(), // ⬅️ ПРИВЕДЕННЯ ТИПУ ДО LONG
+            entryType = Constants.TYPE_EXPENSE
+        ).show(parentFragmentManager, ProfitabilityActionsDialogFragment.TAG)
+    }
     /**
      * Відображає діалог редагування/видалення при тривалому натисканні на елемент.
      */
