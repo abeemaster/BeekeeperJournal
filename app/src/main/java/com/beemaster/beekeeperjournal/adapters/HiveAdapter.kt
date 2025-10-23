@@ -7,7 +7,6 @@ import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -40,7 +39,7 @@ class HiveAdapter(
         private val hivePrimaryColorView: View = itemView.findViewById(R.id.item_hive_primary_color)
         private val hiveNameTextView: TextView = itemView.findViewById(R.id.item_hive_name)
         private val secondaryColorView: View = itemView.findViewById(R.id.secondaryColorView)
-        private val optionsButton: ImageButton = itemView.findViewById(R.id.optionsButton)
+
 
 
         private var currentHive: HiveEntity? = null
@@ -58,8 +57,6 @@ class HiveAdapter(
                 }
                 true
             }
-
-            optionsButton.visibility = View.GONE
         }
 
         /**

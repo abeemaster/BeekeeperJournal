@@ -27,8 +27,8 @@
     <!-- MainActionButton
         Стиль для кнопок головної дії, успадковує NavButton, але змінює розмір, скидає вагу та використовує інший колір для виділення. -->
     <style name="MainActionButton" parent="NavButton">
-        <item name="android:layout_height">62dp</item>
-        <item name="android:layout_width">320dp</item>
+        <item name="android:layout_height">65dp</item>
+
         <item name="android:layout_weight">0</item>
         <item name="android:maxWidth">320dp</item>
         <item name="backgroundTint">@color/color_primary_dark</item>
@@ -114,6 +114,7 @@
         <item name="android:background">@drawable/notes_area_background</item>
         <item name="android:elevation">2dp</item>
     </style>
+
     <!-- Нові стилі -->
     <style name="Widget.App.Button.NewEntry" parent="Widget.MaterialComponents.Button">
         <item name="android:backgroundTint">@color/button_add_note</item>
@@ -150,5 +151,32 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
+    <!-- Стиль для картки (кнопки) Вулика на головному екрані -->
+    <style name="Widget.App.CardView.ListItem" parent="Widget.Material3.CardView.Elevated">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardBackgroundColor">@color/color_surface</item>
+        <item name="strokeColor">@color/border_note</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+    </style>
+
+    <!-- Стиль для Багаторядкового Введення (поле введення інформації) -->
+    <style name="Widget.App.EditText.NoteContent" parent="Widget.AppCompat.EditText">
+        <item name="android:gravity">top</item>
+        <item name="android:padding">@dimen/content_padding</item>
+        <item name="android:background">@drawable/notes_area_background</item>
+        <item name="android:textColor">@color/text_note</item>
+        <item name="android:textColorHint">@color/text_date_gray</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:inputType">textMultiLine|textCapSentences</item>
+        <item name="android:imeOptions">actionDone</item>
+        <item name="android:minLines">10</item>
+    </style>
 </resources>
 

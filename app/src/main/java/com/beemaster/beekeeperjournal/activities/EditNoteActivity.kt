@@ -182,7 +182,7 @@ class EditNoteActivity : AppCompatActivity() {
     private fun bindViews() {
         editNoteScreenTitle = findViewById(R.id.editNoteScreenTitle)
         editNoteContentInput = findViewById(R.id.editNoteContentInput)
-        microphoneBtnEditNote = findViewById(R.id.microphoneBtnEditNote)
+        microphoneBtnEditNote = findViewById(R.id.microphoneBtn)
         saveEditedNoteButton = findViewById(R.id.saveEditedNoteButton)
     }
 

@@ -95,10 +95,9 @@
 
             <ImageButton
                 android:id="@+id/microphoneBtn"
-                style="@style/Widget.App.ImageButton.Microphone" android:contentDescription="@string/voice_input_description"
-                android:src="@drawable/ic_mic"
-
-                />
+                style="@style/Widget.App.ImageButton.Microphone"
+                android:contentDescription="@string/voice_input_description"
+                android:src="@drawable/ic_mic"/>
 
         </LinearLayout>
 

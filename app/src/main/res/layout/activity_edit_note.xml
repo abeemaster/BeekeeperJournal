@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,31 +12,18 @@
 
     <TextView
         android:id="@+id/editNoteScreenTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_dark_green"
-        android:layout_marginBottom="@dimen/spacing_large"/>
-    <!-- ЗМІНЕНО: Текст заголовка буде встановлено програмно -->
+        style="@style/Widget.App.TextView.InfoTitle"
+        android:layout_width="wrap_content" />
 
     <EditText
         android:id="@+id/editNoteContentInput"
+        style="@style/Widget.App.EditText.NoteContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:autofillHints=""
         android:hint="@string/edit_your_entry"
-        android:gravity="top"
-        android:padding="@dimen/content_padding"
-        android:background="@drawable/notes_area_background"
-        android:textColor="@color/text_note"
-        android:textColorHint="@color/text_date_gray"
-        android:layout_marginBottom="@dimen/spacing_medium"
-        android:elevation="2dp"
-        android:inputType="textMultiLine|textCapSentences"
-        android:imeOptions="actionDone"
-        android:minLines="10"/>
+        android:layout_marginBottom="@dimen/spacing_medium"/>
 
     <!-- Контейнер для кнопок "Зберегти" та "Мікрофон" -->
     <LinearLayout
@@ -49,31 +36,19 @@
         <!-- Кнопка "Зберегти запис" -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/saveEditedNoteButton"
+            style="@style/Widget.App.Button.NewEntry"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/spacing_small"
             android:layout_weight="1"
-            android:text="@string/save"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/button_add_note"
-            android:paddingVertical="8dp"
-            app:cornerRadius="12dp"
-            android:stateListAnimator="@null"
-            android:elevation="4dp"
-            android:layout_marginEnd="@dimen/spacing_small" />
+            android:text="@string/save" />
 
         <!-- Кнопка мікрофона на екрані редагування -->
         <ImageButton
-            android:id="@+id/microphoneBtnEditNote"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_mic"
-            android:background="@drawable/microphone_button_background"
-            android:contentDescription="@string/voice_input"
-            android:elevation="@dimen/button_elevation"
-            android:stateListAnimator="@null"
-            android:scaleType="centerInside"/>
+            android:id="@+id/microphoneBtn"
+            style="@style/Widget.App.ImageButton.Microphone"
+            android:contentDescription="@string/voice_input_description"
+            android:src="@drawable/ic_mic"/>
     </LinearLayout>
 
 </LinearLayout>
