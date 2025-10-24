@@ -9,6 +9,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
 import com.beemaster.beekeeperjournal.R
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 
 /**
@@ -49,7 +50,7 @@ class EditHiveNumberDialogFragment : DialogFragment() {
         editText.setText(currentNumber)
 
         // ВИКОРИСТОВУЄМО ТЕМУ ДЛЯ КРАСИВИХ КНОПОК
-        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_BeekeeperJournal_AlertDialog)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             // .setTitle("Редагувати номер вулика") // <-- ВИДАЛЕНО, щоб уникнути подвійного заголовка
             .setView(view)
 

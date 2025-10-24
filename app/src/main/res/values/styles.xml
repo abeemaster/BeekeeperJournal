@@ -46,6 +46,7 @@
         <item name="android:focusable">true</item>
         <item name="android:foreground">?attr/selectableItemBackground</item>
         <item name="cardBackgroundColor">@color/green_50</item>
+
     </style>
 
     <!-- Widget.BeekeeperJournal.DialogCompoundOption

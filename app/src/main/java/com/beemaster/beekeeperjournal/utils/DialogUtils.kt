@@ -6,7 +6,6 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -255,34 +254,7 @@ object DialogUtils {
         }
     }
 
-    /**
-     * Відображає діалог для додавання нового вулика.
-     *
-     * @param context Контекст.
-     * @param onHiveAdded Лямбда, що викликається з новим номером вулика після збереження.
-     */
-    fun showAddHiveDialog(
-        context: Context,
-        onHiveAdded: (hiveNumber: String) -> Unit
-    ) {
-        val dialogView = View.inflate(context, R.layout.dialog_add_hive, null)
-        val numberEditText: EditText = dialogView.findViewById(R.id.numberEditText)
 
-        AlertDialog.Builder(context)
-            .setTitle(context.getString(R.string.add_hive_title))
-            .setView(dialogView)
-            .setPositiveButton(context.getString(R.string.save)) { _, _ ->
-                val hiveNumber = numberEditText.text.toString().trim()
-
-                if (hiveNumber.isNotBlank()) {
-                    onHiveAdded(hiveNumber)
-                } else {
-                    Toast.makeText(context, context.getString(R.string.hive_number_required), Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton(context.getString(R.string.cancel), null)
-            .show()
-    }
 
     /**
      * Відображає діалог з опціями синхронізації (створити/відновити резервну копію).

@@ -30,12 +30,14 @@
         <item name="buttonBarNegativeButtonStyle">@style/Widget.BeekeeperJournal.DialogButton</item>
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorOnSurface">@color/black</item>
-
         <item name="materialAlertDialogTitleTextStyle">@style/AlertDialogTitleTextStyle</item>
-
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.Medium</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.CustomDialogCorners</item>
     </style>
-
+    <!-- Стиль для діалогових вікон.AlertDialog. Визначає радіус кутів діалогового вікна -->
+    <style name="ShapeAppearance.App.CustomDialogCorners" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">1dp</item>
+    </style>
     <!-- Стиль для заголовку теми AppTheme.AlertDialog. -->
     <style name="AlertDialogTitleTextStyle" parent="MaterialAlertDialog.Material3.Title.Text">
         <item name="android:textColor">@color/black</item>
