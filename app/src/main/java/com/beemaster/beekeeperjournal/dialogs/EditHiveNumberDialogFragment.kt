@@ -62,15 +62,19 @@ class EditHiveNumberDialogFragment : DialogFragment() {
             .create()
 
         dialog.setCanceledOnTouchOutside(false)
-        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
-        // ЦЕЙ БЛОК ДЛЯ КЕРУВАННЯ ШИРИНОЮ
-        dialog.window?.let {
+        dialog.window?.let { window ->
+            // Примусове встановлення заокругленого фону для вікна
+            window.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
+
             // Встановлюємо ширину 87% від ширини екрана
             val width = (resources.displayMetrics.widthPixels * 0.87).toInt()
             // Встановлюємо висоту по вмісту
             val height = WindowManager.LayoutParams.WRAP_CONTENT
             // Застосовуємо нові розміри до вікна діалогу
-            it.setLayout(width, height)
+            window.setLayout(width, height)
+
+            // ✅ ДОДАНО: Запобігає панорамуванню, змушуючи вікно змінювати розмір.
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         }
         return dialog
     }

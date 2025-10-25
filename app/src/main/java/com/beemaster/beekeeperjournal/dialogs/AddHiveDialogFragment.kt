@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.beemaster.beekeeperjournal.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.beemaster.beekeeperjournal.dialogs.IOnHiveAddedListener // ✅ ІМПОРТ ПРАЦЮВАТИМЕ
+
 
 /**
  * Діалогове вікно для додавання нового вулика.
@@ -29,6 +29,8 @@ class AddHiveDialogFragment : DialogFragment() {
             throw ClassCastException("$context must implement IOnHiveAddedListener")
         }
     }
+
+
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         // 1. Inflate макет
@@ -58,18 +60,22 @@ class AddHiveDialogFragment : DialogFragment() {
             .setNegativeButton(requireContext().getString(R.string.cancel), null)
             .create()
 
-        // 5. Примусове встановлення заокругленого фону для вікна
-        // Це обходить конфлікти теми Material Design.
-        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
-        // ЦЕЙ БЛОК ДЛЯ КЕРУВАННЯ ШИРИНОЮ
-        dialog.window?.let {
+        // 5. Налаштування вікна (Фон, Ширина та ✅ Клавіатура)
+        dialog.window?.let { window ->
+            // Примусове встановлення заокругленого фону для вікна
+            window.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
+
             // Встановлюємо ширину 87% від ширини екрана
             val width = (resources.displayMetrics.widthPixels * 0.87).toInt()
             // Встановлюємо висоту по вмісту
             val height = WindowManager.LayoutParams.WRAP_CONTENT
             // Застосовуємо нові розміри до вікна діалогу
-            it.setLayout(width, height)
+            window.setLayout(width, height)
+
+            // ✅ ДОДАНО: Запобігає панорамуванню, змушуючи вікно змінювати розмір.
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         }
+
         return dialog
     }
 

@@ -24,6 +24,7 @@ import com.beemaster.beekeeperjournal.data.HiveCreator
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.dialogs.AddHiveDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.HiveOptionsDialogFragment
+import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.IOnHiveAddedListener
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.DialogUtils
@@ -37,7 +38,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(), IOnHiveAddedListener {
+class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsListener, IOnHiveAddedListener {
     @Inject
     lateinit var hiveCreator: HiveCreator
     private lateinit var drawerLayout: DrawerLayout
@@ -124,15 +125,7 @@ class MainActivity : AppCompatActivity(), IOnHiveAddedListener {
                     addHive()
                 }
                 R.id.nav_sync -> {
-                    DialogUtils.showSyncOptionsDialog(
-                        context = this,
-                        onExport = {
-                            getExportFile.launch("beekeeper_backup.json")
-                        },
-                        onImport = {
-                            getImportFile.launch(arrayOf("application/json"))
-                        }
-                    )
+                    SyncOptionsDialogFragment().show(supportFragmentManager, "SyncOptions")
                 }
                 R.id.nav_profitability -> {
                     openProfitabilityActivity()
@@ -252,6 +245,16 @@ class MainActivity : AppCompatActivity(), IOnHiveAddedListener {
         }
     }
 
+    // ✅ Реалізуємо методи інтерфейсу
+    override fun onExportSelected() {
+        // Тут виконуємо логіку onExport, яка була в DialogUtils
+        getExportFile.launch("beekeeper_backup.json")
+    }
+
+    override fun onImportSelected() {
+        // Тут виконуємо логіку onImport, яка була в DialogUtils
+        getImportFile.launch(arrayOf("application/json"))
+    }
     /**
      * Відкриває Activity для налаштувань.
      */

@@ -254,32 +254,4 @@ object DialogUtils {
         }
     }
 
-
-
-    /**
-     * Відображає діалог з опціями синхронізації (створити/відновити резервну копію).
-     *
-     * @param context Контекст.
-     * @param onExport Лямбда, що викликається при виборі "Створити резервну копію".
-     * @param onImport Лямбда, що викликається при виборі "Відновити дані".
-     */
-    fun showSyncOptionsDialog(
-        context: Context,
-        onExport: () -> Unit,
-        onImport: () -> Unit
-    ) {
-        val options = arrayOf(
-            context.getString(R.string.create_backup),
-            context.getString(R.string.restore_backup)
-        )
-        AlertDialog.Builder(context)
-            .setTitle(context.getString(R.string.choose_an_action))
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> onExport()
-                    1 -> onImport()
-                }
-            }
-            .show()
-    }
 }

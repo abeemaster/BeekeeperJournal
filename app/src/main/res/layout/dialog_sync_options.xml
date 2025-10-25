@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/choose_an_action"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:paddingBottom="16dp"
+        android:gravity="center_horizontal"/>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_create_backup"
+        style="@style/Widget.BeekeeperJournal.DialogOptionCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/text_create_backup"
+            style="@style/Widget.BeekeeperJournal.DialogCompoundOption"
+            android:text="@string/create_backup"
+            android:contentDescription="@string/create_backup"
+            app:drawableStartCompat="@drawable/ic_export_backup"
+            tools:text="Створити резервну копію" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_restore_backup"
+        style="@style/Widget.BeekeeperJournal.DialogOptionCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/text_restore_backup"
+            style="@style/Widget.BeekeeperJournal.DialogCompoundOption"
+            android:text="@string/restore_backup"
+            android:contentDescription="@string/restore_backup"
+            app:drawableStartCompat="@drawable/ic_import_backup"
+            tools:text="Відновити з резервної копії" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>
