@@ -4,6 +4,7 @@ package com.beemaster.beekeeperjournal.dialogs
 
 import android.app.Dialog
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
@@ -50,7 +51,7 @@ class EditHiveNumberDialogFragment : DialogFragment() {
         editText.setText(currentNumber)
 
         // ВИКОРИСТОВУЄМО ТЕМУ ДЛЯ КРАСИВИХ КНОПОК
-        val dialog = MaterialAlertDialogBuilder(requireContext())
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_BeekeeperJournal_AlertDialog)
             // .setTitle("Редагувати номер вулика") // <-- ВИДАЛЕНО, щоб уникнути подвійного заголовка
             .setView(view)
 
@@ -61,7 +62,16 @@ class EditHiveNumberDialogFragment : DialogFragment() {
             .create()
 
         dialog.setCanceledOnTouchOutside(false)
-
+        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
+        // ЦЕЙ БЛОК ДЛЯ КЕРУВАННЯ ШИРИНОЮ
+        dialog.window?.let {
+            // Встановлюємо ширину 87% від ширини екрана
+            val width = (resources.displayMetrics.widthPixels * 0.87).toInt()
+            // Встановлюємо висоту по вмісту
+            val height = WindowManager.LayoutParams.WRAP_CONTENT
+            // Застосовуємо нові розміри до вікна діалогу
+            it.setLayout(width, height)
+        }
         return dialog
     }
 

@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
@@ -35,7 +36,7 @@ class AddHiveDialogFragment : DialogFragment() {
         val numberEditText: EditText = dialogView.findViewById(R.id.numberEditText)
 
         // 2. Створюємо MaterialAlertDialogBuilder
-        return MaterialAlertDialogBuilder(requireContext())
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_BeekeeperJournal_AlertDialog)
             .setView(dialogView)
 
             // 3. Обробка кнопки "Зберегти"
@@ -43,7 +44,7 @@ class AddHiveDialogFragment : DialogFragment() {
                 val hiveNumber = numberEditText.text.toString().trim()
 
                 if (hiveNumber.isNotBlank()) {
-                    listener.onHiveAdded(hiveNumber) // ✅ Викликаємо метод інтерфейсу
+                    listener.onHiveAdded(hiveNumber) // Викликаємо метод інтерфейсу
                 } else {
                     Toast.makeText(
                         context,
@@ -56,6 +57,20 @@ class AddHiveDialogFragment : DialogFragment() {
             // 4. Обробка кнопки "Скасувати"
             .setNegativeButton(requireContext().getString(R.string.cancel), null)
             .create()
+
+        // 5. Примусове встановлення заокругленого фону для вікна
+        // Це обходить конфлікти теми Material Design.
+        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
+        // ЦЕЙ БЛОК ДЛЯ КЕРУВАННЯ ШИРИНОЮ
+        dialog.window?.let {
+            // Встановлюємо ширину 87% від ширини екрана
+            val width = (resources.displayMetrics.widthPixels * 0.87).toInt()
+            // Встановлюємо висоту по вмісту
+            val height = WindowManager.LayoutParams.WRAP_CONTENT
+            // Застосовуємо нові розміри до вікна діалогу
+            it.setLayout(width, height)
+        }
+        return dialog
     }
 
     companion object {
