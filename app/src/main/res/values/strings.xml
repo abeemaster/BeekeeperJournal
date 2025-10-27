@@ -47,6 +47,7 @@
     <string name="delete_hive_message">Ви впевнені, що хочете видалити %s? Цю дію неможливо скасувати.</string>
     <string name="new_hive_number_hint">Введіть новий номер</string>
     <string name="hive_number_hint">Введіть номер</string>
+    <string name="enter_search_query">Введіть пошуковий запит</string>
     <string name="save">Зберегти</string>
     <string name="delete">Видалити</string>
     <string name="edit">Редагувати</string>

@@ -329,7 +329,7 @@ class EditNoteActivity : AppCompatActivity() {
             microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.status_red)
             isGoogleListening = true
         } else {
-            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.color_primary)
+            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(this, R.color.button_microphone)
             isGoogleListening = false
         }
     }

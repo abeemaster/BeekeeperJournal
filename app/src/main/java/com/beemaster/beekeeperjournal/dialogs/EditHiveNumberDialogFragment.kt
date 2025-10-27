@@ -67,6 +67,7 @@ class EditHiveNumberDialogFragment : DialogFragment() {
             window.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
 
             // Встановлюємо ширину 87% від ширини екрана
+
             val width = (resources.displayMetrics.widthPixels * 0.87).toInt()
             // Встановлюємо висоту по вмісту
             val height = WindowManager.LayoutParams.WRAP_CONTENT

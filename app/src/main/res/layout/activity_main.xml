@@ -58,7 +58,6 @@
                 android:id="@+id/nav_general_notes"
                 style="@style/MainActionButton"
                 android:text="@string/general_notes_button_text"
-
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

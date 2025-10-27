@@ -123,7 +123,7 @@ class VoskRecognitionHelper(
         speechService = null
 
         // Візуалізація неактивного статусу
-        microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.color_primary)
+        microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.button_microphone)
     }
 
     /**

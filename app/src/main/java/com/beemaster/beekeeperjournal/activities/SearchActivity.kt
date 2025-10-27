@@ -97,7 +97,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      */
     private fun bindViews() {
         searchQueryInput = findViewById(R.id.searchQueryInput)
-        microphoneBtnSearch = findViewById(R.id.microphoneBtnSearch)
+        microphoneBtnSearch = findViewById(R.id.microphoneBtn)
         searchExecuteButton = findViewById(R.id.searchExecuteButton)
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView)
     }
@@ -210,7 +210,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      * Налаштовує компоненти для голосового розпізнавання Vosk.
      */
     private fun setupVosk() {
-        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.color_primary)
+        // microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.color_primary)
 
         // ✅ ВИПРАВЛЕНО: Перевіряємо через VoskModelManager
         if (voskModelManager.isModelReady) {
@@ -278,7 +278,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         speechService?.cancel()
         speechService?.shutdown()
         speechService = null
-        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.color_primary)
+        microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.button_microphone)
     }
 
     // --------------------------------------------------------------------------
