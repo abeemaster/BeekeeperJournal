@@ -10,8 +10,6 @@
         android:background="@android:color/white"
         tools:context=".fragments.IncomesFragment">
 
-
-
         <TextView
             android:id="@+id/totalIncomeTextView"
             android:layout_width="wrap_content"
@@ -38,7 +36,8 @@
             android:id="@+id/fabAddIncome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="42dp"
             android:contentDescription="@string/add_income_title"
             android:src="@drawable/ic_add_24dp"
             app:layout_constraintBottom_toBottomOf="parent"

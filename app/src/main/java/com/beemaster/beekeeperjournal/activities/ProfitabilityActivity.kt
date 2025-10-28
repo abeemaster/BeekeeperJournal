@@ -9,10 +9,9 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
-import com.beemaster.beekeeperjournal.R
 import androidx.lifecycle.lifecycleScope
+import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SectionsPagerAdapter
 import com.beemaster.beekeeperjournal.databinding.ActivityProfitabilityBinding
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
@@ -41,10 +40,10 @@ class ProfitabilityActivity : AppCompatActivity() {
         binding = ActivityProfitabilityBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val toolbar: Toolbar = binding.toolbar
-        setSupportActionBar(toolbar)
+        //val toolbar: Toolbar = binding.toolbar
+        //setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        toolbar.setNavigationOnClickListener { onSupportNavigateUp() }
+        //toolbar.setNavigationOnClickListener { onSupportNavigateUp() }
 
         val sectionsPagerAdapter = SectionsPagerAdapter(this)
         binding.viewPager.adapter = sectionsPagerAdapter

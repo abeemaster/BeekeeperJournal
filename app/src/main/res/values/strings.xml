@@ -10,6 +10,7 @@
     <string name="hive_name">Вулик_Імя</string>
     <string name="notes_button_text">Приміт</string>
     <string name="hive_notes_title">Примітки %s</string>
+    <string name="beekeeping_profitability">Рентабельність пасіки</string>
     <!-- Рядки для Vosk -->
     <string name="vosk_model_loading">Модель Vosk ще не завантажена. Зачекайте.</string>
     <string name="vosk_listening">Слухаю…</string>
@@ -52,6 +53,7 @@
     <string name="delete">Видалити</string>
     <string name="edit">Редагувати</string>
     <string name="cancel">Скасувати</string>
+    <string name="note_text">Текст нотатки…</string>
     <string name="add_hive_title">Додати новий вулик</string>
     <string name="menu_profitability">Рентабельність</string>
     <string name="add_expense_title">Кнопка для додавання нової витрати</string>
@@ -61,6 +63,8 @@
     <string name="income_unit_hint">Одиниця виміру (наприклад, \"кг\")</string>
     <string name="income_price_per_unit_hint">Ціна за одиницю (наприклад, 250)</string>
     <string name="date_hint">Дата (наприклад, 25.10.2025)</string>
+    <string name="date">25.10.2025</string>
+    <string name="information">Вулик №1 (Інформація)</string>
     <string name="expense_description_hint">Опис (наприклад, \"Цукор для підгодівлі\")</string>
     <string name="expense_total_price_hint">Загальна сума витрат (наприклад, 500)</string>
     <string name="expense_quantity_hint">Кількість</string>
@@ -106,7 +110,7 @@
     <string name="tab_title_income">Прибутки</string>
     <string name="error_invalid_tab_position">Недійсна позиція</string>
 
-    <string name="annual_profitability_format">Річна рентабельність: %s</string>
+    <string name="annual_profitability_format">За 2025 рік: %s</string>
 
     <string name="error_note_not_found">Помилка записів не знайдено</string>
     <string name="dialog_choose_action">Оберіть дію</string>
@@ -123,9 +127,9 @@
     <string name="settings_saved_message">Налаштування збережено</string>
     <string name="no_notes_yet">Нотаток поки що немає.\nНатисніть /Новий запис/, щоб додати першу!</string>
     <string name="edit_your_entry">Редагуйте ваш запис тут…</string>
-    <string name="expense_format_with_currency">-%1$.2f грн</string>
+    <string name="expense_format_with_currency">-%1$.1f </string>
     <string name="quantity_format">%.2f</string>
-    <string name="income_amount_format">+%.2f грн</string>
+    <string name="income_amount_format">+%.1f </string>
     <string name="income_quantity_details_format">%1$.2f %2$s по %3$.2f грн/%4$s</string>
     <string name="hive_notes_format">Вулик %1$s | Тип: %2$s</string>
     <string name="error_fill_all_fields">Будь ласка, заповніть усі обов\'язкові поля та вкажіть коректні значення.</string>

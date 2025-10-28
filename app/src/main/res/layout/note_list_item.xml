@@ -14,8 +14,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:textSize="12sp"
-            android:textColor="@color/color_primary_dark"
-            android:text="27-09-2025"
+            android:textColor="@color/color_primary_darker"
+            android:text="@string/date"
             />
 
         <TextView
@@ -24,15 +24,15 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="@android:color/black"
-            android:text="Текст нотатки..."
+            android:text="@string/note_text"
             />
         <TextView
             android:id="@+id/noteTypeAndHive"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="@color/color_primary_dark"
+            android:textColor="@color/color_primary_darker"
             android:textStyle="italic"
             android:layout_marginTop="@dimen/spacing_small"
-            android:text="Тип: Вулик №1 (Інформація)"/>
+            android:text="@string/information"/>
     </LinearLayout>
