@@ -18,7 +18,8 @@
     <string name="audio_permission_denied">Дозвіл на запис аудіо відхилено. Голосовий ввід недоступний.</string>
     <string name="vosk_error">Помилка голосового вводу: %1$s</string>
     <string name="vosk_timeout">Голосовий ввід вимкнено через бездіяльність.</string>
-    <string name="search_not_found">Записів за запитом «%1$s» не знайдено.</string>
+    <string name="search_not_found">Нічого не знайдено для: %1$s</string>
+    <string name="search_no_results">Немає результатів пошуку</string>
     <string name="vosk_model_not_loaded">Модель Vosk ще не завантажена. Зачекайте або перезапустіть додаток.</string>
     <string name="voice_input_stopped">Голосовий ввід зупинено.</string>
     <string name="voice_input">Голосовий ввід.</string>
@@ -27,6 +28,9 @@
     <string name="error_recognition_start">Помилка запуску розпізнавання: %1$s</string>
     <string name="error_voice_input">Помилка голосового вводу: %1$s</string>
     <string name="vosk_model_loaded">Vosk модель завантажена</string>
+    <string name="voice_input_system">Система голосового вводу</string>
+    <string name="engine_google_name">Голосова модель Google</string>
+    <string name="engine_vosk_name">Голосова модель Vosk</string>
     <!-- Рядки для activity_main.xml -->
     <string name="general_notes_button_text">Загальні записи</string>
     <string name="new_record_button_text">Новий запис</string>
@@ -42,14 +46,21 @@
     <string name="menu_add_hive">Додати вулик</string>
     <string name="menu_synchronization">Синхронізація</string>
     <string name="menu_settings">Налаштування</string>
+    <string name="go_to_settings">До налаштувань</string>
+    <string name="settings_parameter">Параметр налаштування</string>
     <string name="menu_exit">Вихід</string>
+    <string name="title_settings">Налаштування</string>
+
+
+    <string name="setting_title_voice_input">Голосовий ввід</string>
+    <string name="setting_title_data_export">Експорт та резервна копія</string>
 
     <string name="delete_hive_title">Видалити вулик</string>
     <string name="delete_hive_message">Ви впевнені, що хочете видалити %s? Цю дію неможливо скасувати.</string>
     <string name="new_hive_number_hint">Введіть новий номер</string>
     <string name="hive_number_hint">Введіть номер</string>
     <string name="enter_search_query">Введіть пошуковий запит</string>
-    <string name="save">Зберегти</string>
+    <string name="button_save">Зберегти</string>
     <string name="delete">Видалити</string>
     <string name="edit">Редагувати</string>
     <string name="cancel">Скасувати</string>
@@ -123,7 +134,7 @@
     <string name="hive_display_number">Вулик №%s</string>
     <string name="error_hive_not_found_placeholder">Вулик (Не знайдено)</string>
     <string name="error_hive_loading">Помилка завантаження даних вулика.</string>
-    <string name="title_settings">Налаштування</string>
+
     <string name="settings_saved_message">Налаштування збережено</string>
     <string name="no_notes_yet">Нотаток поки що немає.\nНатисніть /Новий запис/, щоб додати першу!</string>
     <string name="edit_your_entry">Редагуйте ваш запис тут…</string>
@@ -144,6 +155,19 @@
     <string name="error_entry_not_found">Помилка: Запис не знайдено для обраної дії.</string>
     <string name="expense_deleted">Витрату успішно видалено.</string>
     <string name="income_deleted">Прибуток успішно видалено.</string>
+
+
+    <string name="pref_header_general">Загальні</string>
+    <string name="pref_header_data_tools">Дані та інструменти</string>
+    <string name="pref_header_about">Про програму</string>
+    <string name="pref_title_sync_data">Синхронізувати дані</string>
+    <string name="pref_summary_sync_data">Автоматично синхронізувати дані з хмарним сховищем</string>
+    <string name="pref_title_display_unit">Одиниця виміру</string>
+    <string name="pref_title_backup">Створити резервну копію</string>
+    <string name="pref_summary_backup">Експортувати базу даних у файл</string>
+    <string name="pref_title_apiary_locations">Редагувати місця пасік</string>
+    <string name="pref_title_version">Версія програми</string>
+
 
 
 </resources>

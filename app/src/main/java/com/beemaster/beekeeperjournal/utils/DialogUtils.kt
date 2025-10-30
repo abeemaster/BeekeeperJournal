@@ -106,7 +106,7 @@ object DialogUtils {
             unitEditText.setText(incomeToEdit.unitName)
             pricePerUnitEditText.setText(incomeToEdit.price.toString())
             calendar.time = Date(incomeToEdit.date)
-            saveButton.text = context.getString(R.string.save)
+            saveButton.text = context.getString(R.string.button_save)
         } else {
             dateEditText.setText(dateFormat.format(calendar.time))
         }
@@ -196,7 +196,7 @@ object DialogUtils {
             quantityUnitsEditText.setText(expenseToEdit.nameQuantity)
             amountEditText.setText(expenseToEdit.amount.toString())
             calendar.time = Date(expenseToEdit.date)
-            saveButton.text = context.getString(R.string.save)
+            saveButton.text = context.getString(R.string.button_save)
         } else {
             dateEditText.setText(dateFormat.format(calendar.time))
         }

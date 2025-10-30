@@ -42,7 +42,7 @@ class AddHiveDialogFragment : DialogFragment() {
             .setView(dialogView)
 
             // 3. Обробка кнопки "Зберегти"
-            .setPositiveButton(requireContext().getString(R.string.save)) { _, _ ->
+            .setPositiveButton(requireContext().getString(R.string.button_save)) { _, _ ->
                 val hiveNumber = numberEditText.text.toString().trim()
 
                 if (hiveNumber.isNotBlank()) {

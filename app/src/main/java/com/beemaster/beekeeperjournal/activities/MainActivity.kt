@@ -6,14 +6,11 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.ImageButton
+import android.widget.ImageButton // Залишаємо, якщо використовується не для drawerToggleButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,23 +24,19 @@ import com.beemaster.beekeeperjournal.dialogs.HiveOptionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.IOnHiveAddedListener
 import com.beemaster.beekeeperjournal.utils.BackupManager
-import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveAddResult
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsListener, IOnHiveAddedListener {
+class MainActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListener, IOnHiveAddedListener {
+
     @Inject
     lateinit var hiveCreator: HiveCreator
-    private lateinit var drawerLayout: DrawerLayout
-    private lateinit var navigationView: NavigationView
-    private lateinit var drawerToggleButton: ImageButton
     private lateinit var generalNotesButton: MaterialButton
     private lateinit var hiveRecyclerView: RecyclerView
     private lateinit var hiveAdapter: HiveAdapter
@@ -66,26 +59,28 @@ class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsL
         }
     }
 
+    // -----------------------------------------------------------------------------------
+    // 1. ІМПЛЕМЕНТАЦІЯ АБСТРАКТНОГО МЕТОДУ BASEACTIVITY
+    // -----------------------------------------------------------------------------------
+    override fun getLayoutResId(): Int = R.layout.activity_main
+
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        // ВИДАЛЕНО: setContentView(R.layout.activity_main) - викликається у BaseActivity.onCreate
 
         initViews()
         setupListeners()
         setupRecyclerView()
         observeHives()
-        collectHiveEvents() // Запуск спостереження за подіями ViewModel
+        collectHiveEvents()
 
-        // Перевірка та створення "Вулика №1" за замовчуванням, якщо він відсутній.
         lifecycleScope.launch {
             val existingHive = viewModel.getHiveByNumber("1")
             if (existingHive == null) {
                 val defaultHiveNumber = "1"
-
-                val newHive = hiveCreator.createDefaultHiveEntity(
-                    defaultHiveNumber
-                )
+                val newHive = hiveCreator.createDefaultHiveEntity(defaultHiveNumber)
                 viewModel.addHive(newHive)
             }
         }
@@ -97,11 +92,9 @@ class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsL
      * Ініціалізує всі елементи інтерфейсу (View).
      */
     private fun initViews() {
-        drawerLayout = findViewById(R.id.drawer_layout)
-        navigationView = findViewById(R.id.nav_view)
-        drawerToggleButton = findViewById(R.id.drawer_toggle_button)
+        // ВИДАЛЕНО: Ініціалізація drawerLayout, navigationView, drawerToggleButton
         generalNotesButton = findViewById(R.id.nav_general_notes)
-        hiveRecyclerView = findViewById(R.id.hiveListRecyclerView)
+        hiveRecyclerView = findViewById(R.id.hive_list_recycler_view)
         hiveCountTextView = findViewById(R.id.hiveCountTextView)
     }
 
@@ -109,36 +102,8 @@ class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsL
      * Налаштовує всі слухачі подій для елементів інтерфейсу.
      */
     private fun setupListeners() {
-        drawerToggleButton.setOnClickListener {
-            drawerLayout.openDrawer(GravityCompat.START)
-        }
-
-        navigationView.setNavigationItemSelectedListener { menuItem ->
-            drawerLayout.closeDrawer(GravityCompat.START)
-            when (menuItem.itemId) {
-                R.id.nav_home -> {
-                }
-                R.id.nav_search -> {
-                    openSearchActivity()
-                }
-                R.id.nav_add_hive -> {
-                    addHive()
-                }
-                R.id.nav_sync -> {
-                    SyncOptionsDialogFragment().show(supportFragmentManager, "SyncOptions")
-                }
-                R.id.nav_profitability -> {
-                    openProfitabilityActivity()
-                }
-                R.id.nav_settings -> {
-                    openSettingsActivity()
-                }
-                R.id.nav_exit_button -> {
-                    finishAffinity()
-                }
-            }
-            true
-        }
+        // ВИДАЛЕНО: drawerToggleButton.setOnClickListener
+        // ВИДАЛЕНО: navigationView.setNavigationItemSelectedListener
 
         generalNotesButton.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
@@ -192,15 +157,9 @@ class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsL
     private fun collectHiveEvents() {
         lifecycleScope.launch {
             viewModel.hiveEvents.collect { result ->
-                // Визначаємо ідентифікатор рядка, що відповідає результату
                 val messageResId = when (result) {
-                    // Логіка додавання
                     HiveAddResult.SUCCESS -> R.string.hive_added_success
-
-                    // ОБРОБКА КОНФЛІКТУ НОМЕРА ПРИ ДОДАВАННІ/РЕДАГУВАННІ
                     HiveAddResult.EXISTS -> R.string.hive_number_exists
-
-                    // Логіка ліміту
                     HiveAddResult.LIMIT_REACHED -> R.string.max_hives_reached
                 }
                 Toast.makeText(this@MainActivity, messageResId, Toast.LENGTH_LONG).show()
@@ -209,26 +168,11 @@ class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsL
     }
 
     /**
-     * Відкриває Activity для перегляду рентабельності.
-     */
-    private fun openProfitabilityActivity() {
-        val intent = Intent(this, ProfitabilityActivity::class.java)
-        startActivityWithSlideAnimation(intent)
-    }
-
-    /**
-     * Відкриває Activity для пошуку.
-     */
-    private fun openSearchActivity() {
-        val intent = Intent(this, SearchActivity::class.java)
-        startActivityWithSlideAnimation(intent)
-    }
-
-    /**
      * Запускає діалог додавання нового вулика.
-     * Тепер просто викликає DialogFragment.
+     * Цей метод викликався з нав. панелі, тепер він викликається через BaseActivity
+     * та обробляється тут.
      */
-    private fun addHive() {
+    fun addHive() {
         AddHiveDialogFragment.newInstance()
             .show(supportFragmentManager, AddHiveDialogFragment.TAG)
     }
@@ -239,28 +183,18 @@ class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsL
      */
     override fun onHiveAdded(hiveNumber: String) {
         lifecycleScope.launch {
-            // Логіка, яку ви раніше мали у лямбді:
             val newHive = hiveCreator.createDefaultHiveEntity(hiveNumber)
             viewModel.addNewHive(newHive)
         }
     }
 
-    // ✅ Реалізуємо методи інтерфейсу
+    // Реалізуємо методи інтерфейсу (викликаються з BaseActivity через діалог SyncOptionsDialogFragment)
     override fun onExportSelected() {
-        // Тут виконуємо логіку onExport, яка була в DialogUtils
         getExportFile.launch("beekeeper_backup.json")
     }
 
     override fun onImportSelected() {
-        // Тут виконуємо логіку onImport, яка була в DialogUtils
         getImportFile.launch(arrayOf("application/json"))
-    }
-    /**
-     * Відкриває Activity для налаштувань.
-     */
-    private fun openSettingsActivity() {
-        val intent = Intent(this, SettingsActivity::class.java)
-        startActivityWithSlideAnimation(intent)
     }
 
     // ---------------------------------------------------------------------
@@ -272,14 +206,12 @@ class MainActivity : AppCompatActivity(), SyncOptionsDialogFragment.SyncOptionsL
      * та обробляє обрану дію.
      */
     private fun showHiveOptionsDialog(hive: HiveEntity) {
-        // Передаємо дані для того, щоб Fragment міг працювати з конкретним вуликом.
         val dialog = HiveOptionsDialogFragment.newInstance(
             hive.id.toLong(),
             hive.hiveNumber,
             hive.color,
             hive.secondaryColor
         )
-        // Викликаємо діалог через FragmentManager
         dialog.show(supportFragmentManager, HiveOptionsDialogFragment.TAG)
     }
 }

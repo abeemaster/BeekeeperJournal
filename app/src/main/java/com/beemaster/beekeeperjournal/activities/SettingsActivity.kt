@@ -1,95 +1,122 @@
-// SettingsActivity файл меню налаштувань
-
 package com.beemaster.beekeeperjournal.activities
 
-import android.content.SharedPreferences
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import android.widget.Toast
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
-import com.beemaster.beekeeperjournal.Constants
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
+import com.beemaster.beekeeperjournal.adapters.SettingsMenuAdapter
+import com.beemaster.beekeeperjournal.data.SettingItem
+import com.google.android.material.navigation.NavigationView
 
 /**
- * Activity для налаштування параметрів додатку, зокрема, вибору рушія розпізнавання мови.
+ * Activity, що відображає головне меню налаштувань.
+ * Використовує DrawerLayout та RecyclerView для відображення пунктів.
  */
 class SettingsActivity : AppCompatActivity() {
 
-    // 1. Ініціалізація View: використовуємо "лениву" ініціалізацію або by viewModels()
-    // для більш складних випадків. Тут залишаємо lateinit, але можемо використати View Binding.
-    private lateinit var speechEngineRadioGroup: RadioGroup
-    private lateinit var googleRadioButton: RadioButton
-    private lateinit var voskRadioButton: RadioButton
-    private lateinit var saveButton: Button
+    // Елементи, додані для нового дизайну
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private lateinit var drawerToggleButton: ImageButton
 
-    // ✅ ДОДАНО: Лінива ініціалізація SharedPreferences для чистоти коду
-    private val sharedPreferences: SharedPreferences by lazy {
-        getSharedPreferences(Constants.SETTINGS_PREFS_NAME, MODE_PRIVATE)
-    }
+    // Елемент списку
+    private lateinit var settingsRecyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        initViews()
-        loadSettings()
-        setupListeners()
-        // ✅ Встановлення заголовка ActionBar
+        // Встановлюємо ActionBar, хоча його елементи можуть бути приховані власним ConstraintLayout
         supportActionBar?.title = getString(R.string.title_settings)
-    }
 
-    private fun initViews() {
-        // ✅ Використовуємо apply{} для більш компактного коду
-        speechEngineRadioGroup = findViewById(R.id.speechEngineRadioGroup)
-        googleRadioButton = findViewById(R.id.googleRadioButton)
-        voskRadioButton = findViewById(R.id.voskRadioButton)
-        saveButton = findViewById(R.id.saveButton)
+        initViews()
+        setupListeners()
+        setupSettingsList()
     }
 
     /**
-     * Завантажує поточні налаштування з SharedPreferences і встановлює відповідний RadioButton.
+     * Ініціалізує елементи інтерфейсу, використовуючи ID з activity_settings.xml.
      */
-    private fun loadSettings() {
-        val savedEngine = sharedPreferences.getString(
-            Constants.KEY_SPEECH_ENGINE,
-            Constants.DEFAULT_SPEECH_ENGINE // "google"
+    private fun initViews() {
+        // Ініціалізація елементів DrawerLayout
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navigationView = findViewById(R.id.nav_view)
+        drawerToggleButton = findViewById(R.id.drawer_toggle_button)
+
+        // Ініціалізація RecyclerView для списку налаштувань
+        settingsRecyclerView = findViewById(R.id.settingsRecyclerView)
+    }
+
+    /**
+     * Налаштовує слухачів подій, зокрема для кнопки бічного меню.
+     */
+    private fun setupListeners() {
+        // Кнопка для відкриття бічного меню
+        drawerToggleButton.setOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+
+        // Обробка кліків на пунктах навігації (якщо ви використовуєте nav_menu)
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            drawerLayout.closeDrawer(GravityCompat.START)
+            // Примітка: Логіка навігації тут має бути ідентична тій, що у MainActivity,
+            // оскільки бічне меню спільне.
+
+            // Наразі просто закриваємо, але якщо потрібно,
+            // додайте сюди логіку openSearchActivity(), openProfitabilityActivity() тощо.
+
+            // Якщо ви повертаєтеся до MainActivity, можна зробити так:
+            if (menuItem.itemId == R.id.nav_home) {
+                finish() // Просто закриваємо SettingsActivity, щоб повернутися на головний екран
+            }
+            // ... інша логіка, якщо це потрібно для вашого бічного меню
+
+            true
+        }
+    }
+
+    /**
+     * Формує список елементів налаштувань та налаштовує RecyclerView.
+     */
+    private fun setupSettingsList() {
+        // Створення пунктів меню налаштувань
+        val settingsList = listOf(
+            SettingItem(
+                title = getString(R.string.setting_title_voice_input),
+                targetActivity = VoiceSettingsActivity::class.java
+            )
+            // Додайте тут інші пункти, наприклад:
+            /*
+            SettingItem(
+                title = getString(R.string.setting_title_theme),
+                targetActivity = ThemeSettingsActivity::class.java
+            )
+            */
         )
 
-        when (savedEngine) {
-            Constants.ENGINE_GOOGLE -> googleRadioButton.isChecked = true
-            Constants.ENGINE_VOSK -> voskRadioButton.isChecked = true
-        }
-    }
-
-    private fun setupListeners() {
-        saveButton.setOnClickListener {
-            val selectedEngine = getSelectedEngine()
-            saveSettings(selectedEngine)
-            Toast.makeText(this, getString(R.string.settings_saved_message), Toast.LENGTH_SHORT).show()
-            finish()
-        }
-    }
-
-    // ✅ ДОДАНО: Окрема функція для визначення вибраного рушія
-    private fun getSelectedEngine(): String {
-        return if (googleRadioButton.isChecked) {
-            Constants.ENGINE_GOOGLE // "google"
-        } else {
-            Constants.ENGINE_VOSK // "vosk"
+        settingsRecyclerView.layoutManager = LinearLayoutManager(this)
+        settingsRecyclerView.adapter = SettingsMenuAdapter(settingsList) { item ->
+            // Обробка кліку: перехід до відповідної Activity
+            startActivity(Intent(this, item.targetActivity))
         }
     }
 
     /**
-     * Зберігає вибраний рушій розпізнавання мови у SharedPreferences.
-     * ✅ ВИКОРИСТАННЯ KTX: Використовує функцію-розширення SharedPreferences.edit { ... }.
-     * @param engine Вибраний рушій ("google" або "vosk").
+     * Обробка натискання кнопки "назад" у ActionBar.
+     * Оскільки ми використовуємо DrawerLayout, ця кнопка закриватиме бічне меню
+     * або повертатиме користувача назад.
      */
-    private fun saveSettings(engine: String) {
-        sharedPreferences.edit {
-            putString(Constants.KEY_SPEECH_ENGINE, engine)
+    override fun onSupportNavigateUp(): Boolean {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
+            return true
         }
+        onBackPressedDispatcher.onBackPressed()
+        return true
     }
 }

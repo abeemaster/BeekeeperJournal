@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/spacing_small"
             android:layout_weight="1"
-            android:text="@string/save" />
+            android:text="@string/button_save" />
 
         <!-- Кнопка мікрофона на екрані редагування -->
         <ImageButton

@@ -80,7 +80,12 @@ interface NoteDao {
      */
     @Query("""
         SELECT 
-            N.*, 
+            N.id AS id,                 -- Змінено з noteId на id
+            N.title AS title,           -- Змінено з noteTitle на title
+            N.content AS content,       -- Змінено з noteText на content
+            N.createdAt AS createdAt,   -- Змінено з noteCreatedAt на createdAt
+            N.type AS type,             -- ДОДАНО: вимагається сутністю NoteSearchResultEntity
+            N.hiveId AS hiveId,
             H.hiveNumber AS currentHiveDisplayNumber
         FROM notes AS N
         LEFT JOIN hives AS H ON N.hiveId = H.id

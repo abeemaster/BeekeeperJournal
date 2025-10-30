@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+        <string-array name="unit_entries">
+            <item>Кілограми (кг)</item>
+            <item>Штуки (шт)</item>
+            <item>Літри (л)</item>
+        </string-array>
+
+        <string-array name="unit_values">
+            <item>kg</item>
+            <item>pcs</item>
+            <item>liters</item>
+        </string-array>
+
+</resources>

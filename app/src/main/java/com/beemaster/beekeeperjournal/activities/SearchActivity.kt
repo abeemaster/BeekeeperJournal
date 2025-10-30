@@ -9,9 +9,9 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +32,8 @@ import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 
 /**
@@ -39,7 +41,7 @@ import org.vosk.android.SpeechService
  * Відображає результати пошуку та дозволяє переходити до відповідних екранів.
  */
 @AndroidEntryPoint
-class SearchActivity : AppCompatActivity(), RecognitionListener {
+class SearchActivity : BaseActivity(), RecognitionListener {
 
     companion object {
         private const val TAG = "SearchActivity"
@@ -53,6 +55,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var searchExecuteButton: MaterialButton
     private lateinit var searchResultsRecyclerView: RecyclerView
     private lateinit var searchResultsAdapter: SearchResultsAdapter
+    private lateinit var emptySearchPlaceholder: TextView
     private var speechService: SpeechService? = null
 
     /**
@@ -60,13 +63,18 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      */
     private val viewModel: SearchViewModel by viewModels()
 
+
+    // -----------------------------------------------------------------------------------
+    //  ІМПЛЕМЕНТАЦІЯ АБСТРАКТНОГО МЕТОДУ BASEACTIVITY
+    // -----------------------------------------------------------------------------------
+    override fun getLayoutResId(): Int = R.layout.activity_search
+
     /**
      * Викликається при першому створенні Activity.
      * Ініціалізує View, встановлює слухачів, налаштовує RecyclerView та Vosk.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_search)
         bindViews()
         setupListeners()
         setupRecyclerView()
@@ -80,7 +88,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      */
     override fun onResume() {
         super.onResume()
-        viewModel.performSearch(searchQueryInput.text.toString())
+        // viewModel.performSearch(searchQueryInput.text.toString())
     }
 
     /**
@@ -100,19 +108,32 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         microphoneBtnSearch = findViewById(R.id.microphoneBtn)
         searchExecuteButton = findViewById(R.id.searchExecuteButton)
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView)
+        emptySearchPlaceholder = findViewById(R.id.emptySearchPlaceholder)
+
+        // ✅ НОВИЙ ЛОГ: Перевіряємо, чи ініціалізація відбулася
+        if (searchExecuteButton == null) {
+            Log.e(TAG, "FAILURE: searchExecuteButton is null! Check R.id.searchExecuteButton.")
+        }
     }
 
     /**
-     * Налаштовує слухачі подій для кнопок "Пошук" та "Мікрофон".
+     * Налаштовує слухачі подій для кнопок "Пошук", "Мікрофон".
      */
     private fun setupListeners() {
-        searchExecuteButton.setOnClickListener {
-            viewModel.performSearch(searchQueryInput.text.toString())
+        // 1. Кнопка Пошук
+        searchExecuteButton.setOnClickListener { // ⬅️ ВИКОРИСТОВУЄМО ВАШУ ЗМІННУ
+            val query = searchQueryInput.text.toString().trim() // ⬅️ ВИКОРИСТОВУЄМО ВАШУ ЗМІННУ
             hideKeyboard()
+            viewModel.performSearch(query)
         }
 
-        microphoneBtnSearch.setOnClickListener {
-            toggleListening()
+        // 2. Кнопка Голосовий ввід
+        microphoneBtnSearch.setOnClickListener { // ⬅️ ВИКОРИСТОВУЄМО ВАШУ ЗМІННУ
+            if (speechService == null) {
+                startListening()
+            } else {
+                stopListening()
+            }
         }
 
         searchQueryInput.setOnFocusChangeListener { view, hasFocus ->
@@ -129,24 +150,19 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this)
         searchResultsAdapter = SearchResultsAdapter(
             onItemLongClick = { note ->
-                // ✅ ВИКЛИКАЄМО НОВИЙ УНІФІКОВАНИЙ ДІАЛОГ
                 showNoteActionsDialog(note)
             }
         )
         searchResultsRecyclerView.adapter = searchResultsAdapter
 
-        // ✅ ВСТАНОВЛЮЄМО СЛУХАЧА РЕЗУЛЬТАТУ
         setupNoteActionsListener()
     }
-
-    // Файл: SearchActivity.kt
 
     /**
      * Відображає BottomSheetDialogFragment з опціями для нотатки з результатів пошуку.
      * @param note Об'єкт Note, який було натиснуто.
      */
     private fun showNoteActionsDialog(note: Note) {
-        // note.id та note.hiveId є Int у вашому коді
         SearchResultActionsDialogFragment.newInstance(
             noteId = note.id,
             hiveId = note.hiveId
@@ -193,14 +209,44 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
 
     /**
      * Спостерігає за результатами пошуку у ViewModel та оновлює адаптер RecyclerView.
+     *
+     * Підписка на StateFlow з результатами пошуку у ViewModel.
      */
     private fun observeViewModel() {
         lifecycleScope.launch {
             viewModel.searchResults.collect { results ->
+                // -------------------------------------------------------------
+                // ЛОГ 1: Початок обробки результатів
+                // -------------------------------------------------------------
+                Log.d("SEARCH_FLOW", "--- Activity: Оновлення результатів. Кількість: ${results.size} ---")
+
                 searchResultsAdapter.submitList(results)
-                if (results.isEmpty() && searchQueryInput.text.isNotBlank()) {
-                    val message = getString(R.string.search_not_found, searchQueryInput.text)
-                    Toast.makeText(this@SearchActivity, message, Toast.LENGTH_SHORT).show()
+
+                val isSearchExecuted = viewModel.isSearchPerformed() // ⬅️ Виклик функції з ViewModel
+                val isResultsEmpty = results.isEmpty()               // Перевірка результатів
+
+                // -------------------------------------------------------------
+                // ЛОГ 2: Виведення ключових умов
+                // -------------------------------------------------------------
+                Log.d("SEARCH_FLOW", "Activity: isSearchExecuted: $isSearchExecuted")
+                Log.d("SEARCH_FLOW", "Activity: isResultsEmpty: $isResultsEmpty")
+                Log.d("SEARCH_FLOW", "Activity: Умова IF: ${isSearchExecuted && isResultsEmpty}")
+
+
+                if (isSearchExecuted && isResultsEmpty) {
+                    emptySearchPlaceholder.visibility = View.VISIBLE
+                    Log.d("SEARCH_FLOW", "-> ДІЯ: Плейсхолдер ВІДОБРАЖЕНО.")
+
+                    val isQueryEmpty = searchQueryInput.text.isBlank()
+
+                    if (isQueryEmpty) {
+                        emptySearchPlaceholder.setText(R.string.search_not_found)
+                    } else {
+                        emptySearchPlaceholder.setText(R.string.search_no_results)
+                    }
+                } else {
+                    emptySearchPlaceholder.visibility = View.GONE
+                    Log.d("SEARCH_FLOW", "-> ДІЯ: Плейсхолдер ПРИХОВАНО.")
                 }
             }
         }
@@ -210,18 +256,13 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      * Налаштовує компоненти для голосового розпізнавання Vosk.
      */
     private fun setupVosk() {
-        // microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.color_primary)
-
-        // ✅ ВИПРАВЛЕНО: Перевіряємо через VoskModelManager
         if (voskModelManager.isModelReady) {
             microphoneBtnSearch.isEnabled = true
         } else {
             microphoneBtnSearch.isEnabled = false
             Toast.makeText(this, getString(R.string.vosk_model_loading), Toast.LENGTH_LONG).show()
 
-            // Додаємо слухача, який активує кнопку, коли модель буде готова
             voskModelManager.addModelReadyListener {
-                // Виклик буде виконано у головному потоці, тож можна безпечно оновлювати UI
                 microphoneBtnSearch.isEnabled = true
                 Toast.makeText(this, getString(R.string.vosk_model_loaded), Toast.LENGTH_SHORT).show()
             }
@@ -251,7 +292,6 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      * Запускає процес прослуховування Vosk.
      */
     private fun startListening() {
-        // Отримуємо модель через VoskModelManager
         val currentVoskModel = voskModelManager.getModel()
 
         if (currentVoskModel == null) {
@@ -260,7 +300,6 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
             return
         }
         try {
-            // currentVoskModel тепер має коректний тип Model!
             val rec = Recognizer(currentVoskModel, 16000.0f)
             speechService = SpeechService(rec, 16000.0f)
             speechService?.startListening(this)
@@ -290,7 +329,7 @@ class SearchActivity : AppCompatActivity(), RecognitionListener {
      * та виконує пошук.
      */
     override fun onResult(hypothesis: String) {
-        stopListening() // Зупиняємо прослуховування після отримання результату
+        stopListening()
         try {
             val jsonResult = JSONObject(hypothesis)
             val text = jsonResult.optString("text", "")

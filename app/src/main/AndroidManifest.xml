@@ -59,11 +59,13 @@
             android:theme="@style/Theme.BeekeeperJournal"
             tools:ignore="DiscouragedApi" />
         <activity
-            android:name=".activities.SettingsActivity"
+            android:name=".activities.VoiceSettingsActivity"
             android:label="Налаштування"
             android:screenOrientation="unspecified"
             tools:ignore="DiscouragedApi" />
 
+        <activity android:name=".activities.SettingsActivity"
+            android:label="@string/title_settings" />
 
     </application>
 

@@ -12,6 +12,7 @@ import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity
 import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.models.NoteDisplayModel // ✅ НОВИЙ ІМПОРТ
 import com.beemaster.beekeeperjournal.mappers.toNoteDisplayModel // ✅ НОВИЙ ІМПОРТ
+import kotlinx.coroutines.flow.first // ДОДАНО: Для перетворення Flow на List
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -56,6 +57,7 @@ class NoteRepository @Inject constructor(
      */
     fun getNotesForHiveDisplay(hiveId: Int, noteType: String): Flow<List<NoteDisplayModel>> {
         // Використовуємо searchNotes (який робить JOIN і повертає NoteSearchResultEntity)
+        // Для live-оновлень тут необхідний Flow, тому ми використовуємо Flow
         return noteDao.searchNotes(query = "")
             .map { searchResults ->
                 searchResults
@@ -66,6 +68,24 @@ class NoteRepository @Inject constructor(
             }
     }
 
+    /**
+     * Виконує ефективний пошук нотаток через DAO.
+     * Тепер це suspend-функція, яка збирає (collects) перше значення з Flow.
+     */
+    suspend fun searchNotes(query: String): List<NoteSearchResultEntity> {
+        // Ми беремо лише ПЕРШИЙ (і єдиний) випуск Flow, що перетворює Flow<List<...>> на List<...>.
+        return noteDao.searchNotes(query).first()
+    }
+
+
+    /**
+     * Імпортує список нотаток у базу даних, зазвичай, після очищення існуючих даних.
+     * @param notes Список Note для імпорту.
+     */
+    suspend fun importNotes(notes: List<Note>) {
+        val noteEntities = notes.map { it.toNoteEntity() }
+        noteDao.clearAndInsertNotes(noteEntities)
+    }
 
     /**
      * Додає нову нотатку або оновлює існуючу.
@@ -91,12 +111,6 @@ class NoteRepository @Inject constructor(
     suspend fun updateNoteContent(noteId: Int, newContent: String) {
         noteDao.updateNoteContent(noteId, newContent)
     }
-
-    /**
-     * Видаляє нотатку за її унікальним ID.
-     */
-// ...
-
 
     /**
      * Видаляє нотатку за її унікальним ID.
@@ -129,28 +143,8 @@ class NoteRepository @Inject constructor(
         val searchResult = noteDao.getNoteSearchResultById(id)
         return searchResult?.toNoteDisplayModel()
     }
-// ...
 
-    /**
-     * Виконує ефективний пошук нотаток через DAO.
-     */
-    fun searchNotes(query: String): Flow<List<NoteSearchResultEntity>> {
-        @Suppress("UNCHECKED_CAST")
-        return noteDao.searchNotes(query) as Flow<List<NoteSearchResultEntity>>
-    }
-
-
-    /**
-     * Імпортує список нотаток у базу даних, зазвичай, після очищення існуючих даних.
-     * @param notes Список Note для імпорту.
-     */
-    suspend fun importNotes(notes: List<Note>) {
-        val noteEntities = notes.map { it.toNoteEntity() }
-        noteDao.clearAndInsertNotes(noteEntities)
-    }
-
-
-    /**
+      /**
      * Отримує всі нотатки для експорту або створення бекапу.
      * @return Список об'єктів Note.
      */
