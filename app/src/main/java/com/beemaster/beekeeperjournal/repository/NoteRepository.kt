@@ -9,13 +9,14 @@ import com.beemaster.beekeeperjournal.mappers.toNote
 import com.beemaster.beekeeperjournal.mappers.toNoteList
 import kotlinx.coroutines.flow.Flow
 import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity
+import com.beemaster.beekeeperjournal.mappers.toNoteDisplayModel
 import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.models.NoteDisplayModel // ✅ НОВИЙ ІМПОРТ
-import com.beemaster.beekeeperjournal.mappers.toNoteDisplayModel // ✅ НОВИЙ ІМПОРТ
-import kotlinx.coroutines.flow.first // ДОДАНО: Для перетворення Flow на List
+import kotlinx.coroutines.flow.first // Для перетворення Flow на List
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+
 
 /**
  * Репозиторій для роботи з нотатками.
@@ -72,11 +73,16 @@ class NoteRepository @Inject constructor(
      * Виконує ефективний пошук нотаток через DAO.
      * Тепер це suspend-функція, яка збирає (collects) перше значення з Flow.
      */
+    /**
+     * Виконує ефективний пошук нотаток та повертає List<NoteSearchResultEntity>.
+     * Перетворено на suspend-функцію для використання у ViewModel.
+     */
+
     suspend fun searchNotes(query: String): List<NoteSearchResultEntity> {
-        // Ми беремо лише ПЕРШИЙ (і єдиний) випуск Flow, що перетворює Flow<List<...>> на List<...>.
+        @Suppress("UNCHECKED_CAST")
+        // Отримуємо перший (і єдиний) випуск Flow, конвертуючи його в List
         return noteDao.searchNotes(query).first()
     }
-
 
     /**
      * Імпортує список нотаток у базу даних, зазвичай, після очищення існуючих даних.

@@ -103,6 +103,7 @@
             android:layout_marginBottom="@dimen/spacing_medium"
             android:gravity="center"
             android:text="@string/search_no_results"
+            android:textColor="@color/text_note"
             android:visibility="gone"
             tools:visibility="visible" />
 

@@ -18,8 +18,8 @@
     <string name="audio_permission_denied">Дозвіл на запис аудіо відхилено. Голосовий ввід недоступний.</string>
     <string name="vosk_error">Помилка голосового вводу: %1$s</string>
     <string name="vosk_timeout">Голосовий ввід вимкнено через бездіяльність.</string>
-    <string name="search_not_found">Нічого не знайдено для: %1$s</string>
-    <string name="search_no_results">Немає результатів пошуку</string>
+    <string name="search_not_found">Введіть пошуковий запит</string>
+    <string name="search_no_results">За Вашим запитом результати пошуку відсутні</string>
     <string name="vosk_model_not_loaded">Модель Vosk ще не завантажена. Зачекайте або перезапустіть додаток.</string>
     <string name="voice_input_stopped">Голосовий ввід зупинено.</string>
     <string name="voice_input">Голосовий ввід.</string>

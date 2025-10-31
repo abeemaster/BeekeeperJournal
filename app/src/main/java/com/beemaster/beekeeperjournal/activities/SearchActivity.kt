@@ -1,8 +1,6 @@
 package com.beemaster.beekeeperjournal.activities
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,9 +10,10 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.Constants
@@ -22,6 +21,7 @@ import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SearchResultsAdapter
 import com.beemaster.beekeeperjournal.dialogs.SearchResultActionsDialogFragment
 import com.beemaster.beekeeperjournal.models.Note
+import com.beemaster.beekeeperjournal.viewmodel.SearchScreenState
 import com.beemaster.beekeeperjournal.viewmodel.SearchViewModel
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import com.google.android.material.button.MaterialButton
@@ -32,8 +32,6 @@ import org.json.JSONObject
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 
 
 /**
@@ -45,7 +43,6 @@ class SearchActivity : BaseActivity(), RecognitionListener {
 
     companion object {
         private const val TAG = "SearchActivity"
-        private const val RECORD_AUDIO_PERMISSION_CODE = 1
     }
 
     @Inject
@@ -80,6 +77,7 @@ class SearchActivity : BaseActivity(), RecognitionListener {
         setupRecyclerView()
         observeViewModel()
         setupVosk()
+        // viewModel.performSearch(searchQueryInput.text.toString())
     }
 
     /**
@@ -109,11 +107,6 @@ class SearchActivity : BaseActivity(), RecognitionListener {
         searchExecuteButton = findViewById(R.id.searchExecuteButton)
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView)
         emptySearchPlaceholder = findViewById(R.id.emptySearchPlaceholder)
-
-        // ✅ НОВИЙ ЛОГ: Перевіряємо, чи ініціалізація відбулася
-        if (searchExecuteButton == null) {
-            Log.e(TAG, "FAILURE: searchExecuteButton is null! Check R.id.searchExecuteButton.")
-        }
     }
 
     /**
@@ -180,7 +173,11 @@ class SearchActivity : BaseActivity(), RecognitionListener {
             val noteId = bundle.getInt(SearchResultActionsDialogFragment.KEY_NOTE_ID)
             val targetHiveId = bundle.getInt(SearchResultActionsDialogFragment.KEY_HIVE_ID)
             val action = bundle.getString(SearchResultActionsDialogFragment.KEY_ACTION)
-            val searchResult = viewModel.searchResults.value.find { it.note.id == noteId }
+
+            // Використовуємо getCurrentResults()
+            // Це отримує список, навіть якщо ViewModel знаходиться у стані Results
+            val searchResult = viewModel.getCurrentResults().find { it.note.id == noteId }
+
             val note = searchResult?.note
             val noteType = note?.type ?: Constants.TYPE_HIVE
 
@@ -206,7 +203,6 @@ class SearchActivity : BaseActivity(), RecognitionListener {
             }
         }
     }
-
     /**
      * Спостерігає за результатами пошуку у ViewModel та оновлює адаптер RecyclerView.
      *
@@ -214,44 +210,53 @@ class SearchActivity : BaseActivity(), RecognitionListener {
      */
     private fun observeViewModel() {
         lifecycleScope.launch {
-            viewModel.searchResults.collect { results ->
-                // -------------------------------------------------------------
-                // ЛОГ 1: Початок обробки результатів
-                // -------------------------------------------------------------
-                Log.d("SEARCH_FLOW", "--- Activity: Оновлення результатів. Кількість: ${results.size} ---")
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.screenState.collect { state ->
+                    when (state) {
+                        is SearchScreenState.Initial -> {
+                            // СТАН 1: Початковий стан (екран, готовий до вводу)
+                            searchResultsAdapter.submitList(emptyList())
+                            emptySearchPlaceholder.visibility = View.GONE
+                            searchResultsRecyclerView.visibility = View.VISIBLE
+                        }
+                        is SearchScreenState.Loading -> {
+                            // СТАН 2: Завантаження (опціонально: можна показати прогрес-бар)
+                            emptySearchPlaceholder.visibility = View.GONE
+                            // Якщо потрібно: progressSpinner.visibility = View.VISIBLE
+                        }
+                        is SearchScreenState.Results -> {
+                            // СТАН 3: Результати пошуку
+                            val results = state.list
+                            searchResultsAdapter.submitList(results)
 
-                searchResultsAdapter.submitList(results)
+                            val isResultsEmpty = results.isEmpty()
+                            val queryWasExecuted = state.queryWasExecuted
 
-                val isSearchExecuted = viewModel.isSearchPerformed() // ⬅️ Виклик функції з ViewModel
-                val isResultsEmpty = results.isEmpty()               // Перевірка результатів
+                            val showPlaceholder = queryWasExecuted && isResultsEmpty
 
-                // -------------------------------------------------------------
-                // ЛОГ 2: Виведення ключових умов
-                // -------------------------------------------------------------
-                Log.d("SEARCH_FLOW", "Activity: isSearchExecuted: $isSearchExecuted")
-                Log.d("SEARCH_FLOW", "Activity: isResultsEmpty: $isResultsEmpty")
-                Log.d("SEARCH_FLOW", "Activity: Умова IF: ${isSearchExecuted && isResultsEmpty}")
+                            if (showPlaceholder) {
+                                emptySearchPlaceholder.visibility = View.VISIBLE
+                                searchResultsRecyclerView.visibility = View.GONE
 
+                                val isQueryEmpty = searchQueryInput.text.isBlank()
 
-                if (isSearchExecuted && isResultsEmpty) {
-                    emptySearchPlaceholder.visibility = View.VISIBLE
-                    Log.d("SEARCH_FLOW", "-> ДІЯ: Плейсхолдер ВІДОБРАЖЕНО.")
-
-                    val isQueryEmpty = searchQueryInput.text.isBlank()
-
-                    if (isQueryEmpty) {
-                        emptySearchPlaceholder.setText(R.string.search_not_found)
-                    } else {
-                        emptySearchPlaceholder.setText(R.string.search_no_results)
+                                if (isQueryEmpty) {
+                                    // Пошук був, але запит порожній
+                                    emptySearchPlaceholder.setText(R.string.search_not_found)
+                                } else {
+                                    // Запит був, але результатів немає
+                                    emptySearchPlaceholder.setText(R.string.search_no_results)
+                                }
+                            } else {
+                                emptySearchPlaceholder.visibility = View.GONE
+                                searchResultsRecyclerView.visibility = View.VISIBLE
+                            }
+                        }
                     }
-                } else {
-                    emptySearchPlaceholder.visibility = View.GONE
-                    Log.d("SEARCH_FLOW", "-> ДІЯ: Плейсхолдер ПРИХОВАНО.")
                 }
             }
         }
     }
-
     /**
      * Налаштовує компоненти для голосового розпізнавання Vosk.
      */
@@ -268,24 +273,6 @@ class SearchActivity : BaseActivity(), RecognitionListener {
             }
         }
         searchQueryInput.requestFocus()
-    }
-
-    /**
-     * Запускає або зупиняє прослуховування мікрофона.
-     */
-    private fun toggleListening() {
-        if (speechService != null) {
-            stopListening()
-            Toast.makeText(this, getString(R.string.voice_input_stopped), Toast.LENGTH_SHORT).show()
-        } else {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
-            } else {
-                startListening()
-                Toast.makeText(this, getString(R.string.voice_input_listening), Toast.LENGTH_SHORT).show()
-                microphoneBtnSearch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.status_red)
-            }
-        }
     }
 
     /**
