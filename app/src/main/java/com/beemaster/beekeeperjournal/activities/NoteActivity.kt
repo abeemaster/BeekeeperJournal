@@ -1,4 +1,4 @@
-// EditNoteActivity.kt - Файл для редагування/створення нотаток.
+// NoteActivity.kt - Файл для редагування/створення нотаток.
 
 package com.beemaster.beekeeperjournal.activities
 
@@ -28,10 +28,10 @@ import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class EditNoteActivity : AppCompatActivity() {
+class NoteActivity : AppCompatActivity() {
 
     companion object {
-        private const val TAG = "EditNoteActivity"
+        private const val TAG = "NoteActivity"
     }
 
     @Inject
@@ -86,7 +86,7 @@ class EditNoteActivity : AppCompatActivity() {
             }
             override fun onBeginningOfSpeech() {
                 Log.d(TAG, "onBeginningOfSpeech")
-                Toast.makeText(this@EditNoteActivity, getString(R.string.listening_message), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@NoteActivity, getString(R.string.listening_message), Toast.LENGTH_SHORT).show()
                 updateMicrophoneButtonState(true)
             }
             override fun onRmsChanged(rmsdB: Float) {}
@@ -109,7 +109,7 @@ class EditNoteActivity : AppCompatActivity() {
                     SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> getString(R.string.error_speech_timeout)
                     else -> getString(R.string.error_unknown)
                 }
-                Toast.makeText(this@EditNoteActivity, getString(R.string.recognition_error, errorMessage), Toast.LENGTH_LONG).show()
+                Toast.makeText(this@NoteActivity, getString(R.string.recognition_error, errorMessage), Toast.LENGTH_LONG).show()
                 updateMicrophoneButtonState(false)
             }
             override fun onResults(results: Bundle?) {
@@ -146,11 +146,11 @@ class EditNoteActivity : AppCompatActivity() {
         val speechEngine = sharedPref.getString("speech_engine", "google")
 
         if (speechEngine == "vosk") {
-            if (voskHelper.isVoskListening()) {
+            if (voskHelper.isListening()) {
                 voskHelper.stopListening()
                 updateMicrophoneButtonState(false)
             } else {
-                voskHelper.setupVoskAndStartListening()
+                voskHelper.checkPermissionAndStartListening()
                 updateMicrophoneButtonState(true)
             }
         } else {
@@ -235,7 +235,7 @@ class EditNoteActivity : AppCompatActivity() {
                     originalCreatedAt = loadedNote.timestamp
 
                 } else {
-                    Toast.makeText(this@EditNoteActivity, getString(R.string.error_note_not_found), Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@NoteActivity, getString(R.string.error_note_not_found), Toast.LENGTH_LONG).show()
                     finish()
                     return@launch
                 }

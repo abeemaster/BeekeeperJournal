@@ -1,4 +1,4 @@
-// Цей клас буде керувати даними для EditNoteActivity
+// Цей клас буде керувати даними для NoteActivity
 
 package com.beemaster.beekeeperjournal.viewmodel
 

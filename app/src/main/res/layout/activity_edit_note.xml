@@ -8,7 +8,7 @@
     android:padding="@dimen/screen_padding"
     android:background="@color/background_light_green_soft"
     android:gravity="center_horizontal"
-    tools:context=".activities.EditNoteActivity">
+    tools:context=".activities.NoteActivity">
 
     <TextView
         android:id="@+id/editNoteScreenTitle"

@@ -265,12 +265,12 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     }
 
     /**
-     * Відкриває активиті редактора нотаток ([EditNoteActivity]) для створення нової нотатки.
+     * Відкриває активиті редактора нотаток ([NoteActivity]) для створення нової нотатки.
      * Передає ID вулика, його номер та поточний тип запису.
      * @param startVoiceInput Якщо true, активує голосове введення в редакторі.
      */
     private fun openNoteEditorActivity(startVoiceInput: Boolean = false) {
-        val intent = Intent(this, EditNoteActivity::class.java).apply {
+        val intent = Intent(this, NoteActivity::class.java).apply {
             putExtra(Constants.EXTRA_ENTRY_TYPE, currentEntryType)
             putExtra(Constants.EXTRA_HIVE_ID, currentHiveId)
             // Використовуємо локально завантажений номер вулика (НЕ з моделі Note)
@@ -310,7 +310,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
                         if (noteModel != null) {
                             // 2. Запуск редактора з даними нотатки
-                            val intent = Intent(this@HiveInfoActivity, EditNoteActivity::class.java).apply {
+                            val intent = Intent(this@HiveInfoActivity, NoteActivity::class.java).apply {
                                 putExtra(Constants.EXTRA_NOTE_ID, noteModel.id)
                                 putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, noteModel.text)
                                 putExtra(Constants.EXTRA_HIVE_ID, noteModel.hiveId)

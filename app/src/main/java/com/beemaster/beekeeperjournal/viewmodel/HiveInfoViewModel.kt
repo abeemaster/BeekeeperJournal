@@ -71,7 +71,7 @@ class HiveInfoViewModel @Inject constructor(
 
     /**
      * Отримує повну модель відображення нотатки за її ID.
-     * Використовується для підготовки даних перед відкриттям редактора (EditNoteActivity).
+     * Використовується для підготовки даних перед відкриттям редактора (NoteActivity).
      * @param noteId ID нотатки.
      * @return Об'єкт [NoteDisplayModel] або null, якщо нотатка не знайдена.
      */

@@ -1,5 +1,4 @@
 // VoskRecognitionHelper.kt Цей файл є контролером або хелпером, який працює найближче до Activity/View. Тут основні налаштування Воск.
-
 package com.beemaster.beekeeperjournal.utils
 
 import android.Manifest
@@ -13,10 +12,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import org.json.JSONObject
-import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
@@ -26,169 +25,213 @@ import org.vosk.android.SpeechService
  * Інкапсулює логіку дозволів, ініціалізації Vosk та обробки результатів.
  *
  * @param activity Об'єкт [AppCompatActivity], необхідний для запиту дозволів та відображення Toast-повідомлень.
- * @param noteContentInput Поле [EditText], куди вставляється розпізнаний текст.
- * @param microphoneBtnEditNote Кнопка [ImageButton], чий колір змінюється для відображення статусу запису.
- * @param voskModelManager Ін'єктований менеджер моделі Vosk.
+ * @param noteContentInput Поле [EditText], куди вставляється розпізнаний текст (для нотаток).
+ * @param microphoneBtnEditNote Кнопка [ImageButton], чий колір змінюється для відображення статусу запису (для нотаток).
+ * @param voskModelManager Менеджер моделі Vosk.
+ * @param searchInput Поле [EditText] для пошуку (використовується в SearchActivity).
  */
 class VoskRecognitionHelper(
     private val activity: AppCompatActivity,
     private val noteContentInput: EditText,
     private val microphoneBtnEditNote: ImageButton,
-    // Приймаємо VoskModelManager, інжектований у Activity
-    private val voskModelManager: VoskModelManager
+    private val voskModelManager: VoskModelManager,
+    private val searchInput: EditText? = null
 ) : RecognitionListener {
 
-    companion object {
-        private const val TAG = "VoskRecognitionHelper"
-        private const val RECORD_AUDIO_PERMISSION_CODE = 1
-        // Тайм-аут тиші (наприклад, 6 секунди)
-        private const val SILENCE_TIMEOUT_MS = 6000L
-    }
+    private val TAG = "VoskRecognitionHelper"
 
     private var speechService: SpeechService? = null
+    private var isListening = false
+    /**
+     * Повертає поточний стан прослуховування.
+     */
+    fun isListening(): Boolean = isListening
+
+    // Таймаут тиші для Vosk, щоб автоматично завершити розпізнавання
+    private val SILENCE_TIMEOUT_MS: Long = 3000
     private val silenceTimerHandler = Handler(Looper.getMainLooper())
+
+    // Визначає, яке поле введення зараз є цільовим.
+    // Якщо searchInput не null, використовуємо його. Інакше - noteContentInput.
+    private val targetInput: EditText
+        get() = searchInput ?: noteContentInput
+
+    // Визначає, яка кнопка мікрофона зараз є цільовою.
+    // Оскільки NoteActivity має свою кнопку, а SearchActivity - свою,
+    // ми зробимо так, щоб цей клас викликався з двох різних Activity,
+    // кожна зі своєю кнопкою. Але в цьому класі ми контролюємо кнопку з нотаток,
+    // тому додамо метод для встановлення кнопки пошуку.
+
+    private var currentMicrophoneButton: ImageButton = microphoneBtnEditNote
+
+    // Метод, щоб SearchActivity міг передати свою кнопку
+    fun setMicrophoneButton(button: ImageButton) {
+        this.currentMicrophoneButton = button
+    }
+
+
     private val silenceTimeoutRunnable = Runnable {
-        // Логіка, яка спрацює, коли час тиші вичерпано
-        Log.d(TAG, "Silence timeout reached. Automatically stopping recognition.")
-        stopListening()
-        Toast.makeText(activity, activity.getString(R.string.vosk_timeout), Toast.LENGTH_SHORT).show()
-    }
-
-    /**
-     * Геттер для моделі Vosk.
-     */
-    private val voskModel: Model?
-        get() = voskModelManager.getModel() // Використовуємо ін'єктований менеджер
-
-    /**
-     * Перевіряє, чи активний наразі процес розпізнавання.
-     *
-     * @return true, якщо Vosk слухає; false, якщо ні.
-     */
-    fun isVoskListening(): Boolean {
-        return speechService != null
-    }
-
-    /**
-     * Налаштовує Vosk, перевіряє дозволи та починає прослуховування.
-     * Якщо дозвіл відсутній, запитує його у користувача.
-     */
-    fun setupVoskAndStartListening() {
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            // Запит дозволу
-            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
-            return
+        if (isListening) {
+            Log.d(TAG, "Vosk Silence timeout reached. Stopping recording.")
+            stopListening()
+            Toast.makeText(activity, activity.getString(R.string.voice_input_timeout), Toast.LENGTH_SHORT).show()
         }
+    }
 
-        // Перевіряємо готовність моделі через менеджер
-        if (!voskModelManager.isModelReady) {
-            Toast.makeText(activity, activity.getString(R.string.vosk_model_loading), Toast.LENGTH_SHORT).show()
+    // ---------------------------------------------------------------------
+    // ІНІЦІАЛІЗАЦІЯ / ЖИТТЄВИЙ ЦИКЛ
+    // ---------------------------------------------------------------------
 
-            // Додаємо слухача. Якщо модель стане готова, викликаємо setupVoskAndStartListening ще раз.
-            voskModelManager.addModelReadyListener {
-                Handler(Looper.getMainLooper()).post {
-                    if (isVoskListening()) return@post // Уникнути повторного запуску
-                    setupVoskAndStartListening()
-                    Toast.makeText(activity, activity.getString(R.string.vosk_model_loaded), Toast.LENGTH_SHORT).show()
-                }
+    init {
+        // Логіка Vosk була тут. Зараз вона вся у методах.
+    }
+
+    /**
+     * Починає процес розпізнавання: перевіряє дозволи та, якщо все готово,
+     * запускає Vosk.
+     */
+    fun checkPermissionAndStartListening() {
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // Запит дозволу, якщо його немає
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                Constants.REQUEST_RECORD_AUDIO_PERMISSION
+            )
+        } else {
+            // Дозвіл є, запускаємо прослуховування
+            startListening()
+        }
+    }
+
+    /**
+     * Викликається після обробки результату запиту дозволу.
+     */
+    fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray) {
+        if (requestCode == Constants.REQUEST_RECORD_AUDIO_PERMISSION) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startListening()
+            } else {
+                Toast.makeText(activity, activity.getString(R.string.permission_denied), Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    private fun startListening() {
+        if (isListening) return
+
+        val model = voskModelManager.getModel() // ✅ ВИКОРИСТОВУЄМО НОВИЙ ГЕТТЕР
+
+        if (!voskModelManager.isModelReady) {
+            Toast.makeText(activity, activity.getString(R.string.vosk_model_not_ready), Toast.LENGTH_LONG).show()
             return
         }
 
         try {
-            // voskModel тепер коректно викликає voskModelManager.getModel(), тому він не null
-            val rec = Recognizer(voskModel, 16000.0f)
-            speechService = SpeechService(rec, 16000.0f)
+            val recognizer = Recognizer(model, 16000.0f)
 
-            // Видаляємо тайм-аут. Vosk слухатиме, доки не буде викликано stopListening().
+            speechService = SpeechService(recognizer, 16000.0f)
             speechService?.startListening(this)
-            // Запускаємо таймер тиші при успішному старті
+
+            isListening = true
+            updateMicrophoneButtonState(true)
             silenceTimerHandler.postDelayed(silenceTimeoutRunnable, SILENCE_TIMEOUT_MS)
 
-            // Візуалізація активного статусу
-            microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.status_red)
-            Toast.makeText(activity, activity.getString(R.string.vosk_listening), Toast.LENGTH_SHORT).show()
+            Log.d(TAG, "Vosk started listening.")
         } catch (e: Exception) {
-            Toast.makeText(activity, activity.getString(R.string.vosk_start_error, e.message), Toast.LENGTH_LONG).show()
-            Log.e(TAG, "Error starting recognition", e)
+            Log.e(TAG, "Error starting Vosk: ${e.message}", e)
+            Toast.makeText(activity, activity.getString(R.string.vosk_error, e.message), Toast.LENGTH_LONG).show()
+            stopListening()
         }
     }
 
-    /**
-     * Зупиняє прослуховування та очищає ресурси Vosk.
-     */
     fun stopListening() {
-        speechService?.cancel()
-        speechService?.shutdown()
-        speechService = null
+        if (!isListening) return
 
-        // Візуалізація неактивного статусу
-        microphoneBtnEditNote.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.button_microphone)
+        silenceTimerHandler.removeCallbacks(silenceTimeoutRunnable)
+        speechService?.stop()
+
+        isListening = false
+        updateMicrophoneButtonState(false)
+        Log.d(TAG, "Stopped listening.")
     }
 
     /**
-     * Обробляє результат запиту дозволів. Викликається з [AppCompatActivity.onRequestPermissionsResult].
+     * Очищення ресурсів. Викликається в Activity.onDestroy().
      */
-    fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray) {
-        if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Перевіряємо готовність моделі через менеджер
-                if (voskModelManager.isModelReady) {
-                    // Якщо дозвіл отримано, повторно викликаємо запуск розпізнавання з невеликою затримкою.
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        setupVoskAndStartListening()
-                    }, 300)
-                }
-            } else {
-                Toast.makeText(activity, activity.getString(R.string.audio_permission_denied), Toast.LENGTH_LONG).show()
-            }
-        }
+    fun destroy() {
+        silenceTimerHandler.removeCallbacks(silenceTimeoutRunnable)
+        speechService?.cancel()
+        speechService = null
+        Log.d(TAG, "Vosk helper resources destroyed.")
     }
 
-    override fun onResult(hypothesis: String?) {
-        if (hypothesis != null) {
-            try {
-                val jsonResult = JSONObject(hypothesis)
-                val text = jsonResult.optString("text", "")
-                if (text.isNotEmpty()) {
-                    noteContentInput.append("$text ")
-                    // Встановлюємо курсор у кінець тексту
-                    noteContentInput.setSelection(noteContentInput.text.length)
+    // ---------------------------------------------------------------------
+    // VOSK RECOGNITION LISTENER
+    // ---------------------------------------------------------------------
+
+    override fun onResult(hypothesis: String) {
+        try {
+            val resultJson = JSONObject(hypothesis)
+            val recognizedText = resultJson.optString("text", "")
+
+            if (recognizedText.isNotEmpty()) {
+                // ✅ ЗМІНА: ВСТАВЛЯЄМО ТЕКСТ У ВИБРАНЕ ПОЛЕ
+                val currentText = targetInput.text.toString()
+
+                if (searchInput != null) {
+                    // Якщо це пошук, замінюємо весь текст і одразу запускаємо пошук (це треба робити в Activity)
+                    targetInput.setText(recognizedText)
+                    targetInput.setSelection(recognizedText.length)
+                    // ПРИМІТКА: Пошук потрібно запустити в SearchActivity
+                } else {
+                    // Якщо це нотатка, додаємо текст
+                    val newText = if (currentText.isEmpty() || currentText.endsWith(" ")) {
+                        currentText + recognizedText
+                    } else {
+                        currentText + " " + recognizedText
+                    }
+                    targetInput.setText(newText)
+                    targetInput.setSelection(newText.length)
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error parsing Vosk JSON result: ${e.message}", e)
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing Vosk JSON result: ${e.message}", e)
         }
-        // Скидаємо таймер тиші, оскільки Vosk щойно розпізнав нову фразу
+
+        // Скидаємо таймер тиші
         silenceTimerHandler.removeCallbacks(silenceTimeoutRunnable)
         silenceTimerHandler.postDelayed(silenceTimeoutRunnable, SILENCE_TIMEOUT_MS)
-
     }
 
-    override fun onPartialResult(hypothesis: String?) {
-        // Логіка відображення проміжних результатів відсутня.
-    }
-
-    override fun onFinalResult(hypothesis: String) {
-        // Логіка обробки фінальних результатів відсутня.
-    }
+    override fun onPartialResult(hypothesis: String?) { /* Ігноруємо */ }
+    override fun onFinalResult(hypothesis: String) { /* Ігноруємо */ }
 
     override fun onError(exception: Exception?) {
         if (exception != null) {
             Log.e(TAG, "Vosk recognition error: ${exception.message}", exception)
-
             Toast.makeText(activity, activity.getString(R.string.vosk_error, exception.message), Toast.LENGTH_LONG).show()
         }
-        // При помилці завжди завершуємо сесію.
         stopListening()
     }
 
     override fun onTimeout() {
-        Log.d(TAG, "Recognition timeout. Stopping recording. (Тайм-аут спрацює лише, якщо Vosk не зміг встановити з'єднання з мікрофоном)")
-        // Якщо Vosk все ж спрацює на внутрішній тайм-аут (наприклад, через 10 секунд тиші),
-        // ми завершуємо роботу. Однак, у цьому режимі це трапляється рідко.
+        Log.d(TAG, "Recognition timeout. Stopping recording.")
+        Toast.makeText(activity, activity.getString(R.string.voice_input_timeout), Toast.LENGTH_SHORT).show()
         stopListening()
+    }
 
-        Toast.makeText(activity, activity.getString(R.string.vosk_timeout), Toast.LENGTH_SHORT).show()
+    // ---------------------------------------------------------------------
+    // УПРАВЛІННЯ UI
+    // ---------------------------------------------------------------------
+
+    /**
+     * Оновлює зовнішній вигляд кнопки мікрофона (колір) залежно від стану
+     * голосового розпізнавання.
+     */
+    private fun updateMicrophoneButtonState(isListening: Boolean) {
+        val colorResId = if (isListening) R.color.status_red else R.color.status_green
+        // Використовуємо поточну кнопку
+        currentMicrophoneButton.backgroundTintList = ContextCompat.getColorStateList(activity, colorResId)
     }
 }

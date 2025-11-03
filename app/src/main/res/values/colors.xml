@@ -4,6 +4,7 @@
     <color name="color_primary_dark">#388E3C</color>
     <color name="color_primary_darker">#2E7D32</color>
     <color name="status_red">#F44336</color>
+    <color name="status_green">#337B37</color>
     <color name="status_orange">#FF9800</color>
     <color name="color_secondary_dark">#FFA000</color>
     <color name="color_secondary">#FFC107</color>
@@ -32,5 +33,6 @@
     <color name="green_200">#C5E1A5</color>
     <color name="green_50">#F1F8E9</color>
     <color name="background_light_green_soft">#F0FDF4</color>
+
 
 </resources>

@@ -29,4 +29,5 @@ object Constants {
     const val TYPE_NOTES = "notes"     // Інше, якщо потрібно
     const val TYPE_EXPENSE = "expense" // ✅ ДОДАНО: Константа для типу витрат
     const val TYPE_INCOME = "income"  // Якщо плануєте працювати з прибутками
+    const val REQUEST_RECORD_AUDIO_PERMISSION = 100
 }

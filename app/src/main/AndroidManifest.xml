@@ -37,7 +37,7 @@
             android:theme="@style/Theme.BeekeeperJournal"
             tools:ignore="DiscouragedApi" />
         <activity
-            android:name=".activities.EditNoteActivity"
+            android:name=".activities.NoteActivity"
             android:exported="false"
             android:label="Редагувати Запис"
             android:screenOrientation="unspecified"

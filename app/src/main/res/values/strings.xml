@@ -31,6 +31,9 @@
     <string name="voice_input_system">Система голосового вводу</string>
     <string name="engine_google_name">Голосова модель Google</string>
     <string name="engine_vosk_name">Голосова модель Vosk</string>
+    <string name="permission_denied">Дозвіл на використання мікрофона відхилено. Голосовий ввід недоступний.</string>
+    <string name="vosk_model_not_ready">Модель розпізнавання Vosk ще не готова. Будь ласка, зачекайте кілька секунд і спробуйте знову.</string>
+
     <!-- Рядки для activity_main.xml -->
     <string name="general_notes_button_text">Загальні записи</string>
     <string name="new_record_button_text">Новий запис</string>
