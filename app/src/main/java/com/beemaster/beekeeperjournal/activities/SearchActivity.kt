@@ -33,7 +33,7 @@ import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 
-
+// Коментар тимчасовий заради коміта.
 /**
  * Activity для здійснення пошуку нотаток та голосового вводу (Vosk).
  * Відображає результати пошуку та дозволяє переходити до відповідних екранів.
