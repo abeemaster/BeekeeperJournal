@@ -18,12 +18,10 @@ class EditNoteViewModel @Inject constructor(
     private val hiveRepository: HiveRepository
 ) : ViewModel() {
 
-    // ✅ ВИПРАВЛЕНО: Назва методу уніфікована, повертає Note?
     /**
      * Отримує повний об'єкт нотатки з бази даних за її ID.
      */
     suspend fun getNoteById(noteId: Int): Note? {
-        // noteRepository.getNoteById тепер повертає Note
         return noteRepository.getNoteById(noteId)
     }
 
@@ -40,12 +38,8 @@ class EditNoteViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
 
-            // 1. ✅ ВИПРАВЛЕНО: Отримуємо hiveNumber, необхідний для конструктора Note
-            // Це вимагає suspend-виклик, який можливий всередині viewModelScope.launch.
             val hive = hiveRepository.getHiveById(hiveId)
-            val hiveNumber = hive?.hiveNumber ?: ""
-
-            // 2. Створюємо Domain Model (Note), використовуючи НОВІ назви полів
+            // val hiveNumber = hive?.hiveNumber ?: ""
             val note = Note(
                 id = noteId,
                 type = type,
@@ -55,7 +49,6 @@ class EditNoteViewModel @Inject constructor(
                 timestamp = createdAt
             )
 
-            // Репозиторій тепер приймає Note
             if (noteId > 0) {
                 noteRepository.updateNote(note)
             } else {
@@ -73,10 +66,11 @@ class EditNoteViewModel @Inject constructor(
 
     /**
      * Видаляє нотатку за її ID.
-     */
+     *
     fun deleteNote(noteId: Int) {
         viewModelScope.launch {
             noteRepository.deleteNote(noteId)
         }
     }
+    */
 }

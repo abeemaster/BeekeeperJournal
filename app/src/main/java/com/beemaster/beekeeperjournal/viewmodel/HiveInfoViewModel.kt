@@ -89,13 +89,13 @@ class HiveInfoViewModel @Inject constructor(
      * Це використовується після редагування нотатки у діалозі.
      * @param noteId ID нотатки, яку потрібно оновити.
      * @param newContent Новий текст нотатки.
-     */
+     *
     fun updateNoteContent(noteId: Int, newContent: String) {
         viewModelScope.launch {
-            //  Оновлення вмісту нотатки
             noteRepository.updateNoteContent(noteId, newContent)
         }
     }
+    */
 
     /**
      * Видаляє нотатку з бази даних.

@@ -23,11 +23,8 @@ object Constants {
     const val EXTRA_NOTE_ID = "com.beemaster.beekeeperjournal.NOTE_ID"
     const val EXTRA_ORIGINAL_NOTE_TEXT = "com.beemaster.beekeeperjournal.ORIGINAL_NOTE_TEXT"
     const val EXTRA_START_VOICE_INPUT = "com.beemaster.beekeeperjournal.START_VOICE_INPUT"
-    const val TYPE_HIVE = "hive"       // Нотатки, пов'язані з вуликом
-    const val TYPE_QUEEN = "queen"     // Нотатки, пов'язані з маткою
-    const val TYPE_GENERAL = "general" // Загальні нотатки
-    const val TYPE_NOTES = "notes"     // Інше, якщо потрібно
-    const val TYPE_EXPENSE = "expense" // ✅ ДОДАНО: Константа для типу витрат
-    const val TYPE_INCOME = "income"  // Якщо плануєте працювати з прибутками
+    const val TYPE_HIVE = "hive"
+    const val TYPE_EXPENSE = "expense"
+    const val TYPE_INCOME = "income"
     const val REQUEST_RECORD_AUDIO_PERMISSION = 100
 }
