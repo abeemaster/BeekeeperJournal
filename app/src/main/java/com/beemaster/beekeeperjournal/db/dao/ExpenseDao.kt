@@ -7,7 +7,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
-import com.beemaster.beekeeperjournal.models.Expense
 import kotlinx.coroutines.flow.Flow
 
 /**

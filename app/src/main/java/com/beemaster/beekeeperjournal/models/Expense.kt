@@ -16,7 +16,6 @@ package com.beemaster.beekeeperjournal.models
  * @param amount Загальна сума витрати (вартість).
  */
 data class Expense(
-    // Встановлюємо default = 0 для ID, щоб ViewModel міг легко створювати нові об'єкти
     val id: Int = 0,
     val hiveId: Int,
     val date: Long,

@@ -74,8 +74,8 @@ class EditHiveNumberDialogFragment : DialogFragment() {
             // Застосовуємо нові розміри до вікна діалогу
             window.setLayout(width, height)
 
-            // ✅ ДОДАНО: Запобігає панорамуванню, змушуючи вікно змінювати розмір.
-            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            // Запобігає панорамуванню, змушуючи вікно змінювати розмір.
+            // window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) - треба буде видалити якщо не виникатиме проблем.
         }
         return dialog
     }

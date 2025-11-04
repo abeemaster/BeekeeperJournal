@@ -25,33 +25,6 @@ import java.util.Locale
 object DialogUtils {
 
     /**
-     * Відображає загальний діалог з опціями "Редагувати" та "Видалити".
-     *
-     * @param context Контекст для створення діалогу.
-     * @param onEdit Лямбда, що викликається при виборі "Редагувати".
-     * @param onDelete Лямбда, що викликається при виборі "Видалити".
-     */
-    fun showEditDeleteDialog(
-        context: Context,
-        onEdit: () -> Unit,
-        onDelete: () -> Unit
-    ) {
-        val options = arrayOf(
-            context.getString(R.string.edit),
-            context.getString(R.string.delete)
-        )
-        AlertDialog.Builder(context)
-            .setTitle(R.string.choose_an_action)
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> onEdit()
-                    1 -> onDelete()
-                }
-            }
-            .show()
-    }
-
-    /**
      * Відображає діалог підтвердження перед виконанням деструктивної дії (видалення).
      *
      * @param context Контекст для створення діалогу.

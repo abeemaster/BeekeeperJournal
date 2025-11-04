@@ -103,38 +103,15 @@ class MainActivityViewModel @Inject constructor(
     }
 
     /**
-     * Оновлює існуючий об'єкт HiveEntity.
-     * @param hiveEntity Оновлений об'єкт вулику.
-     */
-    fun updateHive(hiveEntity: HiveEntity) {
-        viewModelScope.launch {
-            hiveRepository.updateHive(hiveEntity)
-        }
-    }
-    /**
-     * Оновлює номер вулика у базі даних.
-     */
-    fun updateHiveNumber(hiveId: Long, newNumber: String) {
-        viewModelScope.launch {
-            hiveRepository.updateHiveNumber(hiveId, newNumber) // ⚠️ ПЕРЕВІРТЕ РЕПОЗИТОРІЙ!
-        }
-    }
-
-    /**
      * Оновлює номер вулика з перевіркою на конфлікт номерів.
      * @param hiveId ID вулика, який оновлюється.
      * @param newNumber Новий номер.
      */
-    // Файл: MainActivityViewModel.kt
-
     fun updateHiveNumberWithValidation(hiveId: Long, newNumber: String) = viewModelScope.launch {
         // 1. Перевірка існування (чи існує ВЖЕ інший вулик з цим номером)
         val existingHive = hiveRepository.getHiveByNumber(newNumber)
 
-        // Якщо вулик існує І його ID не збігається з ID поточного вулика
-        // ✅ ВИПРАВЛЕННЯ: Приводимо existingHive.id до Long для порівняння.
         if (existingHive != null && existingHive.id.toLong() != hiveId) {
-            // ❌ КОНФЛІКТ: Надсилаємо помилку про існування номера
             _hiveEventChannel.send(HiveAddResult.EXISTS)
             return@launch
         }
@@ -149,7 +126,6 @@ class MainActivityViewModel @Inject constructor(
      * Видаляє об'єкт HiveEntity з бази даних.
      * @param hiveEntity Об'єкт вулику для видалення.
      */
-    // ✅ ПЕРЕПИСАНА ФУНКЦІЯ: ТЕПЕР ПРИЙМАЄ ID
     fun deleteHive(hiveId: Long) { // Змінили параметр з HiveEntity на Long
         viewModelScope.launch {
 
@@ -205,8 +181,6 @@ class MainActivityViewModel @Inject constructor(
     suspend fun getAllIncomesSuspend(): List<Income> {
         return incomeRepository.getAllIncomesSuspend()
     }
-
-    // Функції імпорту...
 
     /**
      * Імпортує список HiveEntity в базу даних.

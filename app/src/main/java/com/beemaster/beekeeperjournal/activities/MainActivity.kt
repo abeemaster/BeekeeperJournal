@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.ImageButton // Залишаємо, якщо використовується не для drawerToggleButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,7 +21,7 @@ import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.dialogs.AddHiveDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.HiveOptionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
-import com.beemaster.beekeeperjournal.dialogs.IOnHiveAddedListener
+import com.beemaster.beekeeperjournal.dialogs.OnHiveAddedListener
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveAddResult
@@ -33,7 +32,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListener, IOnHiveAddedListener {
+class MainActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListener, OnHiveAddedListener {
 
     @Inject
     lateinit var hiveCreator: HiveCreator
@@ -60,7 +59,7 @@ class MainActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListen
     }
 
     // -----------------------------------------------------------------------------------
-    // 1. ІМПЛЕМЕНТАЦІЯ АБСТРАКТНОГО МЕТОДУ BASEACTIVITY
+    // 1. ІМПЛЕМЕНТАЦІЯ АБСТРАКТНОГО МЕТОДУ BASE ACTIVITY
     // -----------------------------------------------------------------------------------
     override fun getLayoutResId(): Int = R.layout.activity_main
 

@@ -110,7 +110,7 @@ interface HiveDao {
      * Це допоміжний метод для імпорту/відновлення, який гарантує атомарність.
      * @param hives Список HiveEntity для імпорту.
      */
-    @Transaction // ✅ Додано: Забезпечує, що операції виконуються як єдина транзакція
+    @Transaction // Забезпечує, що операції виконуються як єдина транзакція
     suspend fun clearAndInsertHives(hives: List<HiveEntity>) {
         deleteAllHives()
         insertAllHives(hives)

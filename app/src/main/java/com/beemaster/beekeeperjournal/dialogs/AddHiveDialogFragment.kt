@@ -18,15 +18,14 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  */
 class AddHiveDialogFragment : DialogFragment() {
 
-    private lateinit var listener: IOnHiveAddedListener
+    private lateinit var listener: OnHiveAddedListener
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Прив'язуємо слухача
         try {
-            listener = context as IOnHiveAddedListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$context must implement IOnHiveAddedListener")
+            listener = context as OnHiveAddedListener
+        } catch (_: ClassCastException) {
+            throw ClassCastException("$context must implement OnHiveAddedListener")
         }
     }
 
@@ -60,7 +59,7 @@ class AddHiveDialogFragment : DialogFragment() {
             .setNegativeButton(requireContext().getString(R.string.cancel), null)
             .create()
 
-        // 5. Налаштування вікна (Фон, Ширина та ✅ Клавіатура)
+        // 5. Налаштування вікна (Фон, Ширина та  Клавіатура)
         dialog.window?.let { window ->
             // Примусове встановлення заокругленого фону для вікна
             window.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
@@ -72,8 +71,8 @@ class AddHiveDialogFragment : DialogFragment() {
             // Застосовуємо нові розміри до вікна діалогу
             window.setLayout(width, height)
 
-            // ✅ ДОДАНО: Запобігає панорамуванню, змушуючи вікно змінювати розмір.
-            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            // Запобігає панорамуванню, змушуючи вікно змінювати розмір.
+            // window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) - цей рядок треба видалити якщо не виникатиме проблем
         }
 
         return dialog

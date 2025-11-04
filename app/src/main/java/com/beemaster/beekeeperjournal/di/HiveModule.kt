@@ -17,7 +17,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object HiveModule {
 
-    // ✅ Надаємо константу default кольору вулика як просте Int
+    // Надаємо константу default кольору вулика як просте Int
     @Provides
     @Singleton
     @Named("DefaultHiveColor")

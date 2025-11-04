@@ -27,7 +27,7 @@ fun Activity.startActivityWithSlideAnimation(
 }
 
 /**
- * ✅ ДОДАНО: Запускає нову Activity із ЗВОРОТНОЮ анімацією (для навігації "Вгору" або "Назад").
+ * Запускає нову Activity із ЗВОРОТНОЮ анімацією (для навігації "Вгору" або "Назад").
  * Це забезпечує коректний UX, коли новий екран виглядає так, ніби він "в'їжджає" зліва,
  * а попередній "виїжджає" вправо.
  */
@@ -37,7 +37,8 @@ fun Activity.startActivityWithReverseSlideAnimation(
 ) {
     val options = ActivityOptionsCompat.makeCustomAnimation(
         this,
-        com.beemaster.beekeeperjournal.R.anim.slide_in_left, // Анімація входу зліва
+        com.beemaster.beekeeperjournal.R.anim.slide_in_left, //
+        // Анімація входу зліва
         com.beemaster.beekeeperjournal.R.anim.slide_out_right // Анімація виходу вправо
     )
     startActivity(intent, options.toBundle())

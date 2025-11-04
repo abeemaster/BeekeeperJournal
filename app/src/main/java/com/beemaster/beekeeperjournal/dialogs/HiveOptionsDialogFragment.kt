@@ -45,7 +45,6 @@ class HiveOptionsDialogFragment : BottomSheetDialogFragment() {
         setupEditNumberResultListener()
 
         // Отримання ID та поточних кольорів з аргументів.
-        val hiveId = arguments?.getLong(ARG_HIVE_ID) ?: 0L
         val primaryColor = arguments?.getInt(ARG_COLOR) ?: Color.BLACK
         val secondaryColor = arguments?.getInt(ARG_SECONDARY_COLOR) ?: Color.BLACK
 
@@ -69,13 +68,13 @@ class HiveOptionsDialogFragment : BottomSheetDialogFragment() {
         /** * Опція: Змінити Основний Колір. */
         view.findViewById<MaterialCardView>(R.id.selectPrimaryColorCard).setOnClickListener {
             dialog?.hide() // ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
-            showPrimaryColorPicker(hiveId, primaryColor)
+            showPrimaryColorPicker(primaryColor)
         }
 
         /** * Опція: Змінити Додатковий Колір. */
         view.findViewById<MaterialCardView>(R.id.selectSecondaryColorCard).setOnClickListener {
             dialog?.hide() // ПРИХОВУЄМО БАТЬКІВСЬКИЙ ДІАЛОГ
-            showSecondaryColorPicker(hiveId, secondaryColor)
+            showSecondaryColorPicker(secondaryColor)
         }
 
         /** * Опція: Видалити Вулик. */
@@ -115,7 +114,7 @@ class HiveOptionsDialogFragment : BottomSheetDialogFragment() {
     /**
      * Відображає діалог вибору кольору для Основного кольору.
      */
-    private fun showPrimaryColorPicker(hiveId: Long, initialColor: Int) {
+    private fun showPrimaryColorPicker(initialColor: Int) {
         val picker = ColorPickerDialogFragment.newInstance(
             initialColor,
             ColorPickerDialogFragment.KEY_PRIMARY_REQUEST
@@ -126,7 +125,7 @@ class HiveOptionsDialogFragment : BottomSheetDialogFragment() {
     /**
      * Відображає діалог вибору кольору для Додаткового кольору.
      */
-    private fun showSecondaryColorPicker(hiveId: Long, initialColor: Int) {
+    private fun showSecondaryColorPicker(initialColor: Int) {
         val picker = ColorPickerDialogFragment.newInstance(
             initialColor,
             ColorPickerDialogFragment.KEY_SECONDARY_REQUEST

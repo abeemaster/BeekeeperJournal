@@ -24,7 +24,7 @@ import javax.inject.Singleton
 @Singleton
 class NoteRepository @Inject constructor(
     private val noteDao: NoteDao,
-    private val hiveRepository: HiveRepository
+    @Suppress("unused") private val hiveRepository: HiveRepository
 ) {
     /**
      * Отримує всі нотатки з бази даних у вигляді потоку Flow.
@@ -38,33 +38,17 @@ class NoteRepository @Inject constructor(
     }
 
     /**
-     * Отримує нотатки, відфільтровані за ID вулика та типом запису.
-     * @param hiveId ID вулика (0 для загальних нотаток).
-     * @param noteType Тип нотатки.
-     * @return Flow, що містить відфільтрований список Note.
-     */
-    fun getNotesByHiveAndType(hiveId: Int, noteType: String): Flow<List<Note>> { // ЦЯ ФУНКЦІЯ ПОВЕРТАЄ ЧИСТУ ДОМЕННУ МОДЕЛЬ
-        return noteDao.getNotesByHiveAndType(hiveId, noteType).map { entities ->
-            entities.map { it.toNote() }
-        }
-    }
-
-    /**
-     * ✅ НОВА ФУНКЦІЯ: Отримує нотатки, збагачені номером вулика, для відображення в UI.
+     * Отримує нотатки, збагачені номером вулика, для відображення в UI.
      * Ця функція замінює getNotesByHiveAndType для використання у HiveInfoViewModel.
      * @param hiveId ID вулика (0 для загальних нотаток).
      * @param noteType Тип нотатки.
      * @return Flow, що містить відфільтрований список NoteDisplayModel.
      */
     fun getNotesForHiveDisplay(hiveId: Int, noteType: String): Flow<List<NoteDisplayModel>> {
-        // Використовуємо searchNotes (який робить JOIN і повертає NoteSearchResultEntity)
-        // Для live-оновлень тут необхідний Flow, тому ми використовуємо Flow
         return noteDao.searchNotes(query = "")
             .map { searchResults ->
                 searchResults
-                    // Фільтруємо на рівні репозиторію за hiveId та type.
                     .filter { it.hiveId == hiveId && it.type == noteType }
-                    // ✅ КОНВЕРТУЄМО: Використовуємо мапер для перетворення на NoteDisplayModel
                     .map { it.toNoteDisplayModel() }
             }
     }
@@ -80,7 +64,6 @@ class NoteRepository @Inject constructor(
 
     suspend fun searchNotes(query: String): List<NoteSearchResultEntity> {
         @Suppress("UNCHECKED_CAST")
-        // Отримуємо перший (і єдиний) випуск Flow, конвертуючи його в List
         return noteDao.searchNotes(query).first()
     }
 
@@ -110,15 +93,6 @@ class NoteRepository @Inject constructor(
     }
 
     /**
-     * Оновлює вміст (текст) нотатки за її ID.
-     * @param noteId ID нотатки, яку потрібно оновити.
-     * @param newContent Новий текст нотатки.
-     */
-    suspend fun updateNoteContent(noteId: Int, newContent: String) {
-        noteDao.updateNoteContent(noteId, newContent)
-    }
-
-    /**
      * Видаляє нотатку за її унікальним ID.
      */
     suspend fun deleteNote(id: Int) {
@@ -141,20 +115,8 @@ class NoteRepository @Inject constructor(
      * @return Об'єкт [NoteDisplayModel] або null.
      */
     suspend fun getNoteDisplayModelById(id: Int): NoteDisplayModel? {
-        // Ми припускаємо, що NoteDao має метод для отримання NoteSearchResultEntity за ID.
-        // Якщо такого методу в DAO немає, вам потрібно буде його створити,
-        // або отримати NoteEntity та самостійно додати hiveNumber з HiveRepository.
-
-        // Для спрощення, припустимо, що DAO повертає NoteSearchResultEntity
         val searchResult = noteDao.getNoteSearchResultById(id)
         return searchResult?.toNoteDisplayModel()
     }
 
-      /**
-     * Отримує всі нотатки для експорту або створення бекапу.
-     * @return Список об'єктів Note.
-     */
-    suspend fun getAllNotesForExport(): List<Note> {
-        return noteDao.getAllNotesSuspend().map { it.toNote() }
-    }
 }

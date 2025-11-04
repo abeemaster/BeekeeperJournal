@@ -1,7 +1,5 @@
 // ExpenseAdapter.kt
 // Адаптер для RecyclerView, який відображає список витрат.
-// ExpenseAdapter.kt
-// Адаптер для RecyclerView, який відображає список витрат.
 
 package com.beemaster.beekeeperjournal.adapters
 
@@ -25,9 +23,9 @@ import java.util.Locale
  * @property onLongClick Лямбда-функція, що викликається при довгому натисканні на елемент.
  */
 class ExpenseAdapter(
-    private val onClick: (Expense) -> Unit, // ✅ Змінено тип аргументу
-    private val onLongClick: (Expense) -> Unit // ✅ Змінено тип аргументу
-) : ListAdapter<Expense, ExpenseAdapter.ExpenseViewHolder>(ExpenseDiffCallback()) { // ✅ Змінено тип ListAdapter
+    private val onClick: (Expense) -> Unit,
+    private val onLongClick: (Expense) -> Unit
+) : ListAdapter<Expense, ExpenseAdapter.ExpenseViewHolder>(ExpenseDiffCallback()) {
 
     /**
      * Створює новий ViewHolder.
@@ -52,8 +50,8 @@ class ExpenseAdapter(
      */
     class ExpenseViewHolder(
         view: View,
-        private val onClick: (Expense) -> Unit, // ✅ Змінено тип аргументу
-        private val onLongClick: (Expense) -> Unit // ✅ Змінено тип аргументу
+        private val onClick: (Expense) -> Unit,
+        private val onLongClick: (Expense) -> Unit
     ) : RecyclerView.ViewHolder(view) {
         private val date: TextView = view.findViewById(R.id.expense_date)
         private val description: TextView = view.findViewById(R.id.expense_description)
@@ -95,7 +93,7 @@ class ExpenseAdapter(
      * Внутрішній клас для обчислення різниці між старим і новим списком елементів.
      * Забезпечує плавну анімацію та ефективне оновлення [ListAdapter].
      */
-    private class ExpenseDiffCallback : DiffUtil.ItemCallback<Expense>() { // ✅ Змінено тип DiffUtil
+    private class ExpenseDiffCallback : DiffUtil.ItemCallback<Expense>() {
         /**
          * Перевіряє, чи представляють два об'єкти один і той самий елемент (за ID).
          */

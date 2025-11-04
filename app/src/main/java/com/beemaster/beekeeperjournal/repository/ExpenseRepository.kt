@@ -61,20 +61,11 @@ class ExpenseRepository @Inject constructor(
     }
 
     /**
-     * Отримує витрату за її ID. Конвертує ExpenseEntity у Expense.
-     * @return Об'єкт Expense або null.
-     */
-    suspend fun getExpenseById(expenseId: Int): Expense? {
-        // ✅ Конвертуємо Entity у Model після читання з DAO
-        return expenseDao.getExpenseById(expenseId)?.toExpense()
-    }
-
-    /**
      * Отримує всі витрати (не Flow). Конвертує List<ExpenseEntity> у List<Expense>.
      * @return Список об'єктів Expense.
      */
     suspend fun getAllExpensesSuspend(): List<Expense> {
-        // ✅ Конвертуємо Entity у Model
+        //  Конвертуємо Entity у Model
         return expenseDao.getAllExpensesSuspend().map { it.toExpense() }
     }
 
@@ -84,7 +75,7 @@ class ExpenseRepository @Inject constructor(
      * для спрощення імпорту з бекапу (де використовуються Entity).
      */
     suspend fun importExpenses(expenses: List<Expense>) {
-        // ✅ ВИПРАВЛЕНО: Конвертуємо кожен елемент списку за допомогою map,
+        // Конвертуємо кожен елемент списку за допомогою map,
         // щоб передати DAO коректний List<ExpenseEntity>.
         val expenseEntities = expenses.map { it.toExpenseEntity() }
         expenseDao.insertExpenses(expenseEntities)

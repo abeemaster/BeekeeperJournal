@@ -22,11 +22,9 @@ import java.util.Locale
  * @property onLongClick Лямбда-функція, що викликається при довгому натисканні на елемент.
  */
 class IncomeAdapter(
-    // ✅ ЗМІНА ТИПУ: Тепер адаптер приймає Income
     private val onClick: (Income) -> Unit,
     private val onLongClick: (Income) -> Unit
-) : ListAdapter<Income, IncomeAdapter.IncomeViewHolder>(IncomeDiffCallback()) { // ✅ ЗМІНА ТИПУ
-
+) : ListAdapter<Income, IncomeAdapter.IncomeViewHolder>(IncomeDiffCallback()) {
     /**
      * Створює новий ViewHolder, використовуючи View Binding.
      */
@@ -48,13 +46,12 @@ class IncomeAdapter(
      */
     class IncomeViewHolder(
         private val binding: IncomeItemBinding,
-        // ✅ ЗМІНА ТИПУ: Тепер ViewHolder працює з Income
         private val onClick: (Income) -> Unit,
         private val onLongClick: (Income) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private val dateFormat = SimpleDateFormat("dd.MM.yy", Locale.getDefault())
-        private var currentIncome: Income? = null // ✅ ЗМІНА ТИПУ
+        private var currentIncome: Income? = null
 
         init {
             // Слухачі кліків налаштовуються ОДИН РАЗ тут
@@ -73,8 +70,8 @@ class IncomeAdapter(
          *
          * @param income Об'єкт прибутку, який потрібно відобразити.
          */
-        fun bind(income: Income) { // ✅ ЗМІНА ТИПУ
-            currentIncome = income // Зберігаємо для використання у кліках
+        fun bind(income: Income) {
+            currentIncome = income
 
             binding.tvDescription.text = income.productName
             binding.tvPricePerUnit.text = itemView.context.getString(R.string.income_amount_format, income.totalAmount)
@@ -91,7 +88,7 @@ class IncomeAdapter(
     /**
      * Внутрішній клас для обчислення різниці між старим і новим списком елементів.
      */
-    private class IncomeDiffCallback : DiffUtil.ItemCallback<Income>() { // ✅ ЗМІНА ТИПУ
+    private class IncomeDiffCallback : DiffUtil.ItemCallback<Income>() {
         /**
          * Перевіряє, чи представляють два об'єкти один і той самий елемент (за ID).
          */
@@ -103,7 +100,6 @@ class IncomeAdapter(
          * Перевіряє, чи мають два елементи однакові дані.
          */
         override fun areContentsTheSame(oldItem: Income, newItem: Income): Boolean {
-            // Перевірка всіх полів чистої Domain Model (Income)
             return oldItem == newItem
         }
     }

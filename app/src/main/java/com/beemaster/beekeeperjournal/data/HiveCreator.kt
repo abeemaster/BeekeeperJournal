@@ -13,8 +13,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class HiveCreator @Inject constructor(
-    // ✅ Ін'єкція фіксованого значення кольору
-    @Named("DefaultHiveColor") private val defaultColor: Int
+    // Ін'єкція фіксованого значення кольору
+    @param:Named("DefaultHiveColor") private val defaultColor: Int
 ) {
     /**
      * Створює новий об'єкт HiveEntity зі стандартними значеннями.
@@ -24,7 +24,7 @@ class HiveCreator @Inject constructor(
     fun createDefaultHiveEntity(number: String) = HiveEntity(
         // ID буде встановлено базою даних (0 або автогенерація)
         hiveNumber = number,
-        // ✅ Використовуємо ін'єктовану константу
+        // Використовуємо ін'єктовану константу
         color = defaultColor,
         // 0 = колір за замовчуванням / прозорий / не встановлений
         secondaryColor = 0

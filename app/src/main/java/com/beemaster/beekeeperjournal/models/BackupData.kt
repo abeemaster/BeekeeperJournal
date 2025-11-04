@@ -4,7 +4,6 @@ package com.beemaster.beekeeperjournal.models
 
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
-import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 
 /**
  * Клас-обгортка для резервної копії даних.

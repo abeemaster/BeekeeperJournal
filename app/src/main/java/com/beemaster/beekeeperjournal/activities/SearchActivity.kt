@@ -28,18 +28,15 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// Коментар тимчасовий заради коміта.
+
 /**
  * Activity для здійснення пошуку нотаток та голосового вводу (Vosk/Google).
  * Відображає результати пошуку та дозволяє переходити до відповідних екранів.
  */
 @AndroidEntryPoint
-// ✅ РЕАЛІЗАЦІЯ ІНТЕРФЕЙСУ
 class SearchActivity : BaseActivity(), VoskSearchListener {
 
-    companion object {
-        private const val TAG = "SearchActivity"
-    }
+    companion object;
 
     @Inject
     lateinit var voskModelManager: VoskModelManager
@@ -54,14 +51,15 @@ class SearchActivity : BaseActivity(), VoskSearchListener {
 
     /**
      * ViewModel для керування даними та логікою пошуку.
-     * ✅ МОЖЕ БУТИ PRIVATE, оскільки доступ до нього йде через інтерфейс/метод.
+     * МОЖЕ БУТИ PRIVATE, оскільки доступ до нього йде через інтерфейс/метод.
      */
     private val viewModel: SearchViewModel by viewModels()
 
 
     // -----------------------------------------------------------------------------------
-    //  ІМПЛЕМЕНТАЦІЯ АБСТРАКТНОГО МЕТОДУ BASEACTIVITY
+    //  ІМПЛЕМЕНТАЦІЯ АБСТРАКТНОГО МЕТОДУ BASE ACTIVITY
     // -----------------------------------------------------------------------------------
+
     override fun getLayoutResId(): Int = R.layout.activity_search
 
     /**
@@ -75,18 +73,14 @@ class SearchActivity : BaseActivity(), VoskSearchListener {
         setupRecyclerView()
         observeViewModel()
 
-        // 💡 Ініціалізуємо VoiceManager:
         voskHelper.init(
             activity = this,
             inputField = searchInput, // Передаємо поле, куди вставляти текст
             micButton = microphoneBtn // Передаємо кнопку для управління кольором
         )
 
-        // Фокусуємо поле вводу
         searchInput.requestFocus()
     }
-
-    // ... (методи onResume, onRequestPermissionsResult, onDestroy, bindViews) ...
 
     /**
      * Викликається при відновленні Activity.
@@ -94,13 +88,11 @@ class SearchActivity : BaseActivity(), VoskSearchListener {
      */
     override fun onResume() {
         super.onResume()
-        // viewModel.performSearch(searchQueryInput.text.toString())
     }
-
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        // ✅ Передаємо результат запиту дозволу хелперу:
+        // Передаємо результат запиту дозволу хелперу:
         voskHelper.onRequestPermissionsResult(requestCode, grantResults)
     }
 
@@ -110,7 +102,7 @@ class SearchActivity : BaseActivity(), VoskSearchListener {
      */
     override fun onDestroy() {
         super.onDestroy()
-        // ✅ Звільняємо ресурси Vosk/Google:
+        // Звільняємо ресурси Vosk/Google:
         voskHelper.destroy()
     }
 
@@ -124,7 +116,6 @@ class SearchActivity : BaseActivity(), VoskSearchListener {
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView)
         emptySearchPlaceholder = findViewById(R.id.emptySearchPlaceholder)
     }
-
 
     /**
      * Налаштовує слухачі подій для кнопок "Пошук", "Мікрофон".
@@ -218,6 +209,7 @@ class SearchActivity : BaseActivity(), VoskSearchListener {
             }
         }
     }
+
     /**
      * Спостерігає за результатами пошуку у ViewModel та оновлює адаптер RecyclerView.
      *
@@ -276,8 +268,9 @@ class SearchActivity : BaseActivity(), VoskSearchListener {
     // --------------------------------------------------------------------------
     // ІМПЛЕМЕНТАЦІЯ VOSKSEARCHLISTENER
     // --------------------------------------------------------------------------
+
     /**
-     * ✅ Викликається з VoiceManager після успішного голосового вводу.
+     * Викликається з VoiceManager після успішного голосового вводу.
      */
     override fun performSearchFromVosk(query: String) {
         // Ми завжди використовуємо ViewModel для виконання пошуку

@@ -29,8 +29,7 @@ import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_EDIT
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_DELETE
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ENTRY_ID
-import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ENTRY_TYPE
-// ...
+
 
 /**
  * Фрагмент для відображення списку витрат та загальної суми витрат.
@@ -75,7 +74,7 @@ class ExpensesFragment : Fragment() {
         expenseAdapter = ExpenseAdapter(
             onClick = { /* Можна додати обробку звичайного натискання, якщо потрібно */ },
             onLongClick = { expense ->
-                // ✅ ВИКЛИКАЄМО НОВИЙ УНІФІКОВАНИЙ ДІАЛОГ
+
                 showProfitabilityActionsDialog(expense)
             }
         )
@@ -84,7 +83,6 @@ class ExpensesFragment : Fragment() {
             adapter = expenseAdapter
         }
 
-        // ✅ ВСТАНОВЛЮЄМО СЛУХАЧА РЕЗУЛЬТАТУ
         setupProfitabilityActionsListener()
     }
 
@@ -96,13 +94,11 @@ class ExpensesFragment : Fragment() {
             ProfitabilityActionsDialogFragment.KEY_REQUEST,
             viewLifecycleOwner
         ) { _, bundle ->
-            // ✅ ВИПРАВЛЕННЯ 1: Отримуємо Long, але одразу приводимо до Int
             val entryIdLong = bundle.getLong(KEY_ENTRY_ID)
             val entryIdInt = entryIdLong.toInt() // <-- ПРИВЕДЕННЯ ТИПУ
 
             val action = bundle.getString(KEY_ACTION)
 
-            // ✅ ВИПРАВЛЕННЯ 2: Порівнюємо Int з Int
             val expenseToHandle = viewModel.expenses.value.find { it.id == entryIdInt }
 
             if (expenseToHandle == null) {
@@ -169,36 +165,11 @@ class ExpensesFragment : Fragment() {
      * Відображає BottomSheetDialogFragment для вибору дій над записом.
      */
     private fun showProfitabilityActionsDialog(expense: Expense) {
-        // ✅ ВИПРАВЛЕНО: Приводимо Int до Long, щоб відповідати сигнатурі newInstance
+        // Приводимо Int до Long, щоб відповідати сигнатурі newInstance
         ProfitabilityActionsDialogFragment.newInstance(
-            entryId = expense.id.toLong(), // ⬅️ ПРИВЕДЕННЯ ТИПУ ДО LONG
+            entryId = expense.id.toLong(), // ПРИВЕДЕННЯ ТИПУ ДО LONG
             entryType = Constants.TYPE_EXPENSE
         ).show(parentFragmentManager, ProfitabilityActionsDialogFragment.TAG)
-    }
-    /**
-     * Відображає діалог редагування/видалення при тривалому натисканні на елемент.
-     */
-    private fun showEditDeleteDialog(expense: Expense) { // ✅ Змінено тип аргументу на Expense
-        DialogUtils.showEditDeleteDialog(
-            context = requireContext(),
-            onEdit = {
-                // ✅ ВИПРАВЛЕНО: Тепер передаємо об'єкт Expense у DialogUtils
-                DialogUtils.showAddExpenseDialog(requireContext(), viewModel, hiveId = expense.hiveId, expenseToEdit = expense)
-            },
-            onDelete = {
-                DialogUtils.showDeleteConfirmationDialog(
-                    context = requireContext(),
-                    titleResId = R.string.confirm_delete,
-                    messageResId = R.string.delete_confirm_message,
-                    onConfirm = {
-                        viewModel.deleteExpense(expense.id)
-                        // ✅ ПОКРАЩЕННЯ: Використовуйте R.string.expense_deleted (якщо створено)
-                        // Залишив R.string.note_deleted як приклад, але краще використовувати специфічний рядок.
-                        Toast.makeText(requireContext(), getString(R.string.note_deleted), Toast.LENGTH_SHORT).show()
-                    }
-                )
-            }
-        )
     }
 
     override fun onDestroyView() {

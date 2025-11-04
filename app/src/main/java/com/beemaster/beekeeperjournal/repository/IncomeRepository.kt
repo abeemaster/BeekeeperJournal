@@ -6,8 +6,6 @@
 package com.beemaster.beekeeperjournal.repository
 
 import com.beemaster.beekeeperjournal.db.dao.IncomeDao
-import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
-// ✅ НОВІ ІМПОРТИ
 import com.beemaster.beekeeperjournal.models.Income
 import com.beemaster.beekeeperjournal.mappers.toIncome
 import com.beemaster.beekeeperjournal.mappers.toIncomeEntity
@@ -25,8 +23,7 @@ class IncomeRepository @Inject constructor(
      * Отримує потік усіх прибутків. Конвертує List<IncomeEntity> у List<Income>.
      * @return Flow зі списком об'єктів Income.
      */
-    fun getAllIncomes(): Flow<List<Income>> { // 💡 Змінено на Income
-        // ✅ КОНВЕРТАЦІЯ FLOW: Entity -> Model
+    fun getAllIncomes(): Flow<List<Income>> {
         return incomeDao.getAllIncomes().map { entities ->
             entities.map { it.toIncome() }
         }
@@ -43,8 +40,7 @@ class IncomeRepository @Inject constructor(
      * Вставляє новий прибуток у базу, конвертуючи Income у IncomeEntity.
      * @param income Бізнес-модель Income для вставки.
      */
-    suspend fun insertIncome(income: Income) { // 💡 Змінено на Income
-        // ✅ КОНВЕРТАЦІЯ: Model -> Entity перед записом
+    suspend fun insertIncome(income: Income) {
         incomeDao.insertIncome(income.toIncomeEntity())
     }
 
@@ -52,8 +48,7 @@ class IncomeRepository @Inject constructor(
      * Оновлює існуючий прибуток у базі, конвертуючи Income у IncomeEntity.
      * @param income Бізнес-модель Income для оновлення.
      */
-    suspend fun updateIncome(income: Income) { // 💡 Змінено на Income
-        // ✅ КОНВЕРТАЦІЯ: Model -> Entity перед оновленням
+    suspend fun updateIncome(income: Income) {
         incomeDao.updateIncome(income.toIncomeEntity())
     }
 
@@ -61,21 +56,12 @@ class IncomeRepository @Inject constructor(
         incomeDao.deleteIncome(incomeId)
     }
 
-    /**
-     * Отримує прибуток за його ID. Конвертує IncomeEntity у Income.
-     * @return Об'єкт Income або null.
-     */
-    suspend fun getIncomeById(incomeId: Int): Income? { // 💡 Змінено на Income?
-        // ✅ КОНВЕРТАЦІЯ: Entity -> Model після читання
-        return incomeDao.getIncomeById(incomeId)?.toIncome()
-    }
 
     /**
      * Отримує всі прибутки (не Flow). Конвертує List<IncomeEntity> у List<Income>.
      * @return Список об'єктів Income.
      */
-    suspend fun getAllIncomesSuspend(): List<Income> { // 💡 Змінено на List<Income>
-        // ✅ КОНВЕРТАЦІЯ: Entity -> Model
+    suspend fun getAllIncomesSuspend(): List<Income> {
         return incomeDao.getAllIncomesSuspend().map { it.toIncome() }
     }
 
@@ -83,14 +69,9 @@ class IncomeRepository @Inject constructor(
      * Імпортує прибутки, конвертуючи список Income у список IncomeEntity.
      * @param incomes Список Income для імпорту.
      */
-    suspend fun importIncomes(incomes: List<Income>) { // 💡 Змінено на List<Income>
-        // ✅ КОНВЕРТАЦІЯ СПИСКУ: Model -> Entity
+    suspend fun importIncomes(incomes: List<Income>) {
         val incomeEntities = incomes.map { it.toIncomeEntity() }
         incomeDao.clearAndInsertIncomes(incomeEntities)
-    }
-
-    suspend fun getFinalTotalIncome(): Double? {
-        return incomeDao.getTotalIncomeSuspend()
     }
 
 }

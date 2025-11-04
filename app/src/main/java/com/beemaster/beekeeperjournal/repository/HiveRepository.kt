@@ -96,14 +96,7 @@ class HiveRepository @Inject constructor(
     suspend fun getHiveById(hiveId: Long): HiveEntity? {
         return hiveDao.getHiveById(hiveId)
     }
-    /**
-     * Отримує всі об'єкти вулика. Використовується у синхронному контексті (наприклад, для експорту).
-     * @return Список усіх HiveEntity.
-     */
-    suspend fun getAllHivesSuspend(): List<HiveEntity> {
-        // Припускаємо, що HiveDao має відповідний suspend метод
-        return hiveDao.getAllHivesSuspend()
-    }
+
 
     /**
      * Імпортує список вуликів у базу даних, зазвичай, для відновлення.

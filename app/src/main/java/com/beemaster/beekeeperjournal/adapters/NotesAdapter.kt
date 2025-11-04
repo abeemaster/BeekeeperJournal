@@ -93,13 +93,11 @@ class NotesAdapter(
 /**
  * Допоміжний клас для обчислення різниці між списками нотаток.
  */
-// ✅ ВИПРАВЛЕНО: DiffUtil.ItemCallback тепер працює з NoteDisplayModel
 private class NoteDiffCallback : DiffUtil.ItemCallback<NoteDisplayModel>() {
 
     /**
      * Порівнюємо за унікальним ID.
      */
-    // ✅ ВИПРАВЛЕНО: Порівняння NoteDisplayModel
     override fun areItemsTheSame(oldItem: NoteDisplayModel, newItem: NoteDisplayModel): Boolean {
         return oldItem.id == newItem.id
     }
@@ -107,7 +105,6 @@ private class NoteDiffCallback : DiffUtil.ItemCallback<NoteDisplayModel>() {
     /**
      * Порівнюємо весь вміст (якщо ID однакові).
      */
-    // ✅ ВИПРАВЛЕНО: Порівняння NoteDisplayModel
     override fun areContentsTheSame(oldItem: NoteDisplayModel, newItem: NoteDisplayModel): Boolean {
         return oldItem == newItem
     }

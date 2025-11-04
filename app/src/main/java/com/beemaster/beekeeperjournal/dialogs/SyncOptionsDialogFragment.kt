@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button // Або MaterialButton, якщо ви його використовуєте
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.beemaster.beekeeperjournal.R
 import com.google.android.material.card.MaterialCardView

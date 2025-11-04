@@ -53,12 +53,11 @@ class ColorPickerDialogFragment : DialogFragment() {
 
         )
 
-        // ОНОВЛЕНИЙ newInstance: ТЕПЕР ВІН ПРИЙМАЄ requestKey
         fun newInstance(@ColorInt initialColor: Int, requestKey: String): ColorPickerDialogFragment {
             return ColorPickerDialogFragment().apply {
                 arguments = bundleOf(
                     ARG_INITIAL_COLOR to initialColor,
-                    ARG_REQUEST_KEY to requestKey // ЗБЕРІГАЄМО КЛЮЧ
+                    ARG_REQUEST_KEY to requestKey
                 )
             }
         }
@@ -67,7 +66,6 @@ class ColorPickerDialogFragment : DialogFragment() {
     private lateinit var colorGrid: GridLayout
     @ColorInt
     private var initialColor: Int = Color.BLACK
-    // ЗМІННА ДЛЯ ЗБЕРЕЖЕННЯ КЛЮЧА ЗАПИТУ
     private var requestKey: String = KEY_PRIMARY_REQUEST
 
     private var selectedView: View? = null
@@ -82,7 +80,6 @@ class ColorPickerDialogFragment : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         initialColor = arguments?.getInt(ARG_INITIAL_COLOR) ?: Color.BLACK
-        // ОТРИМУЄМО КЛЮЧ, ЯКИЙ ПОТРІБНО ПОВЕРНУТИ
         requestKey = arguments?.getString(ARG_REQUEST_KEY) ?: KEY_PRIMARY_REQUEST
 
         return inflater.inflate(R.layout.dialog_color_picker, container, false)
@@ -137,7 +134,7 @@ class ColorPickerDialogFragment : DialogFragment() {
         circle.isClickable = true
         circle.isFocusable = true
 
-        // ВИПРАВЛЕННЯ 1: Використовуємо стандартний drawable для ripple-ефекту з теми
+        // Використовуємо стандартний drawable для ripple-ефекту з теми
         val outValue = TypedValue()
         requireContext().theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
         val rippleDrawable: Drawable? = ContextCompat.getDrawable(requireContext(), outValue.resourceId)
@@ -161,7 +158,6 @@ class ColorPickerDialogFragment : DialogFragment() {
         setSelectedOutline(view, selectedOutlinePx)
         selectedView = view
 
-        // ВИКОРИСТОВУЄМО ЗБЕРЕЖЕНИЙ requestKey
         setFragmentResult(requestKey, bundleOf(KEY_COLOR to color))
         dismiss()
     }
@@ -170,7 +166,7 @@ class ColorPickerDialogFragment : DialogFragment() {
      * Встановлює кольорову рамку навколо вибраного круга.
      */
     private fun setSelectedOutline(view: View, outlinePx: Int) {
-        val typedValue = android.util.TypedValue()
+        val typedValue = TypedValue()
         val resolved = requireContext().theme.resolveAttribute(
             com.google.android.material.R.attr.colorPrimaryVariant,
             typedValue,
@@ -178,28 +174,27 @@ class ColorPickerDialogFragment : DialogFragment() {
         )
 
         if (resolved) {
-            @androidx.annotation.ColorInt
-            val colorPrimary: Int
+            @ColorInt
+            val colorPrimary: Int = if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT &&
+                typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
 
-            if (typedValue.type >= android.util.TypedValue.TYPE_FIRST_COLOR_INT &&
-                typedValue.type <= android.util.TypedValue.TYPE_LAST_COLOR_INT) {
-
-                colorPrimary = typedValue.data
+                typedValue.data
             } else {
-                colorPrimary = androidx.core.content.ContextCompat.getColor(requireContext(), typedValue.resourceId)
+                ContextCompat.getColor(requireContext(), typedValue.resourceId)
             }
 
             // Застосовуємо колір
-            (view.background as? android.graphics.drawable.GradientDrawable)?.setStroke(outlinePx, colorPrimary)
+            (view.background as? GradientDrawable)?.setStroke(outlinePx, colorPrimary)
         } else {
             // Запасний варіант
-            (view.background as? android.graphics.drawable.GradientDrawable)?.setStroke(outlinePx, android.graphics.Color.RED)
+            (view.background as? GradientDrawable)?.setStroke(outlinePx, Color.RED)
         }
     }
+
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
 
-        // ✅ ВИПРАВЛЕННЯ: Використовуємо Fragment Result API для передачі скасування.
+        // Використовуємо Fragment Result API для передачі скасування.
         // Навіть при скасуванні ми надсилаємо результат (порожній колір та флаг скасування).
         setFragmentResult(requestKey, bundleOf(
             KEY_COLOR to initialColor, // Можна повернути початковий колір або Color.TRANSPARENT

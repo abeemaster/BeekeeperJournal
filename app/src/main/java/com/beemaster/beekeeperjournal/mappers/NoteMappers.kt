@@ -2,8 +2,6 @@ package com.beemaster.beekeeperjournal.mappers
 
 import com.beemaster.beekeeperjournal.db.entity.NoteEntity
 import com.beemaster.beekeeperjournal.models.Note
-import java.text.SimpleDateFormat
-import java.util.*
 import com.beemaster.beekeeperjournal.adapters.NoteSearchResult
 import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity
 import com.beemaster.beekeeperjournal.models.NoteDisplayModel
@@ -18,7 +16,6 @@ fun NoteSearchResultEntity.toNoteDisplayModel(): NoteDisplayModel {
         text = this.content,
         type = this.type,
         hiveId = this.hiveId,
-        // ✅ ВИПРАВЛЕНО: Використовуємо коректну назву поля з Entity
         hiveDisplayNumber = this.currentHiveNumber ?: "N/A",
         timestamp = this.createdAt,
         title = this.title
@@ -33,7 +30,6 @@ fun NoteEntity.toNote(): Note {
         text = this.content, // 'content' в Entity відповідає 'text' у Domain
         type = this.type,
         hiveId = this.hiveId,
-        // ❌ ВИПРАВЛЕНО: Видалено 'hiveNumber', оскільки його немає у Note.kt
         timestamp = this.createdAt,
         title = this.title
     )
@@ -49,8 +45,8 @@ fun Note.toNoteEntity(): NoteEntity {
         hiveId = this.hiveId,
         type = this.type,
         title = this.title,
-        content = this.text, // 'text' у Domain відповідає 'content' в Entity
-        imagePath = null, // Невідоме поле у Domain, залишаємо null/default
+        content = this.text,
+        imagePath = null,
         createdAt = this.timestamp
     )
 }
@@ -60,14 +56,6 @@ fun Note.toNoteEntity(): NoteEntity {
  */
 fun List<NoteEntity>.toNoteList(): List<Note> {
     return this.map { it.toNote() }
-}
-
-/**
- * Допоміжна функція для форматування дати нотатки у формат "dd.MM.yyyy".
- */
-fun Note.getFormattedDate(): String {
-    val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-    return dateFormat.format(Date(this.timestamp))
 }
 
 /**
@@ -82,13 +70,12 @@ fun NoteSearchResultEntity.toSearchResult(): NoteSearchResult {
         text = this.content,
         type = this.type,
         hiveId = this.hiveId,
-        // ❌ ВИПРАВЛЕНО: Видалено 'hiveNumber', оскільки його немає у Note.kt
         timestamp = this.createdAt,
         title = this.title
     )
 
     // 2. Визначаємо відображуваний номер вулика.
-    // ✅ ВИПРАВЛЕНО: Використовуємо коректну назву поля з Entity
+    // Використовуємо коректну назву поля з Entity
     val displayHiveNumber: String = this.currentHiveNumber
         ?: this.hiveId.toString()
 
