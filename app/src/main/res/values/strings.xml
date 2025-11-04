@@ -30,9 +30,13 @@
     <string name="vosk_model_loaded">Vosk модель завантажена</string>
     <string name="voice_input_system">Система голосового вводу</string>
     <string name="engine_google_name">Голосова модель Google</string>
+    <string name="vosk_fallback_to_google">VOSK вибрано, але не готово</string>
     <string name="engine_vosk_name">Голосова модель Vosk</string>
     <string name="permission_denied">Дозвіл на використання мікрофона відхилено. Голосовий ввід недоступний.</string>
     <string name="vosk_model_not_ready">Модель розпізнавання Vosk ще не готова. Будь ласка, зачекайте кілька секунд і спробуйте знову.</string>
+    <string name="vosk_not_ready_fallback">Vosk ще не готовий. Використовується %s.</string>
+    <string name="vosk_error_fallback">Сталася помилка Vosk. Спроба використовувати %s.</string>
+    <string name="google_voice_engine">Google Voice</string>
 
     <!-- Рядки для activity_main.xml -->
     <string name="general_notes_button_text">Загальні записи</string>

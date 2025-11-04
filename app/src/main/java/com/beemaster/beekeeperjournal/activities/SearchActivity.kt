@@ -2,15 +2,12 @@ package com.beemaster.beekeeperjournal.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -21,25 +18,24 @@ import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SearchResultsAdapter
 import com.beemaster.beekeeperjournal.dialogs.SearchResultActionsDialogFragment
 import com.beemaster.beekeeperjournal.models.Note
-import com.beemaster.beekeeperjournal.utils.VoskRecognitionHelper
+import com.beemaster.beekeeperjournal.utils.VoiceManager
+import com.beemaster.beekeeperjournal.utils.VoskSearchListener
 import com.beemaster.beekeeperjournal.viewmodel.SearchScreenState
 import com.beemaster.beekeeperjournal.viewmodel.SearchViewModel
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
-import jakarta.inject.Inject
 import kotlinx.coroutines.launch
-import org.json.JSONObject
-import org.vosk.android.RecognitionListener
-import org.vosk.android.SpeechService
+import javax.inject.Inject
 
 // Коментар тимчасовий заради коміта.
 /**
- * Activity для здійснення пошуку нотаток та голосового вводу (Vosk).
+ * Activity для здійснення пошуку нотаток та голосового вводу (Vosk/Google).
  * Відображає результати пошуку та дозволяє переходити до відповідних екранів.
  */
 @AndroidEntryPoint
-class SearchActivity : BaseActivity(), RecognitionListener {
+// ✅ РЕАЛІЗАЦІЯ ІНТЕРФЕЙСУ
+class SearchActivity : BaseActivity(), VoskSearchListener {
 
     companion object {
         private const val TAG = "SearchActivity"
@@ -47,18 +43,18 @@ class SearchActivity : BaseActivity(), RecognitionListener {
 
     @Inject
     lateinit var voskModelManager: VoskModelManager
-    private lateinit var voskHelper: VoskRecognitionHelper
+    @Inject
+    lateinit var voskHelper: VoiceManager
     private lateinit var searchInput: EditText
     private lateinit var microphoneBtn: ImageButton
     private lateinit var searchExecuteButton: MaterialButton
     private lateinit var searchResultsRecyclerView: RecyclerView
     private lateinit var searchResultsAdapter: SearchResultsAdapter
     private lateinit var emptySearchPlaceholder: TextView
-    private var speechService: SpeechService? = null
-
 
     /**
      * ViewModel для керування даними та логікою пошуку.
+     * ✅ МОЖЕ БУТИ PRIVATE, оскільки доступ до нього йде через інтерфейс/метод.
      */
     private val viewModel: SearchViewModel by viewModels()
 
@@ -78,21 +74,19 @@ class SearchActivity : BaseActivity(), RecognitionListener {
         setupListeners()
         setupRecyclerView()
         observeViewModel()
-        setupVosk()
-        // 💡 Ініціалізуємо VoskRecognitionHelper:
-        voskHelper = VoskRecognitionHelper(
+
+        // 💡 Ініціалізуємо VoiceManager:
+        voskHelper.init(
             activity = this,
-            // Заглушки, оскільки це поле використовує NoteActivity:
-            noteContentInput = EditText(this),
-            microphoneBtnEditNote = ImageButton(this),
-            voskModelManager = voskModelManager,
-            // ✅ Передаємо наше реальне поле пошуку:
-            searchInput = searchInput
+            inputField = searchInput, // Передаємо поле, куди вставляти текст
+            micButton = microphoneBtn // Передаємо кнопку для управління кольором
         )
 
-        // Встановлюємо кнопку мікрофона для керування станом (колір):
-        voskHelper.setMicrophoneButton(microphoneBtn)
+        // Фокусуємо поле вводу
+        searchInput.requestFocus()
     }
+
+    // ... (методи onResume, onRequestPermissionsResult, onDestroy, bindViews) ...
 
     /**
      * Викликається при відновленні Activity.
@@ -116,7 +110,7 @@ class SearchActivity : BaseActivity(), RecognitionListener {
      */
     override fun onDestroy() {
         super.onDestroy()
-        // ✅ Звільняємо ресурси Vosk:
+        // ✅ Звільняємо ресурси Vosk/Google:
         voskHelper.destroy()
     }
 
@@ -131,27 +125,19 @@ class SearchActivity : BaseActivity(), RecognitionListener {
         emptySearchPlaceholder = findViewById(R.id.emptySearchPlaceholder)
     }
 
+
     /**
      * Налаштовує слухачі подій для кнопок "Пошук", "Мікрофон".
      */
     private fun setupListeners() {
         // 1. Кнопка Пошук
-        searchExecuteButton.setOnClickListener { // ⬅️ ВИКОРИСТОВУЄМО ВАШУ ЗМІННУ
-            val query = searchInput.text.toString().trim() // ⬅️ ВИКОРИСТОВУЄМО ВАШУ ЗМІННУ
+        searchExecuteButton.setOnClickListener {
+            val query = searchInput.text.toString().trim()
             hideKeyboard()
             viewModel.performSearch(query)
         }
 
         // 2. Кнопка Голосовий ввід
-        /**
-        microphoneBtnSearch.setOnClickListener { // ⬅️ ВИКОРИСТОВУЄМО ВАШУ ЗМІННУ
-            if (speechService == null) {
-                startListening()
-            } else {
-                stopListening()
-            }
-        }
-         */
         microphoneBtn.setOnClickListener {
             voskHelper.checkPermissionAndStartListening()
 
@@ -286,88 +272,16 @@ class SearchActivity : BaseActivity(), RecognitionListener {
             }
         }
     }
-    /**
-     * Налаштовує компоненти для голосового розпізнавання Vosk.
-     */
-    private fun setupVosk() {
-        if (voskModelManager.isModelReady) {
-            microphoneBtn.isEnabled = true
-        } else {
-            microphoneBtn.isEnabled = false
-            Toast.makeText(this, getString(R.string.vosk_model_loading), Toast.LENGTH_LONG).show()
-
-            voskModelManager.addModelReadyListener {
-                microphoneBtn.isEnabled = true
-                Toast.makeText(this, getString(R.string.vosk_model_loaded), Toast.LENGTH_SHORT).show()
-            }
-        }
-        searchInput.requestFocus()
-    }
-
-
-    /**
-     * Зупиняє процес прослуховування Vosk та звільняє ресурси.
-     */
-    private fun stopListening() {
-        speechService?.cancel()
-        speechService?.shutdown()
-        speechService = null
-        microphoneBtn.backgroundTintList = ContextCompat.getColorStateList(this, R.color.button_microphone)
-    }
 
     // --------------------------------------------------------------------------
-    // Реалізація RecognitionListener
+    // ІМПЛЕМЕНТАЦІЯ VOSKSEARCHLISTENER
     // --------------------------------------------------------------------------
-
     /**
-     * Отримує остаточний результат розпізнавання мови, додає його до поля вводу
-     * та виконує пошук.
+     * ✅ Викликається з VoiceManager після успішного голосового вводу.
      */
-    override fun onResult(hypothesis: String) {
-        stopListening()
-        try {
-            val jsonResult = JSONObject(hypothesis)
-            val text = jsonResult.optString("text", "")
-            if (text.isNotEmpty()) {
-                searchInput.append("$text ")
-                viewModel.performSearch(searchInput.text.toString())
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error parsing Vosk JSON result: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Обробка проміжного результату розпізнавання (ігнорується).
-     */
-    override fun onPartialResult(hypothesis: String) {
-        // У цьому додатку ігноруємо проміжний результат
-    }
-
-    /**
-     * Обробка кінцевого результату розпізнавання (логіка вже в onResult).
-     */
-    override fun onFinalResult(hypothesis: String) {
-        // Обробка final result відбувається в onResult, тут нічого не робимо
-    }
-
-    /**
-     * Обробка помилок Vosk.
-     */
-    override fun onError(exception: Exception) {
-        Log.e(TAG, "onError: ${exception.message}", exception)
-        val message = getString(R.string.error_voice_input, exception.message)
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        stopListening()
-    }
-
-    /**
-     * Обробка тайм-ауту Vosk.
-     */
-    override fun onTimeout() {
-        Log.d(TAG, "onTimeout: Recognition timeout. Stopping recording.")
-        Toast.makeText(this, getString(R.string.voice_input_timeout), Toast.LENGTH_SHORT).show()
-        stopListening()
+    override fun performSearchFromVosk(query: String) {
+        // Ми завжди використовуємо ViewModel для виконання пошуку
+        viewModel.performSearch(query)
     }
 
     // --------------------------------------------------------------------------

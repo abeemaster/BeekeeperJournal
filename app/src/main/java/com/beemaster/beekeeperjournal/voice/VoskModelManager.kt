@@ -1,4 +1,4 @@
-// VoskModelManager.kt Це Менеджер або Репозиторій для моделі Vosk. Його головна мета — звільнити VoskRecognitionHelper від важкої роботи з великим файлом моделі.
+// VoskModelManager.kt Це Менеджер або Репозиторій для моделі Vosk. Його головна мета — звільнити VoiceManager від важкої роботи з великим файлом моделі.
 
 package com.beemaster.beekeeperjournal.voice
 

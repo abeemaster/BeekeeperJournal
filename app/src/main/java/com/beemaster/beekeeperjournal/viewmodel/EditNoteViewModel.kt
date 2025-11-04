@@ -39,7 +39,7 @@ class EditNoteViewModel @Inject constructor(
         viewModelScope.launch {
 
             val hive = hiveRepository.getHiveById(hiveId)
-            // val hiveNumber = hive?.hiveNumber ?: ""
+            val hiveNumber = hive?.hiveNumber ?: ""
             val note = Note(
                 id = noteId,
                 type = type,
