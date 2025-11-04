@@ -60,13 +60,6 @@ class HiveRepository @Inject constructor(
         return hiveDao.getAllHives()
     }
 
-    /**
-     * Оновлює інформацію про існуючий вулик.
-     * @param hive Об'єкт HiveEntity з оновленими даними.
-     */
-    suspend fun updateHive(hive: HiveEntity) {
-        hiveDao.updateHive(hive)
-    }
     suspend fun updateHiveNumber(hiveId: Long, newNumber: String) {
         // Виклик методу DAO
         hiveDao.updateHiveNumber(hiveId, newNumber)
