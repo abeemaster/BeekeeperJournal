@@ -3,8 +3,9 @@ package com.beemaster.beekeeperjournal.dialogs
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.content.Context
+import android.os.Build // ✅ ДОДАНО
 import android.os.Bundle
-import android.view.LayoutInflater
+// ❌ ВИДАЛЕНО: import android.view.LayoutInflater // Більше не потрібен
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
@@ -28,7 +29,6 @@ import java.util.Locale
 @AndroidEntryPoint
 class AddIncomeDialogFragment : DialogFragment() {
 
-
     private val viewModel: ProfitabilityViewModel by viewModels()
     private var incomeToEdit: Income? = null
     private var hiveId: Int = 0
@@ -45,8 +45,14 @@ class AddIncomeDialogFragment : DialogFragment() {
         arguments?.let {
             // Перевіряємо ID вулика
             hiveId = it.getInt(ARG_HIVE_ID, 0)
-            // Отримуємо об'єкт Income для редагування
-            incomeToEdit = it.getSerializable(ARG_INCOME_TO_EDIT) as? Income
+
+            // ✅ ВИПРАВЛЕННЯ 1: Використання сучасного, безпечного методу getSerializable
+            incomeToEdit = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                it.getSerializable(ARG_INCOME_TO_EDIT, Income::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                it.getSerializable(ARG_INCOME_TO_EDIT) as? Income
+            }
         }
     }
 
@@ -55,7 +61,8 @@ class AddIncomeDialogFragment : DialogFragment() {
      */
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val context = requireContext()
-        val view = LayoutInflater.from(context).inflate(R.layout.income_dialog, null)
+        // ✅ ВИПРАВЛЕННЯ 2: Заміна LayoutInflater.from(context) на layoutInflater
+        val view = layoutInflater.inflate(R.layout.income_dialog, null)
 
         // 1. Пошук елементів UI
         val descriptionEditText: EditText = view.findViewById(R.id.income_description_edit_text)
@@ -66,7 +73,8 @@ class AddIncomeDialogFragment : DialogFragment() {
         val saveButton: Button = view.findViewById(R.id.save_income_button)
 
         // 2. Налаштування полів на основі режиму (редагування чи додавання)
-        setupFields(descriptionEditText, amountEditText, unitEditText, pricePerUnitEditText, dateEditText, saveButton)
+        // ✅ ВИПРАВЛЕННЯ 3: Видалено saveButton з аргументів
+        setupFields(descriptionEditText, amountEditText, unitEditText, pricePerUnitEditText, dateEditText)
 
         // 3. Логіка вибору дати
         setupDatePicking(context, dateEditText)
@@ -95,8 +103,8 @@ class AddIncomeDialogFragment : DialogFragment() {
         amountEditText: EditText,
         unitEditText: EditText,
         pricePerUnitEditText: EditText,
-        dateEditText: EditText,
-        saveButton: Button
+        dateEditText: EditText
+        // saveButton: Button був видалений тут
     ) {
         if (incomeToEdit != null) {
             incomeToEdit?.let { income ->
@@ -180,6 +188,7 @@ class AddIncomeDialogFragment : DialogFragment() {
 
     companion object {
         private const val ARG_HIVE_ID = "hive_id"
+        // ВИПРАВЛЕНО: Income тепер має бути Serializable.
         private const val ARG_INCOME_TO_EDIT = "income_to_edit"
         const val TAG = "AddIncomeDialogFragment"
 

@@ -1,4 +1,5 @@
 // /app/build.gradle.kts
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -34,10 +35,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
+        @Suppress("DEPRECATION")
         jvmTarget = "11"
+
+        @Suppress("DEPRECATION")
+        freeCompilerArgs += listOf(
+            "-Xno-call-assertions",
+            "-Xno-param-assertions"
+        )
     }
 }
+
 dependencies {
     // Стандартні залежності AndroidX
     implementation(libs.androidx.core.ktx)

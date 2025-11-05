@@ -70,7 +70,7 @@ interface NoteDao {
      * @return Список усіх [NoteEntity].
      */
     @Query("SELECT * FROM notes")
-    suspend fun getAllNotesSuspend(): List<NoteEntity> // ✅ ДОДАНО
+    suspend fun getAllNotesSuspend(): List<NoteEntity>
 
     /**
      * Виконує пошук нотаток, поєднуючи дані з таблиці notes та hives.
@@ -86,6 +86,7 @@ interface NoteDao {
             N.createdAt AS createdAt,   -- Змінено з noteCreatedAt на createdAt
             N.type AS type,             -- ДОДАНО: вимагається сутністю NoteSearchResultEntity
             N.hiveId AS hiveId,
+            N.imagePath AS imagePath,
             H.hiveNumber AS currentHiveDisplayNumber
         FROM notes AS N
         LEFT JOIN hives AS H ON N.hiveId = H.id
@@ -120,7 +121,21 @@ interface NoteDao {
         deleteAllNotes()
         insertAllNotes(notes)
     }
-    @Query("SELECT * FROM notes INNER JOIN hives ON notes.hiveId = hives.id WHERE notes.id = :noteId")
+
+    @Query("""
+        SELECT 
+            N.id, 
+            N.hiveId, 
+            N.type, 
+            N.title, 
+            N.content, 
+            N.createdAt,
+            N.imagePath, 
+            H.hiveNumber AS currentHiveDisplayNumber
+        FROM notes AS N 
+        INNER JOIN hives AS H ON N.hiveId = H.id 
+        WHERE N.id = :noteId
+    """)
     suspend fun getNoteSearchResultById(noteId: Int): NoteSearchResultEntity?
 
     @Query("UPDATE notes SET content = :newContent WHERE id = :noteId")

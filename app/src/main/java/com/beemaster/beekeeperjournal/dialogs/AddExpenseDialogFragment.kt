@@ -3,8 +3,8 @@ package com.beemaster.beekeeperjournal.dialogs
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
@@ -36,19 +36,27 @@ class AddExpenseDialogFragment : DialogFragment() {
     private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     private val calendar = Calendar.getInstance()
 
-    /** Отримує аргументи (hiveId та expenseToEdit) з Bundle. */
+    /** Отримує аргументи (hiveId та expenseToEdit). */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
+            // Перевіряємо ID вулика
             hiveId = it.getInt(ARG_HIVE_ID, 0)
-            expenseToEdit = it.getSerializable(ARG_EXPENSE_TO_EDIT) as? Expense
+
+            // ✅ ВИПРАВЛЕННЯ 1: Використання сучасного, безпечного getSerializable
+            expenseToEdit = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                it.getSerializable(ARG_EXPENSE_TO_EDIT, Expense::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                it.getSerializable(ARG_EXPENSE_TO_EDIT) as? Expense
+            }
         }
     }
 
     /** Створює об'єкт діалогу, налаштовує поля, кнопки та логіку збереження. */
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val context = requireContext()
-        val view = LayoutInflater.from(context).inflate(R.layout.expense_dialog, null)
+        val view = layoutInflater.inflate(R.layout.expense_dialog, null)
 
         // 1. Пошук елементів UI
         val nameEditText: EditText = view.findViewById(R.id.expense_name_edit_text)

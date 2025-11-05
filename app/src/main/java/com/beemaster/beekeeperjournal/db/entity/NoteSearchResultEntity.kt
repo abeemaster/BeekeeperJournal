@@ -18,11 +18,10 @@ data class NoteSearchResultEntity(
     val title: String,
     /** Вміст нотатки. */
     val content: String,
-    /** Шлях до зображення (може бути null). */
-    val imagePath: String?,
     /** Часова мітка створення нотатки. */
     val createdAt: Long,
-
+    /** Шлях до зображення (може бути null). */
+    val imagePath: String?,
     /** * Актуальний номер вулика, отриманий із таблиці hives за допомогою JOIN.
      * Використовується для відображення в результатах пошуку.
      */
