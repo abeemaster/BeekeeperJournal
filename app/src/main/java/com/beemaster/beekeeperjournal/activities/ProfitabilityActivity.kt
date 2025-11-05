@@ -7,8 +7,9 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.view.View
+import android.view.ViewGroup
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.beemaster.beekeeperjournal.R
@@ -25,10 +26,12 @@ import java.util.Locale
  * Включає ViewPager2 з двома вкладками: Витрати та Прибутки.
  */
 @AndroidEntryPoint
-class ProfitabilityActivity : AppCompatActivity() {
+class ProfitabilityActivity : BaseActivity() {
 
     private lateinit var binding: ActivityProfitabilityBinding
     private val viewModel: ProfitabilityViewModel by viewModels()
+
+    override fun getLayoutResId(): Int = R.layout.activity_profitability
 
     /**
      * Викликається при першому створенні Activity.
@@ -36,25 +39,29 @@ class ProfitabilityActivity : AppCompatActivity() {
      * а також починає спостереження за даними рентабельності.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 1. super.onCreate() ПОВИНЕН БУТИ ПЕРШИМ. Запускає Drawer.
         super.onCreate(savedInstanceState)
-        binding = ActivityProfitabilityBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
-        //val toolbar: Toolbar = binding.toolbar
-        //setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        //toolbar.setNavigationOnClickListener { onSupportNavigateUp() }
+        // 2. Ініціалізація View Binding, прив'язка до вже встановленого макета.
+        val content: View = findViewById(android.R.id.content)
+        val rootView = (content as ViewGroup).getChildAt(0)
+        binding = ActivityProfitabilityBinding.bind(rootView)
 
+        // 3. Встановлення адаптера для ViewPager
         val sectionsPagerAdapter = SectionsPagerAdapter(this)
         binding.viewPager.adapter = sectionsPagerAdapter
+
+
+        // 4. Прикріплення TabLayoutMediator
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.text = when (position) {
-                0 -> getString(R.string.tab_title_expenses) // ✅ Локалізовано
-                1 -> getString(R.string.tab_title_income)   // ✅ Локалізовано
-                else -> throw IllegalArgumentException(getString(R.string.error_invalid_tab_position)) // ✅ Локалізовано
+                0 -> getString(R.string.tab_title_expenses)
+                1 -> getString(R.string.tab_title_income)
+                else -> throw IllegalArgumentException(getString(R.string.error_invalid_tab_position))
             }
         }.attach()
 
+        // 5. Спостереження за даними
         observeProfitability()
     }
 
@@ -79,7 +86,7 @@ class ProfitabilityActivity : AppCompatActivity() {
                     colorId = R.color.status_blue
                 }
 
-                // ✅ Використовуємо форматний рядок для локалізації
+                // Використовуємо форматний рядок для локалізації
                 val fullText = getString(R.string.annual_profitability_format, amountText)
                 val spannableString = SpannableString(fullText)
 

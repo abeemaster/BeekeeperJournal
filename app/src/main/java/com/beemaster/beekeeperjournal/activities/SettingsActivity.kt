@@ -2,82 +2,45 @@ package com.beemaster.beekeeperjournal.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ImageButton
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SettingsMenuAdapter
 import com.beemaster.beekeeperjournal.data.SettingItem
-import com.google.android.material.navigation.NavigationView
 
 /**
  * Activity, що відображає головне меню налаштувань.
- * Використовує DrawerLayout та RecyclerView для відображення пунктів.
+ * Успадковує від [BaseActivity] для використання загальної логіки DrawerLayout та навігації.
  */
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : BaseActivity() {
 
-    // Елементи, додані для нового дизайну
-    private lateinit var drawerLayout: DrawerLayout
-    private lateinit var navigationView: NavigationView
-    private lateinit var drawerToggleButton: ImageButton
-
-    // Елемент списку
+    // Елемент списку, ініціалізується у onCreate
     private lateinit var settingsRecyclerView: RecyclerView
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_settings)
+    /**
+     * Повертає ID макета для цієї Activity.
+     * Примітка: Для коректної роботи DrawerLayout у цьому макеті мають бути присутні
+     * елементи з ID R.id.drawer_layout, R.id.nav_view та R.id.drawer_toggle_button.
+     */
+    override fun getLayoutResId(): Int {
+        // ID ресурсу макета для Activity налаштувань
+        return R.layout.activity_settings
+    }
 
-        // Встановлюємо ActionBar, хоча його елементи можуть бути приховані власним ConstraintLayout
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // super.onCreate() встановлює макет, ініціалізує Base-елементи (DrawerLayout, NavigationView)
+        // та налаштовує їхні слухачі.
+        super.onCreate(savedInstanceState)
+
+        // Встановлюємо заголовок
         supportActionBar?.title = getString(R.string.title_settings)
 
-        initViews()
-        setupListeners()
-        setupSettingsList()
-    }
-
-    /**
-     * Ініціалізує елементи інтерфейсу, використовуючи ID з activity_settings.xml.
-     */
-    private fun initViews() {
-        // Ініціалізація елементів DrawerLayout
-        drawerLayout = findViewById(R.id.drawer_layout)
-        navigationView = findViewById(R.id.nav_view)
-        drawerToggleButton = findViewById(R.id.drawer_toggle_button)
-
-        // Ініціалізація RecyclerView для списку налаштувань
+        // Ініціалізація RecyclerView, оскільки вона специфічна для цієї Activity
         settingsRecyclerView = findViewById(R.id.settingsRecyclerView)
-    }
 
-    /**
-     * Налаштовує слухачів подій, зокрема для кнопки бічного меню.
-     */
-    private fun setupListeners() {
-        // Кнопка для відкриття бічного меню
-        drawerToggleButton.setOnClickListener {
-            drawerLayout.openDrawer(GravityCompat.START)
-        }
+        // Налаштування списку налаштувань
+        setupSettingsList()
 
-        // Обробка кліків на пунктах навігації (якщо ви використовуєте nav_menu)
-        navigationView.setNavigationItemSelectedListener { menuItem ->
-            drawerLayout.closeDrawer(GravityCompat.START)
-            // Примітка: Логіка навігації тут має бути ідентична тій, що у MainActivity,
-            // оскільки бічне меню спільне.
-
-            // Наразі просто закриваємо, але якщо потрібно,
-            // додайте сюди логіку openSearchActivity(), openProfitabilityActivity() тощо.
-
-            // Якщо ви повертаєтеся до MainActivity, можна зробити так:
-            if (menuItem.itemId == R.id.nav_home) {
-                finish() // Просто закриваємо SettingsActivity, щоб повернутися на головний екран
-            }
-            // ... інша логіка, якщо це потрібно для вашого бічного меню
-
-            true
-        }
     }
 
     /**
@@ -106,17 +69,4 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Обробка натискання кнопки "назад" у ActionBar.
-     * Оскільки ми використовуємо DrawerLayout, ця кнопка закриватиме бічне меню
-     * або повертатиме користувача назад.
-     */
-    override fun onSupportNavigateUp(): Boolean {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START)
-            return true
-        }
-        onBackPressedDispatcher.onBackPressed()
-        return true
-    }
 }

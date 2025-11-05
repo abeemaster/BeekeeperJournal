@@ -4,81 +4,97 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <LinearLayout
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="@dimen/content_padding"
+        android:fitsSystemWindows="true"
         tools:context=".activities.ProfitabilityActivity">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp">
-
-            <ImageButton
-                android:id="@+id/drawer_toggle_button"
-                style="@style/Widget.App.ImageButton.TouchTarget"
-                android:layout_marginStart="@dimen/spacing_tiny"
-                android:layout_marginTop="@dimen/screen_padding_negative"
-                android:contentDescription="@string/open_drawer"
-                android:src="@drawable/ic_menu_black"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="1.0" />
-
-            <TextView
-                android:id="@+id/profitabilityTitle"
-                style="@style/Widget.App.TextView.InfoTitle"
-                android:text="@string/beekeeping_profitability"
-                android:layout_marginStart="@dimen/spacing_tiny"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/drawer_toggle_button"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-        <TextView
-            android:id="@+id/year_amount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            tools:text="Річна рентабельність: 1000.00 грн"
-            android:background="@drawable/note_item_background"/>
-
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="match_parent"
             android:orientation="vertical"
+            android:padding="@dimen/content_padding">
 
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-
-            android:background="@drawable/notes_area_background"
-            android:elevation="2dp"
-            android:padding="1dp"
-            >
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tab_layout"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:padding="0dp"
-                tools:ignore="SpeakableTextPresentCheck" />
+                android:minHeight="48dp">
 
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/view_pager"
+                <ImageButton
+                    android:id="@+id/drawer_toggle_button"
+                    style="@style/Widget.App.ImageButton.TouchTarget"
+                    android:layout_marginStart="@dimen/spacing_tiny"
+                    android:layout_marginTop="@dimen/screen_padding_negative"
+                    android:contentDescription="@string/open_drawer"
+                    android:src="@drawable/ic_menu_black"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0" />
+
+                <TextView
+                    android:id="@+id/profitabilityTitle"
+                    style="@style/Widget.App.TextView.InfoTitle"
+                    android:text="@string/beekeeping_profitability"
+                    android:layout_marginStart="@dimen/spacing_tiny"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/drawer_toggle_button"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+            <TextView
+                android:id="@+id/year_amount"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                tools:text="Річна рентабельність: 1000.00 грн"
+                android:background="@drawable/note_item_background"/>
 
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+
+                android:background="@drawable/notes_area_background"
+                android:elevation="2dp"
+                android:padding="1dp"
+                >
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tab_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:padding="0dp"
+                    tools:ignore="SpeakableTextPresentCheck" />
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/view_pager"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/nav_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:fitsSystemWindows="true"
+            app:headerLayout="@layout/nav_header"
+            app:menu="@menu/nav_menu" />
+    </androidx.drawerlayout.widget.DrawerLayout>
 </layout>

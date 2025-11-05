@@ -52,6 +52,9 @@ abstract class BaseActivity : AppCompatActivity() {
 
     // Виносна функція для обробки навігації
     private fun handleNavigationItem(menuItem: MenuItem) {
+        // Закриваємо бічну панель незалежно від обраного пункту
+        drawerLayout.closeDrawer(GravityCompat.START)
+
         when (menuItem.itemId) {
             R.id.nav_home -> {
                 // Якщо ми не на головному екрані, повертаємося на нього.
@@ -60,13 +63,33 @@ abstract class BaseActivity : AppCompatActivity() {
                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
                 startActivity(intent)
-                // Якщо поточний Activity не MainActivity, він буде закритий (finish()) після переходу
+                // finish()
             }
+
             R.id.nav_search -> {
                 if (this::class.java != SearchActivity::class.java) {
                     startActivity(Intent(this, SearchActivity::class.java))
+                    // finish()
                 }
             }
+
+            R.id.nav_profitability -> {
+                if (this::class.java != ProfitabilityActivity::class.java) {
+                    startActivity(Intent(this, ProfitabilityActivity::class.java))
+                    // finish()
+                }
+            }
+
+            R.id.nav_settings -> {
+                if (this::class.java != SettingsActivity::class.java) {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                    // finish()
+                }
+            }
+
+            // =========================================================================
+            // СПЕЦІАЛЬНА ЛОГІКА: Додати вулик (на Головну)
+            // =========================================================================
             R.id.nav_add_hive -> {
                 if (this is MainActivity) {
                     this.addHive()
@@ -77,23 +100,25 @@ abstract class BaseActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
             }
+
+            // =========================================================================
+            // СПЕЦІАЛЬНА ЛОГІКА: Синхронізація (на Головну)
+            // =========================================================================
             R.id.nav_sync -> {
-                // Виклик діалогу синхронізації
-                SyncOptionsDialogFragment().show(supportFragmentManager, "SyncOptions")
-            }
-            R.id.nav_profitability -> {
-                if (this::class.java != ProfitabilityActivity::class.java) {
-                    startActivity(Intent(this, ProfitabilityActivity::class.java))
+                if (this is MainActivity) {
+                    SyncOptionsDialogFragment().show(supportFragmentManager, "SyncOptions")
+                } else {
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
+                    startActivity(intent)
                 }
             }
-            R.id.nav_settings -> {
-                if (this::class.java != SettingsActivity::class.java) {
-                    startActivity(Intent(this, SettingsActivity::class.java))
-                }
-            }
+
             R.id.nav_exit_button -> {
                 finishAffinity()
             }
         }
     }
+
 }
