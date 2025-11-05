@@ -20,7 +20,6 @@ import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.NotesAdapter
 import com.beemaster.beekeeperjournal.models.NoteDisplayModel
-import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.utils.startActivityWithReverseSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveInfoViewModel
@@ -28,6 +27,7 @@ import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.beemaster.beekeeperjournal.dialogs.NoteActionsDialogFragment
+import com.beemaster.beekeeperjournal.dialogs.showDeleteConfirmationDialog
 
 /**
  * Активиті для відображення детальної інформації та нотаток конкретного вулика
@@ -334,7 +334,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
      * @param noteId ID нотатки, яку потрібно видалити.
      */
     private fun showDeleteConfirmationDialog(noteId: Int) { // Приймаємо ID
-        DialogUtils.showDeleteConfirmationDialog(
+        showDeleteConfirmationDialog(
             context = this,
             titleResId = R.string.confirm_delete,
             messageResId = R.string.delete_confirm_message,

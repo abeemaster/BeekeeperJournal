@@ -2,6 +2,8 @@
 
 package com.beemaster.beekeeperjournal.models
 
+import java.io.Serializable
+
 /**
  * Клас даних, що представляє чисту доменну модель Прибутку.
  * Ця модель використовується у шарах Domain та Presentation (ViewModel).
@@ -24,4 +26,4 @@ data class Income(
     val unitName: String,
     val price: Double,
     val totalAmount: Double
-)
+) : Serializable

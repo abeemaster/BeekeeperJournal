@@ -18,8 +18,8 @@ import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.ExpenseAdapter
 import com.beemaster.beekeeperjournal.databinding.FragmentExpensesBinding
+import com.beemaster.beekeeperjournal.dialogs.AddExpenseDialogFragment
 import com.beemaster.beekeeperjournal.models.Expense
-import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -29,6 +29,7 @@ import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_EDIT
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_DELETE
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ENTRY_ID
+import com.beemaster.beekeeperjournal.dialogs.showDeleteConfirmationDialog
 
 
 /**
@@ -62,8 +63,8 @@ class ExpensesFragment : Fragment() {
         observeTotalExpense()
 
         binding.fabAddExpense.setOnClickListener {
-            // hiveId = 0 означає, що витрата не прив'язана до конкретного вулика
-            DialogUtils.showAddExpenseDialog(requireContext(), viewModel, hiveId = 0)
+            AddExpenseDialogFragment.newInstance(hiveId = 0)
+                .show(childFragmentManager, AddExpenseDialogFragment.TAG)
         }
     }
 
@@ -108,18 +109,15 @@ class ExpensesFragment : Fragment() {
 
             when (action) {
                 ACTION_EDIT -> {
-                    // 1. РЕДАГУВАННЯ: Використовуємо існуючу логіку DialogUtils
-                    // note: тут ми використовуємо expenseToHandle.hiveId, який може бути 0
-                    DialogUtils.showAddExpenseDialog(
-                        requireContext(),
-                        viewModel,
+                    // 1. РЕДАГУВАННЯ: Використовуємо новий DialogFragment
+                    AddExpenseDialogFragment.newInstance(
                         hiveId = expenseToHandle.hiveId, // Передаємо hiveId (може бути 0)
                         expenseToEdit = expenseToHandle
-                    )
+                    ).show(childFragmentManager, AddExpenseDialogFragment.TAG)
                 }
                 ACTION_DELETE -> {
-                    // 2. ВИДАЛЕННЯ: Використовуємо існуючу логіку DialogUtils
-                    DialogUtils.showDeleteConfirmationDialog(
+                    // 2. ВИДАЛЕННЯ: Використовуємо існуючу логіку DeleteConfirmationDialog
+                    showDeleteConfirmationDialog(
                         context = requireContext(),
                         titleResId = R.string.confirm_delete,
                         messageResId = R.string.delete_confirm_message,

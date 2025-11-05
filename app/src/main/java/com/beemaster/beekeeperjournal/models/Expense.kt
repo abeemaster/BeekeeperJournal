@@ -2,6 +2,8 @@
 
 package com.beemaster.beekeeperjournal.models
 
+import java.io.Serializable
+
 /**
  * Клас даних, що представляє бізнес-модель однієї витрати.
  * Ця модель використовується у шарі Domain та Presentation (ViewModel/UI).
@@ -23,4 +25,4 @@ data class Expense(
     val quantityUnits: Double,
     val nameQuantity: String,
     val amount: Double
-)
+) : Serializable

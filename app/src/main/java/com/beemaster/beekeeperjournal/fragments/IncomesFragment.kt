@@ -1,5 +1,7 @@
 // IncomesFragment.kt
 // Фрагмент, що відображає список прибутків.
+// IncomesFragment.kt
+// Фрагмент, що відображає список прибутків.
 
 package com.beemaster.beekeeperjournal.fragments
 
@@ -18,7 +20,6 @@ import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.IncomeAdapter
 import com.beemaster.beekeeperjournal.databinding.FragmentIncomesBinding
 import com.beemaster.beekeeperjournal.models.Income
-import com.beemaster.beekeeperjournal.utils.DialogUtils
 import com.beemaster.beekeeperjournal.viewmodel.ProfitabilityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -29,6 +30,8 @@ import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_EDIT
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.ACTION_DELETE
 import com.beemaster.beekeeperjournal.dialogs.ProfitabilityActionsDialogFragment.Companion.KEY_ENTRY_ID
+import com.beemaster.beekeeperjournal.dialogs.AddIncomeDialogFragment // ✅ Додайте цей імпорт, якщо його немає
+import com.beemaster.beekeeperjournal.dialogs.showDeleteConfirmationDialog
 
 
 /**
@@ -78,8 +81,10 @@ class IncomesFragment : Fragment() {
         observeTotalIncome()
 
         binding.fabAddIncome.setOnClickListener {
+            // ✅ ВИПРАВЛЕНО: Заміна DeleteConfirmationDialog.showAddIncomeDialog на AddIncomeDialogFragment.newInstance
             // hiveId = 0 означає, що прибуток не прив'язаний до конкретного вулика
-            DialogUtils.showAddIncomeDialog(requireContext(), viewModel, hiveId = 0)
+            AddIncomeDialogFragment.newInstance(hiveId = 0)
+                .show(childFragmentManager, AddIncomeDialogFragment.TAG)
         }
     }
 
@@ -127,17 +132,16 @@ class IncomesFragment : Fragment() {
 
             when (action) {
                 ACTION_EDIT -> {
-                    // 1. РЕДАГУВАННЯ: Використовуємо існуючу логіку DialogUtils
-                    DialogUtils.showAddIncomeDialog(
-                        requireContext(),
-                        viewModel,
+                    // ✅ ВИПРАВЛЕНО: Заміна DeleteConfirmationDialog.showAddIncomeDialog на AddIncomeDialogFragment.newInstance
+                    // 1. РЕДАГУВАННЯ: Використовуємо новий DialogFragment
+                    AddIncomeDialogFragment.newInstance(
                         hiveId = incomeToHandle.hiveId,
                         incomeToEdit = incomeToHandle
-                    )
+                    ).show(childFragmentManager, AddIncomeDialogFragment.TAG)
                 }
                 ACTION_DELETE -> {
-                    // 2. ВИДАЛЕННЯ: Використовуємо існуючу логіку DialogUtils
-                    DialogUtils.showDeleteConfirmationDialog(
+                    // 2. ВИДАЛЕННЯ: Використовуємо існуючу логіку DeleteConfirmationDialog
+                    showDeleteConfirmationDialog(
                         context = requireContext(),
                         titleResId = R.string.confirm_delete,
                         messageResId = R.string.delete_confirm_message,
