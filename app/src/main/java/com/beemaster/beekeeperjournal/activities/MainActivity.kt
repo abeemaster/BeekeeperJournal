@@ -1,14 +1,14 @@
 // MainActivity Файл головної сторінки додатка
+// MainActivity Файл головної сторінки додатка
 
 package com.beemaster.beekeeperjournal.activities
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,54 +20,61 @@ import com.beemaster.beekeeperjournal.data.HiveCreator
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.dialogs.AddHiveDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.HiveOptionsDialogFragment
-import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.OnHiveAddedListener
 import com.beemaster.beekeeperjournal.utils.BackupManager
+import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveAddResult
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import jakarta.inject.Inject
+import javax.inject.Inject // Використовуємо стандартний Javax Inject
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
-class MainActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListener, OnHiveAddedListener {
+@AndroidEntryPoint // Необхідно для інжекції
+class MainActivity : BaseActivity(), OnHiveAddedListener {
+
+    // --------------------------------------------------------------------
+    // Інжекція Hilt та ViewModel
+    // --------------------------------------------------------------------
+
+    // 1. Інжекція ViewModel (використовуємо делегат)
+    private val viewModel: MainActivityViewModel by viewModels()
 
     @Inject
     lateinit var hiveCreator: HiveCreator
+
+    // 2. Інжекція Singleton BackupManager (для Setter Injection)
+    @Inject
+    lateinit var backupManager: BackupManager
+
+    @Inject
+    lateinit var backupPrefsManager: BackupPrefsManager
+
+    // --------------------------------------------------------------------
+    // View References
+    // --------------------------------------------------------------------
+
     private lateinit var generalNotesButton: MaterialButton
     private lateinit var hiveRecyclerView: RecyclerView
     private lateinit var hiveAdapter: HiveAdapter
     private lateinit var hiveCountTextView: TextView
-    private lateinit var backupManager: BackupManager
-
-    private val viewModel: MainActivityViewModel by viewModels()
-
-    // Activity Result Launcher для вибору місця збереження файлу експорту.
-    private val getExportFile = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
-        uri?.let {
-            lifecycleScope.launch { backupManager.exportData(it) }
-        }
-    }
-
-    // Activity Result Launcher для вибору файлу імпорту.
-    private val getImportFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        uri?.let {
-            lifecycleScope.launch { backupManager.importData(it) }
-        }
-    }
 
     // -----------------------------------------------------------------------------------
     // 1. ІМПЛЕМЕНТАЦІЯ АБСТРАКТНОГО МЕТОДУ BASE ACTIVITY
     // -----------------------------------------------------------------------------------
-    override fun getLayoutResId(): Int = R.layout.activity_main
 
+    override fun getLayoutResId(): Int = R.layout.activity_main
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // ВИДАЛЕНО: setContentView(R.layout.activity_main) - викликається у BaseActivity.onCreate
+
+        // 🚀 ВИПРАВЛЕННЯ Dagger/Hilt: Setter Injection
+        // Ініціалізуємо Singleton BackupManager ViewModel'ом, щоб він отримав
+        // залежність з меншим скоупом (ViewModelC), обходячи помилку SingletonC.
+        backupManager.setDataSource(viewModel)
 
         initViews()
         setupListeners()
@@ -84,14 +91,54 @@ class MainActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListen
             }
         }
 
-        backupManager = BackupManager(this, viewModel)
+        checkBackupDirectorySet()
+    }
+
+    /**
+     * Перевіряє, чи встановлено URI каталогу для автоматичного бекапу.
+     * Якщо ні, показує SnackBar з пропозицією перейти до налаштувань.
+     */
+    private fun checkBackupDirectorySet() {
+
+        if (backupPrefsManager.getBackupDirectoryUri() == null) {
+
+            val rootView: View = findViewById(R.id.drawer_layout) ?: findViewById(android.R.id.content)
+
+            Snackbar.make(
+                rootView,
+                getString(R.string.warning_set_backup_directory),
+                Snackbar.LENGTH_LONG
+            )
+                .setAction(R.string.action_settings) {
+
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                }
+                .show()
+        }
+    }
+
+    // --------------------------------------------------------------------
+    // НОВИЙ МЕТОД: АВТОМАТИЧНИЙ БЕКАП В UNSTOP()
+    // --------------------------------------------------------------------
+
+
+    /**
+     * ✅ НОВИЙ МЕТОД: Викликається, коли Activity більше не видно.
+     * Запускає автоматичний бекап.
+     */
+    override fun onStop() {
+        super.onStop()
+
+        // Запускаємо автоматичний бекап у фоновому режимі, коли додаток йде у фон.
+        lifecycleScope.launch {
+            backupManager.createAutomaticBackup()
+        }
     }
 
     /**
      * Ініціалізує всі елементи інтерфейсу (View).
      */
     private fun initViews() {
-        // ВИДАЛЕНО: Ініціалізація drawerLayout, navigationView, drawerToggleButton
         generalNotesButton = findViewById(R.id.nav_general_notes)
         hiveRecyclerView = findViewById(R.id.hive_list_recycler_view)
         hiveCountTextView = findViewById(R.id.hiveCountTextView)
@@ -101,8 +148,6 @@ class MainActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListen
      * Налаштовує всі слухачі подій для елементів інтерфейсу.
      */
     private fun setupListeners() {
-        // ВИДАЛЕНО: drawerToggleButton.setOnClickListener
-        // ВИДАЛЕНО: navigationView.setNavigationItemSelectedListener
 
         generalNotesButton.setOnClickListener {
             val intent = Intent(this, HiveInfoActivity::class.java).apply {
@@ -185,15 +230,6 @@ class MainActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListen
             val newHive = hiveCreator.createDefaultHiveEntity(hiveNumber)
             viewModel.addNewHive(newHive)
         }
-    }
-
-    // Реалізуємо методи інтерфейсу (викликаються з BaseActivity через діалог SyncOptionsDialogFragment)
-    override fun onExportSelected() {
-        getExportFile.launch("beekeeper_backup.json")
-    }
-
-    override fun onImportSelected() {
-        getImportFile.launch(arrayOf("application/json"))
     }
 
     // ---------------------------------------------------------------------

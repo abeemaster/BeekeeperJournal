@@ -58,8 +58,6 @@
     <string name="menu_exit">Вихід</string>
     <string name="title_settings">Налаштування</string>
 
-
-    <string name="setting_title_voice_input">Голосовий ввід</string>
     <string name="setting_title_data_export">Експорт та резервна копія</string>
 
     <string name="delete_hive_title">Видалити вулик</string>
@@ -175,6 +173,36 @@
     <string name="pref_title_apiary_locations">Редагувати місця пасік</string>
     <string name="pref_title_version">Версія програми</string>
 
+    <string name="warning_set_backup_directory">Каталог для автоматичного резервного копіювання не встановлено. Дані не захищені!</string>
+    <string name="action_settings">Налаштувати</string>
+    <string name="setting_title_backup_folder">Каталог для автобекапу</string>
+    <string name="backup_directory_selection_cancelled">Вибір каталогу скасовано.</string>
+    <string name="backup_directory_set_success">Каталог для бекапу успішно встановлено!</string>
+
+    <string name="setting_title_voice_input">Голосове введення</string>
+    <string name="setting_title_sync_options">Синхронізація</string>
+    <string name="setting_title_export_manual">Створити резервну копію</string>
+    <string name="setting_title_import_manual">Відновити дані</string>
+    <string name="backup_directory_not_set">Каталог не вибрано. Натисніть, щоб вибрати.</string>
+    <string name="current_backup_path">Поточний шлях: %s</string>
+    <string name="backup_directory_permission_error">Помилка дозволів. Спробуйте вибрати інший каталог.</string>
+
+
+    <string name="setting_title_synchronization">Синхронізація</string>
+    <string name="setting_title_auto_backup_directory">Каталог для авто-бекапу</string>
+
+    <string name="dialog_title_create_backup">Створити резервну копію (Експорт)</string>
+    <string name="dialog_title_restore_backup">Відновити резервну копію (Імпорт)</string>
+
+    <string name="toast_backup_success">Резервну копію створено успішно!</string>
+    <string name="toast_restore_success">Дані відновлено успішно!</string>
+    <string name="toast_directory_set_success">Каталог для автоматичного бекапу встановлено успішно!</string>
+
+    <string name="toast_backup_error">Помилка при створенні резервної копії.</string>
+    <string name="toast_restore_error">Помилка при відновленні даних.</string>
+    <string name="toast_backup_cancelled">Створення резервної копії скасовано.</string>
+    <string name="toast_restore_cancelled">Відновлення даних скасовано.</string>
+    <string name="toast_directory_set_cancelled">Вибір каталогу скасовано.</string>
 
 
 </resources>

@@ -90,6 +90,7 @@ abstract class BaseActivity : AppCompatActivity() {
             // =========================================================================
             // СПЕЦІАЛЬНА ЛОГІКА: Додати вулик (на Головну)
             // =========================================================================
+
             R.id.nav_add_hive -> {
                 if (this is MainActivity) {
                     this.addHive()
@@ -104,6 +105,7 @@ abstract class BaseActivity : AppCompatActivity() {
             // =========================================================================
             // СПЕЦІАЛЬНА ЛОГІКА: Синхронізація (на Головну)
             // =========================================================================
+            /**
             R.id.nav_sync -> {
                 if (this is MainActivity) {
                     SyncOptionsDialogFragment().show(supportFragmentManager, "SyncOptions")
@@ -114,7 +116,7 @@ abstract class BaseActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
             }
-
+*/
             R.id.nav_exit_button -> {
                 finishAffinity()
             }

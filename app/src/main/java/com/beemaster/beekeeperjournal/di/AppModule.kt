@@ -1,5 +1,3 @@
-// Цей об'єктний клас буде відповідати за надання (провайдінг) залежностей, таких як база даних та DAO.
-
 package com.beemaster.beekeeperjournal.di
 
 import android.content.Context
@@ -20,6 +18,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import dagger.Binds
+import dagger.hilt.android.components.ViewModelComponent
+import com.beemaster.beekeeperjournal.viewmodel.BackupDataSource
+import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 
 /**
  * Модуль Dagger Hilt для надання залежностей на рівні життєвого циклу програми (Singleton).
@@ -117,5 +119,28 @@ object AppModule {
     @Provides
     fun provideExpenseRepository(expenseDao: ExpenseDao): ExpenseRepository {
         return ExpenseRepository(expenseDao)
+    }
+
+    // --------------------------------------------------------------------------
+    // Hilt Bindings для інтерфейсів
+    // --------------------------------------------------------------------------
+
+    /**
+     * Абстрактний Dagger Hilt модуль для зв'язування інтерфейсів з їхніми реалізаціями.
+     * Інстальовано у ViewModelComponent, оскільки він зв'язує ViewModel.
+     */
+    @Module
+    @InstallIn(ViewModelComponent::class) // ✅ Встановлюємо у ViewModelComponent
+    abstract class ViewModelBindsModule {
+
+        /**
+         * Зв'язує інтерфейс BackupDataSource з його реалізацією MainActivityViewModel.
+         * Це дозволяє інжектувати BackupDataSource у BackupManager,
+         * не порушуючи правила Hilt щодо HiltViewModel.
+         */
+        @Binds
+        abstract fun bindBackupDataSource(
+            mainActivityViewModel: MainActivityViewModel
+        ): BackupDataSource
     }
 }

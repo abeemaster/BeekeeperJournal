@@ -1,51 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/choose_an_action"
-        android:textAppearance="?attr/textAppearanceTitleMedium"
-        android:paddingBottom="16dp"
-        android:gravity="center_horizontal"/>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_create_backup"
         style="@style/Widget.BeekeeperJournal.DialogOptionCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp">
-
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        android:focusable="true">
         <TextView
-            android:id="@+id/text_create_backup"
-            style="@style/Widget.BeekeeperJournal.DialogCompoundOption"
-            android:text="@string/create_backup"
-            android:contentDescription="@string/create_backup"
-            app:drawableStartCompat="@drawable/ic_export_backup"
-            tools:text="Створити резервну копію" />
-
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="@string/setting_title_export_manual"
+            style="@style/Widget.BeekeeperJournal.DialogCompoundOption" />
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_restore_backup"
         style="@style/Widget.BeekeeperJournal.DialogOptionCard"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        android:focusable="true">
         <TextView
-            android:id="@+id/text_restore_backup"
-            style="@style/Widget.BeekeeperJournal.DialogCompoundOption"
-            android:text="@string/restore_backup"
-            android:contentDescription="@string/restore_backup"
-            app:drawableStartCompat="@drawable/ic_import_backup"
-            tools:text="Відновити з резервної копії" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="@string/setting_title_import_manual"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+    </com.google.android.material.card.MaterialCardView>
 
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_select_backup_folder"
+        style="@style/Widget.BeekeeperJournal.DialogOptionCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/setting_title_backup_folder"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <TextView
+                android:id="@+id/backup_path_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:text="@string/backup_directory_not_set" />
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

@@ -1,5 +1,6 @@
 package com.beemaster.beekeeperjournal.adapters
 
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +27,7 @@ class SettingsMenuAdapter(
     override fun onBindViewHolder(holder: SettingViewHolder, position: Int) {
         val item = items[position]
         holder.title.text = item.title
+        holder.title.setTypeface(null, Typeface.NORMAL)
         holder.itemView.setOnClickListener { onClick(item) }
     }
 

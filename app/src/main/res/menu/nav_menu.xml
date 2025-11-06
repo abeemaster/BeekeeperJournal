@@ -9,17 +9,13 @@
             android:icon="@drawable/ic_home_icon"
             android:title="@string/menu_home" />
         <item
-            android:id="@+id/nav_search"
-            android:icon="@drawable/ic_search"
-            android:title="@string/menu_search" />
-        <item
             android:id="@+id/nav_add_hive"
             android:icon="@drawable/ic_add_box"
             android:title="@string/menu_add_hive"/>
         <item
-            android:id="@+id/nav_sync"
-            android:icon="@drawable/ic_sync"
-            android:title="@string/menu_synchronization" />
+            android:id="@+id/nav_search"
+            android:icon="@drawable/ic_search"
+            android:title="@string/menu_search" />
         <item
             android:id="@+id/nav_profitability"
             android:icon="@drawable/ic_money_off_24dp"
