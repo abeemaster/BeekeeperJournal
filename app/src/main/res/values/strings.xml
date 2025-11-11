@@ -215,7 +215,7 @@
     <string name="log_error_auto_backup">Помилка при створенні автоматичного бекапу</string>
     <string name="toast_export_success">Резервна копія успішно створена.</string>
     <string name="toast_export_error_validation">Копія створилася з помилками. Повторіть процес.</string>
-
+    <string name="auto_backup_location_internal">Місце розташування автоматичного резервного копіювання внутрішнє.</string>
 
 </resources>
 

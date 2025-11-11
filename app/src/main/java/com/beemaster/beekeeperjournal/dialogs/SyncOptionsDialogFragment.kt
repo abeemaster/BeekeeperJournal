@@ -1,7 +1,6 @@
 package com.beemaster.beekeeperjournal.dialogs
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,12 +15,13 @@ import javax.inject.Inject
 
 /**
  * Bottom Sheet для вибору опцій синхронізації.
- * Тепер включає Ручний Експорт/Імпорт та Вибір Каталогу для Автобекапу.
+ * Тепер включає Ручний Експорт/Імпорт.
+ *
+ * ✅ Оновлено: Видалено логіку вибору каталогу для автобекапу.
  */
 @AndroidEntryPoint
 class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
 
-    // ДОДАНО: Companion Object та TAG для виклику з SettingsActivity
     companion object {
         const val TAG = "SyncOptionsDialogFragment"
     }
@@ -30,12 +30,13 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
     interface SyncOptionsListener {
         fun onExportSelected()
         fun onImportSelected()
+        // ❌ ВИДАЛЕНО: fun onSelectBackupFolder()
     }
 
     private lateinit var listener: SyncOptionsListener
 
     @Inject
-    lateinit var prefsManager: BackupPrefsManager
+    lateinit var prefsManager: BackupPrefsManager // Залишено, але не використовується для URI
 
     override fun getTheme(): Int = R.style.CustomBottomSheetDialogTheme
 
@@ -56,7 +57,6 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
 
         val cardExport: MaterialCardView = view.findViewById(R.id.card_create_backup)
         val cardImport: MaterialCardView = view.findViewById(R.id.card_restore_backup)
-        val cardSelectFolder: MaterialCardView = view.findViewById(R.id.card_select_backup_folder)
         val pathTextView: TextView = view.findViewById(R.id.backup_path_summary)
 
         // Слухачі
@@ -70,38 +70,18 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
             dismiss()
         }
 
-        cardSelectFolder.setOnClickListener {
-            listener.onSelectBackupFolder()
-            dismiss()
-        }
-
         updatePathDisplay(pathTextView)
 
         return view
     }
 
     /**
-     * Оновлює TextView, щоб відобразити поточний вибраний каталог для автобекапу.
+     * Оновлює TextView, щоб відобразити поточний статус бекапу у внутрішній пам'яті.
      */
     private fun updatePathDisplay(pathTextView: TextView) {
-        // ✅ ВИПРАВЛЕННЯ: Прибираємо аргумент 'uri'
-        val uri: Uri? = prefsManager.getBackupDirectoryUri()
-
-        if (uri != null) {
-            // Отримуємо ідентифікатор документа, який зазвичай є ім'ям каталогу в SAF
-            // Ми використовуємо URI.path, оскільки DocumentsContract може вимагати особливих дозволів
-            val pathString = uri.path ?: uri.toString()
-
-            // Відображаємо частину шляху
-            val displayPath = if (pathString.length > 30) {
-                "...${pathString.substring(pathString.length - 30)}"
-            } else {
-                pathString
-            }
-
-            pathTextView.text = getString(R.string.current_backup_path, displayPath)
-        } else {
-            pathTextView.text = getString(R.string.backup_directory_not_set)
-        }
+        // Оскільки автобекап тепер працює у внутрішній пам'яті програми,
+        // ми завжди відображаємо фіксоване повідомлення про його місцезнаходження.
+        // Припускаємо, що R.string.auto_backup_location_internal було додано до strings.xml
+        pathTextView.text = getString(R.string.auto_backup_location_internal)
     }
 }
