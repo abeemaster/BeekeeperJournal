@@ -2,98 +2,174 @@ package com.beemaster.beekeeperjournal.utils
 
 import android.content.Context
 import android.net.Uri
-import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.Toast
+import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.mappers.toIncome
 import com.beemaster.beekeeperjournal.mappers.toIncomeEntity
 import com.beemaster.beekeeperjournal.models.BackupData
 import com.beemaster.beekeeperjournal.viewmodel.BackupDataSource
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import dagger.hilt.android.qualifiers.ApplicationContext // Використовуємо Context рівня програми
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Клас, відповідальний за логіку резервного копіювання (експорту)
- * та відновлення (імпорту) даних програми.
- *
- * Використовує Setter Injection для BackupDataSource, щоб обійти обмеження Hilt.
- */
-@Singleton // ✅ Зберігаємо Singleton, щоб уникнути конфліктів у SingletonC
+@Singleton
 class BackupManager @Inject constructor(
-    // 1. Використовуємо ApplicationContext, оскільки це Singleton
-    @ApplicationContext
+    @param:ApplicationContext
     private val context: Context,
-    // 2. BackupDataSource видалено з конструктора
-    private val prefsManager: BackupPrefsManager
+    private val prefsManager: BackupPrefsManager // Залишаємо для очищення старих налаштувань
 ) {
     private val gson = Gson()
-    private val BACKUP_FILENAME = "beekeeper_auto_backup.json"
 
-    // 🚀 НОВА ВЛАСТИВІСТЬ: Зберігаємо BackupDataSource, переданий через ініціалізатор
-    @Volatile // Забезпечуємо потокобезпечність
+    private companion object {
+        // --- Константи для АВТОМАТИЧНОГО БЕКАПУ (Приватний шлях) ---
+        private const val BACKUP_DIR_NAME = "auto_backups" // Новий каталог у приватній пам'яті
+        private const val AUTO_BACKUP_FILENAME = "beekeeper_auto_backup.json"
+
+        // --- Константи для SAF (Лише для ручного експорту) ---
+        // private const val MIME_TYPE_JSON = "application/json" // Видалено, оскільки не використовується тут
+        private const val TAG = "BackupManager"
+    }
+
+    @Volatile
     private var _dataSource: BackupDataSource? = null
 
-    /**
-     * 🚀 НОВИЙ ІНІЦІАЛІЗАТОР: Викликається з Activity/Fragment, де ViewModel доступний.
-     * Це обхідний шлях для Hilt.
-     */
     fun setDataSource(dataSource: BackupDataSource) {
         if (this._dataSource == null) {
             this._dataSource = dataSource
-            Log.d("BackupManager", "BackupDataSource успішно ініціалізовано через setDataSource().")
+            Log.d(TAG, context.getString(R.string.log_datasource_initialized))
+            // ✅ ОЧИЩЕННЯ СТАРИХ URI при першій ініціалізації
+            // Примусово очищаємо старі, некоректні URI, оскільки автобекап більше їх не використовує.
+            prefsManager.clearBackupDirectoryUri()
         }
     }
 
-    // Допоміжна властивість для гарантованого доступу до dataSource
     private val dataSource: BackupDataSource
-        get() = _dataSource ?: throw IllegalStateException("BackupDataSource не ініціалізовано. Викличте setDataSource() з Activity.")
+        get() = _dataSource ?: throw IllegalStateException(context.getString(R.string.error_datasource_not_initialized))
+
+    // --------------------------------------------------------------------
+    // НОВІ МЕТОДИ: АВТОМАТИЧНИЙ БЕКАП (ВНУТРІШНЯ ПАМ'ЯТЬ)
+    // --------------------------------------------------------------------
 
     /**
-     * Експортує всі дані програми в JSON-файл за вказаним Uri (для ручного бекапу).
+     * Створює автоматичну резервну копію у **приватній пам'яті програми**
+     * (фіксований шлях). Це надійніше і не залежить від SAF.
      */
-    suspend fun exportData(uri: Uri) = withContext(Dispatchers.IO) {
+    suspend fun createAutomaticBackup() = withContext(Dispatchers.IO) {
+        // 1. Перевірка на зміни даних
+        if (!dataSource.hasDataChanged()) {
+            Log.d(TAG, context.getString(R.string.log_data_not_changed))
+            return@withContext
+        }
+
+        // 2. Визначення фіксованого шляху
+        val backupDir = File(context.filesDir, BACKUP_DIR_NAME)
+        if (!backupDir.exists()) {
+            backupDir.mkdirs()
+        }
+        val backupFile = File(backupDir, AUTO_BACKUP_FILENAME)
+
+        // 3. Збір даних
+        val backupData = getBackupData()
+        val json = gson.toJson(backupData)
+
         try {
-            // ✅ Використовуємо dataSource
-            val incomes = dataSource.getAllIncomesSuspend()
+            // 4. Запис даних у файл (стандартний Java/Kotlin File IO)
+            backupFile.outputStream().use { outputStream ->
+                OutputStreamWriter(outputStream).use { writer ->
+                    writer.write(json)
+                    writer.flush()
+                }
+            }
 
-            val backupData = BackupData(
-                hives = dataSource.getAllHivesSuspend(),
-                notes = dataSource.getAllNotesSuspend(),
-                expenses = dataSource.getAllExpensesSuspend(),
-                incomes = incomes.map { it.toIncomeEntity() }
-            )
+            // 5. Валідація
+            if (validateBackupFile(backupFile)) {
+                Log.d(TAG, "Автобекап успішно створено у: ${backupFile.absolutePath}")
+            } else {
+                // Якщо файл невалідний, логіка виведення Toast не потрібна, оскільки це автобекап.
+                Log.e(TAG, "Автобекап створено, але валідація не вдалася: ${backupFile.absolutePath}")
+            }
 
+        } catch (e: Exception) {
+            Log.e(TAG, "Помилка при створенні автобекапу у внутрішній пам'яті", e)
+        }
+    }
+
+    /**
+     * Отримує об'єкт BackupData. Використовується для обох типів бекапу.
+     */
+    private suspend fun getBackupData(): BackupData {
+        val incomes = dataSource.getAllIncomesSuspend()
+
+        return BackupData(
+            hives = dataSource.getAllHivesSuspend(),
+            notes = dataSource.getAllNotesSuspend(),
+            expenses = dataSource.getAllExpensesSuspend(),
+            incomes = incomes.map { it.toIncomeEntity() }
+        )
+    }
+
+    // --------------------------------------------------------------------
+    // МОДИФІКОВАНИЙ МЕТОД: РУЧНИЙ ЕКСПОРТ (SAF)
+    // --------------------------------------------------------------------
+
+    /**
+     * ✅ ПЕРЕЙМЕНОВАНО: Експортує дані в JSON-файл за вказаним Uri (для ручного експорту/архівування).
+     * @param uri Document Uri, який повертається SAF.
+     */
+    suspend fun exportManualData(uri: Uri) = withContext(Dispatchers.IO) {
+        try {
+            val backupData = getBackupData()
             val json = gson.toJson(backupData)
 
+            // 1. Запис даних у файл через ContentResolver (SAF)
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 OutputStreamWriter(outputStream).use { writer ->
                     writer.write(json)
+                    writer.flush()
                 }
             }
+
+            // 2. КРОК ВАЛІДАЦІЇ: Перевіряємо щойно створений файл
+            val isValid = validateBackupFile(uri)
+
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Резервну копію створено успішно!", Toast.LENGTH_SHORT).show()
+                if (isValid) {
+                    Toast.makeText(context, context.getString(R.string.toast_export_success), Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.toast_export_error_validation),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         } catch (e: Exception) {
-            Log.e("BackupManager", "Помилка експорту даних", e)
+            Log.e(TAG, context.getString(R.string.log_error_export), e)
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Помилка при створенні резервної копії: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.toast_backup_error) + ": ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
+    // --------------------------------------------------------------------
+    // МОДИФІКОВАНИЙ МЕТОД: ІМПОРТ (ПІДТРИМУЄ І ВНУТРІШНІЙ, І SAF)
+    // --------------------------------------------------------------------
+
     /**
-     * Імпортує дані з JSON-файлу за вказаним Uri (для ручного відновлення).
+     * Імпортує дані з JSON-файлу за вказаним Uri.
+     * Якщо ви хочете імпортувати з автобекапу, передайте його File URI (за допомогою Uri.fromFile(File)).
      */
     suspend fun importData(uri: Uri) = withContext(Dispatchers.IO) {
         try {
-
+            // ... (Ваша оригінальна логіка імпорту залишається незмінною)
             val json = context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 InputStreamReader(inputStream).use { reader ->
                     reader.readText()
@@ -105,96 +181,56 @@ class BackupManager @Inject constructor(
 
             val incomesToImport = backupData.incomes.map { it.toIncome() }
 
-            // 🚀 Викликаємо через dataSource
             dataSource.importHives(backupData.hives)
             dataSource.importNotes(backupData.notes)
             dataSource.importExpenses(backupData.expenses)
             dataSource.importIncomes(incomesToImport)
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Дані відновлено успішно!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_restore_success), Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
-            Log.e("BackupManager", "Помилка імпорту даних", e)
+            Log.e(TAG, context.getString(R.string.log_error_import), e)
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Помилка при відновленні даних: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.toast_restore_error) + ": ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
+    /**
+     * Перевіряє щойно створений файл бекапу на валідність.
+     * Перевантажений метод для підтримки File (внутрішній бекап)
+     */
+    private suspend fun validateBackupFile(file: File): Boolean {
+        return validateBackupFile(Uri.fromFile(file))
+    }
 
     /**
-     * Створює автоматичну резервну копію у вибраному каталозі.
+     * Перевіряє щойно створений файл бекапу на валідність (основний метод).
+     * @param uri Uri щойно створеного файлу бекапу (може бути File Uri або Content Uri).
+     * @return true, якщо файл успішно читається та парситься, false в іншому випадку.
      */
-    suspend fun createAutomaticBackup() = withContext(Dispatchers.IO) {
-        val directoryUri = prefsManager.getBackupDirectoryUri()
-        if (directoryUri == null) {
-            Log.d("BackupManager", "Каталог для автоматичного бекапу не встановлено.")
-            return@withContext
-        }
-
-        try {
-            val incomes = dataSource.getAllIncomesSuspend()
-
-            val backupData = BackupData(
-                hives = dataSource.getAllHivesSuspend(),
-                notes = dataSource.getAllNotesSuspend(),
-                expenses = dataSource.getAllExpensesSuspend(),
-                incomes = incomes.map { it.toIncomeEntity() }
-            )
-            val json = gson.toJson(backupData)
-
-            val fileUri = findOrCreateFile(directoryUri, "application/json", BACKUP_FILENAME)
-
-            if (fileUri == null) {
-                Log.e("BackupManager", "Не вдалося створити або знайти файл бекапу.")
-                return@withContext
-            }
-
-            context.contentResolver.openOutputStream(fileUri)?.use { outputStream ->
-                OutputStreamWriter(outputStream).use { writer ->
-                    writer.write(json)
+    private suspend fun validateBackupFile(uri: Uri): Boolean {
+        // ... (Ваша оригінальна логіка валідації)
+        return withContext(Dispatchers.IO) {
+            try {
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    InputStreamReader(inputStream).use { reader ->
+                        val json = reader.readText()
+                        val backupDataType = object : TypeToken<BackupData>() {}.type
+                        gson.fromJson<BackupData>(json, backupDataType)
+                    }
                 }
+                Log.d(TAG, "Резервна копія успішно пройшла валідацію.")
+                true
+            } catch (e: Exception) {
+                Log.e(TAG, "Валідація резервної копії не вдалася: ", e)
+                false
             }
-
-            Log.i("BackupManager", "Автоматичний бекап успішно створено: $BACKUP_FILENAME")
-
-        } catch (e: Exception) {
-            Log.e("BackupManager", "Помилка при створенні автоматичного бекапу", e)
         }
     }
 
-    /**
-     * Шукає існуючий файл або створює новий.
-     */
-    private fun findOrCreateFile(
-        treeUri: Uri,
-        mimeType: String,
-        displayName: String
-    ): Uri? {
-        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
-            treeUri,
-            DocumentsContract.getTreeDocumentId(treeUri)
-        )
-
-        context.contentResolver.query(
-            childrenUri,
-            arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID),
-            "${DocumentsContract.Document.COLUMN_DISPLAY_NAME} = ?",
-            arrayOf(displayName),
-            null
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val docId = cursor.getString(0)
-                return DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
-            }
-        }
-
-        return DocumentsContract.createDocument(
-            context.contentResolver,
-            treeUri,
-            mimeType,
-            displayName
-        )
-    }
+    // ✅ ВИДАЛЕНО: findOrCreateFile більше не потрібен для автобекапу, оскільки ми використовуємо File IO.
+    // Якщо ви плануєте використовувати його для ручного експорту, його треба перенести в Activity/Fragment
+    // і використовувати DocumentsContract.createDocument лише там.
 }

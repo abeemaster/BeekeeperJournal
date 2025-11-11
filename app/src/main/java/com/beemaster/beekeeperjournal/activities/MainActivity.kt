@@ -29,7 +29,7 @@ import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject // Використовуємо стандартний Javax Inject
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint // Необхідно для інжекції
@@ -71,8 +71,7 @@ class MainActivity : BaseActivity(), OnHiveAddedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🚀 ВИПРАВЛЕННЯ Dagger/Hilt: Setter Injection
-        // Ініціалізуємо Singleton BackupManager ViewModel'ом, щоб він отримав
+        // Ініціалізуємо Singleton BackupManager ViewModelled, щоб він отримав
         // залежність з меншим скоупом (ViewModelC), обходячи помилку SingletonC.
         backupManager.setDataSource(viewModel)
 
@@ -90,32 +89,8 @@ class MainActivity : BaseActivity(), OnHiveAddedListener {
                 viewModel.addHive(newHive)
             }
         }
-
-        checkBackupDirectorySet()
     }
 
-    /**
-     * Перевіряє, чи встановлено URI каталогу для автоматичного бекапу.
-     * Якщо ні, показує SnackBar з пропозицією перейти до налаштувань.
-     */
-    private fun checkBackupDirectorySet() {
-
-        if (backupPrefsManager.getBackupDirectoryUri() == null) {
-
-            val rootView: View = findViewById(R.id.drawer_layout) ?: findViewById(android.R.id.content)
-
-            Snackbar.make(
-                rootView,
-                getString(R.string.warning_set_backup_directory),
-                Snackbar.LENGTH_LONG
-            )
-                .setAction(R.string.action_settings) {
-
-                    startActivity(Intent(this, SettingsActivity::class.java))
-                }
-                .show()
-        }
-    }
 
     // --------------------------------------------------------------------
     // НОВИЙ МЕТОД: АВТОМАТИЧНИЙ БЕКАП В UNSTOP()
@@ -123,7 +98,7 @@ class MainActivity : BaseActivity(), OnHiveAddedListener {
 
 
     /**
-     * ✅ НОВИЙ МЕТОД: Викликається, коли Activity більше не видно.
+     * Викликається, коли Activity більше не видно.
      * Запускає автоматичний бекап.
      */
     override fun onStop() {

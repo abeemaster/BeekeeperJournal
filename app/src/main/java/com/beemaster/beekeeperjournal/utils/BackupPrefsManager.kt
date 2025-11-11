@@ -1,7 +1,6 @@
 package com.beemaster.beekeeperjournal.utils
 
 import android.content.Context
-import android.net.Uri
 import androidx.core.content.edit
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -9,17 +8,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Керує налаштуваннями, пов'язаними з автоматичним резервним копіюванням.
- * Зберігає URI вибраного каталогу та індекс поточної версії.
- */
-/**
  * Клас-менеджер для роботи з SharedPreferences, що стосуються функціоналу бекапу.
- * Зберігає та отримує URI каталогу, обраного користувачем для автоматичного бекапу.
+ * Зберігає та отримує індекс поточної версії бекапу.
  */
-@Singleton // ✅ Обов'язково, щоб Hilt знав, як ініціалізувати цей клас
-class BackupPrefsManager @Inject constructor( // ✅ Обов'язково: конструктор для Hilt
-    // ✅ Обов'язково: Hilt надає Context з цим кваліфікатором
-    @ApplicationContext private val context: Context
+@Singleton
+class BackupPrefsManager @Inject constructor(
+    @param:ApplicationContext private val context: Context
 ) {
 
     // Використовуємо приватні налаштування для бекапу
@@ -27,24 +21,23 @@ class BackupPrefsManager @Inject constructor( // ✅ Обов'язково: ко
 
     companion object {
         private const val PREF_NAME = "backup_prefs"
-        private const val KEY_BACKUP_DIRECTORY_URI = "backup_directory_uri"
+        // ВИДАЛЕНО: private const val KEY_BACKUP_DIRECTORY_URI = "backup_directory_uri"
+        private const val KEY_BACKUP_DIRECTORY_URI_OLD = "backup_directory_uri" // Залишаємо для очищення
         private const val KEY_LAST_BACKUP_INDEX = "last_backup_index"
         // Визначаємо кількість версій
         private const val MAX_BACKUP_VERSIONS = 3
     }
 
-    // --- URI Каталогу ---
-    fun getBackupDirectoryUri(): Uri? {
-        val uriString = prefs.getString(KEY_BACKUP_DIRECTORY_URI, null)
-        return uriString?.let { Uri.parse(it) }
-    }
+    // --- ЛОГІКА ОЧИЩЕННЯ СТАРИХ НАЛАШТУВАНЬ (Викликається BackupManager) ---
     /**
-     * ✅ ВИПРАВЛЕНО: Зберігає URI каталогу для бекапу.
-     * @param uri URI, отриманий після вибору каталогу.
+     * Очищує збережений старий URI каталогу (якщо він існував), щоб усунути проблеми.
+     * Після переходу на внутрішній автобекап цей метод більше не використовується для функціоналу,
+     * але потрібен для міграції/очищення.
      */
-    fun saveBackupDirectoryUri(uri: Uri) {
+    fun clearBackupDirectoryUri() {
         prefs.edit {
-            putString(KEY_BACKUP_DIRECTORY_URI, uri.toString())
+            remove(KEY_BACKUP_DIRECTORY_URI_OLD)
+            Log.d("BackupPrefsManager", "Старий URI каталогу бекапу очищено.")
         }
     }
 

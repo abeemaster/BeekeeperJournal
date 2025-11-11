@@ -46,9 +46,9 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
     @Inject
     lateinit var backupPrefsManager: BackupPrefsManager
 
-    // -----------------------------------------------------------------------------------
-    // ActivityResultContracts для роботи з файловою системою
-    // -----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------
+// ActivityResultContracts для роботи з файловою системою
+// -----------------------------------------------------------------------------------
 
     // 1. Для ручного експорту (Створення файлу)
     private val createBackupLauncher = registerForActivityResult(
@@ -56,7 +56,8 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
     ) { uri ->
         if (uri != null) {
             lifecycleScope.launch {
-                backupManager.exportData(uri)
+                // ЗМІНА: exportData -> exportManualData
+                backupManager.exportManualData(uri)
             }
         } else {
             Toast.makeText(this, getString(R.string.toast_backup_cancelled), Toast.LENGTH_SHORT).show()
@@ -76,23 +77,9 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         }
     }
 
-    // 3. Для вибору каталогу автоматичного бекапу
-    private val pickDirectoryLauncher = registerForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        if (uri != null) {
-            // Зберігаємо постійний доступ до URI каталогу
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            // 💡 ПРИПУЩЕННЯ: setBackupDirectoryUri існує в BackupPrefsManager.kt
-            backupPrefsManager.getBackupDirectoryUri()
-            Toast.makeText(this, getString(R.string.toast_directory_set_success), Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, getString(R.string.toast_directory_set_cancelled), Toast.LENGTH_SHORT).show()
-        }
-    }
+// 3. ВИДАЛЕНО: pickDirectoryLauncher (Логіка більше не потрібна)
+
+// ... Решта вашого коду SettingsActivity ...
 
     override fun getLayoutResId(): Int {
         return R.layout.activity_settings
@@ -145,7 +132,6 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
                 // Обробка спеціальних дій за допомогою порівняння заголовків
                 when (item.title) {
                     getString(R.string.setting_title_synchronization) -> showSyncOptionsDialog()
-                    getString(R.string.setting_title_auto_backup_directory) -> onSelectBackupFolder()
                 }
             } else {
                 // Обробка інших Activity
@@ -182,13 +168,4 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         restoreBackupLauncher.launch(arrayOf("application/json"))
     }
 
-    /**
-     * 🚀 НОВИЙ МЕТОД: Обробка вибору каталогу для автоматичного бекапу.
-     * 💡 ВИПРАВЛЕННЯ: Реалізація абстрактного методу onSelectBackupFolder(), який,
-     * судячи з помилки, присутній у вашому SyncOptionsListener.
-     */
-    override fun onSelectBackupFolder() {
-        Log.d("SettingsActivity", "Опція: Вибір каталогу для автоматичного бекапу")
-        pickDirectoryLauncher.launch(null)
-    }
 }

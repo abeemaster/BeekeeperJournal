@@ -1,4 +1,5 @@
 // Цей клас буде керувати даними для MainActivity.
+
 package com.beemaster.beekeeperjournal.viewmodel
 
 import androidx.annotation.ColorInt
@@ -39,13 +40,12 @@ enum class HiveAddResult {
 }
 
 @HiltViewModel
-// 🚀 ЗМІНА: Додаємо реалізацію нового інтерфейсу
 class MainActivityViewModel @Inject constructor(
     private val hiveRepository: HiveRepository,
     private val noteRepository: NoteRepository,
     private val expenseRepository: ExpenseRepository,
     private val incomeRepository: IncomeRepository
-) : ViewModel(), BackupDataSource { // 🚀 ІМПЛЕМЕНТУЄМО BackupDataSource
+) : ViewModel(), BackupDataSource {
 
     private val MAX_HIVES_LIMIT = 100 // Максимальний ліміт вуликів
 
@@ -74,9 +74,10 @@ class MainActivityViewModel @Inject constructor(
     /**
      * Асинхронно збирає всі дані з бази даних (вулики, нотатки, витрати, прибутки)
      * та повертає їх у вигляді об'єкта [BackupData] для серіалізації.
-     * ✅ ВИРІШУЄ Unresolved reference 'exportAllData'
+     * ВИРІШУЄ Unresolved reference 'exportAllData'
      */
-    suspend fun exportAllData(): BackupData {
+    @Suppress("unused")
+    suspend fun exportAllData(): BackupData { // Насправді функцію викристовує BackupManager.kt для збору даних перед експортом.
         return withContext(Dispatchers.IO) {
             // Викликаємо існуючі методи ViewModel для агрегації
             val hives = getAllHivesSuspend()
@@ -100,9 +101,9 @@ class MainActivityViewModel @Inject constructor(
     /**
      * TODO: МЕТОД ДЛЯ АВТОМАТИЧНОГО БЕКАПУ.
      * Повертає true, якщо є зміни, які вимагають створення нової копії.
-     * ✅ ВИРІШУЄ Unresolved reference 'hasDataChanged'
+     * ВИРІШУЄ Unresolved reference 'hasDataChanged'
      */
-    fun hasDataChanged(): Boolean {
+    override fun hasDataChanged(): Boolean {
         // Заглушка: повертаємо true для тестування автоматичного бекапу.
         return true
     }
@@ -163,7 +164,6 @@ class MainActivityViewModel @Inject constructor(
         // _hiveEventChannel.send(HiveAddResult.SUCCESS) // Надсилаємо успіх
     }
 
-
     /**
      * Видаляє об'єкт HiveEntity з бази даних.
      * @param hiveEntity Об'єкт вулику для видалення.
@@ -191,11 +191,10 @@ class MainActivityViewModel @Inject constructor(
         return hiveRepository.getHiveByNumber(hiveNumber)
     }
 
-
     /**
      * Отримує всі об'єкти HiveEntity. Використовується для експорту даних.
      * @return Список усіх HiveEntity.
-     * ✅ ВИПРАВЛЕНО: Припускаємо, що метод у репозиторії називається getAllHives()
+     * Припускаємо, що метод у репозиторії називається getAllHives()
      */
     override suspend fun getAllHivesSuspend(): List<HiveEntity> {
         return hiveRepository.getAllHives()
@@ -205,7 +204,7 @@ class MainActivityViewModel @Inject constructor(
      * Отримує всі об'єкти Note. Використовується для експорту даних.
      * Бере одноразовий знімок даних з потоку Flow.
      * @return Список усіх Note.
-     * ✅ ВИПРАВЛЕНО: Видалено зайвий маппер, оскільки repo, ймовірно, повертає List<Note>.
+     * Видалено зайвий маппер, оскільки repo, ймовірно, повертає List<Note>.
      */
     override suspend fun getAllNotesSuspend(): List<Note> {
         return noteRepository.getAllNotes().first()
@@ -258,6 +257,7 @@ class MainActivityViewModel @Inject constructor(
     override fun importIncomes(incomes: List<Income>) = viewModelScope.launch(Dispatchers.IO) {
         incomeRepository.importIncomes(incomes)
     }
+
     fun updateHivePrimaryColor(hiveId: Long, @ColorInt color: Int) {
         viewModelScope.launch {
             hiveRepository.updatePrimaryColor(hiveId, color)

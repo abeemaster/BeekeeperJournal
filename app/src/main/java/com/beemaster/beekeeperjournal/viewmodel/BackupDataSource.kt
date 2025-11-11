@@ -7,6 +7,7 @@ import com.beemaster.beekeeperjournal.models.Income
 import com.beemaster.beekeeperjournal.models.Note
 import kotlinx.coroutines.Job
 
+
 /**
  * Інтерфейс для забезпечення доступу до даних та логіки імпорту/експорту
  * для BackupManager, відокремлюючи його від конкретної реалізації ViewModel.
@@ -23,4 +24,9 @@ interface BackupDataSource {
     fun importNotes(notes: List<Note>): Job
     fun importExpenses(expenses: List<Expense>): Job
     fun importIncomes(incomes: List<Income>): Job
+    /**
+     * Перевіряє, чи були внесені зміни в базу даних
+     * з моменту останнього бекапу (для оптимізації автобекапу).
+     */
+    fun hasDataChanged(): Boolean
 }

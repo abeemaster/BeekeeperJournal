@@ -204,6 +204,18 @@
     <string name="toast_restore_cancelled">Відновлення даних скасовано.</string>
     <string name="toast_directory_set_cancelled">Вибір каталогу скасовано.</string>
 
+    <string name="log_datasource_initialized">BackupDataSource успішно ініціалізовано через setDataSource().</string>
+    <string name="error_datasource_not_initialized">BackupDataSource не ініціалізовано. Викличте setDataSource() з Activity.</string>
+    <string name="log_error_export">Помилка експорту даних</string>
+    <string name="log_error_import">Помилка імпорту даних</string>
+    <string name="log_backup_directory_not_set">Каталог для автоматичного бекапу не встановлено.</string>
+    <string name="log_data_not_changed">Дані не змінювалися з моменту останнього бекапу. Пропускаємо.</string>
+    <string name="log_error_file_create">Не вдалося створити або знайти файл бекапу.</string>
+    <string name="log_auto_backup_success">Автоматичний бекап успішно створено</string>
+    <string name="log_error_auto_backup">Помилка при створенні автоматичного бекапу</string>
+    <string name="toast_export_success">Резервна копія успішно створена.</string>
+    <string name="toast_export_error_validation">Копія створилася з помилками. Повторіть процес.</string>
+
 
 </resources>
 

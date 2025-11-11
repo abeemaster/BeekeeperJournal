@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.beemaster.beekeeperjournal.R
-import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
 import com.google.android.material.navigation.NavigationView
 
 abstract class BaseActivity : AppCompatActivity() {

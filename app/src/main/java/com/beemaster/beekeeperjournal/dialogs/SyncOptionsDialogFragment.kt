@@ -30,7 +30,6 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
     interface SyncOptionsListener {
         fun onExportSelected()
         fun onImportSelected()
-        fun onSelectBackupFolder()
     }
 
     private lateinit var listener: SyncOptionsListener
