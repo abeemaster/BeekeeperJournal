@@ -73,7 +73,6 @@ class EditNoteViewModel @Inject constructor(
     fun deleteNote(noteId: Int) {
         viewModelScope.launch {
             noteRepository.deleteNote(noteId)
-            // Оновлюємо час модифікації
             backupPrefsManager.updateLastDataModifiedTime()
         }
     }

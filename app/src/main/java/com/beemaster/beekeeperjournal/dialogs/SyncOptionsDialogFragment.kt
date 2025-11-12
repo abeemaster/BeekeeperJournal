@@ -1,7 +1,7 @@
 package com.beemaster.beekeeperjournal.dialogs
 
 import android.content.Context
-import android.net.Uri // ✅ ПОТРІБНО
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +18,7 @@ import javax.inject.Inject
  * Bottom Sheet для вибору опцій синхронізації.
  * Включає Ручний Експорт/Імпорт та Налаштування Каталогу для Автобекапу.
  *
- * ✅ Оновлено: Відновлено логіку вибору каталогу, необхідну для копіювання автобекапу в SAF.
+ * Відновлено логіку вибору каталогу, необхідну для копіювання автобекапу в SAF.
  */
 @AndroidEntryPoint
 class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
@@ -31,14 +31,13 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
     interface SyncOptionsListener {
         fun onExportSelected()
         fun onImportSelected()
-        // ✅ ВІДНОВЛЕНО: Потрібно для виклику pickDirectoryLauncher в SettingsActivity
         fun onSelectBackupFolder()
     }
 
     private lateinit var listener: SyncOptionsListener
 
     @Inject
-    // ✅ ПОТРІБНО: Тепер використовуємо prefsManager для отримання URI SAF
+    // Тепер використовуємо prefsManager для отримання URI SAF
     lateinit var prefsManager: BackupPrefsManager
 
     override fun getTheme(): Int = R.style.CustomBottomSheetDialogTheme
@@ -62,7 +61,7 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
         val cardExport: MaterialCardView = view.findViewById(R.id.card_create_backup)
         val cardImport: MaterialCardView = view.findViewById(R.id.card_restore_backup)
 
-        // ✅ ВІДНОВЛЕНО: Елемент для вибору папки
+        // Елемент для вибору папки
         val cardSelectFolder: MaterialCardView = view.findViewById(R.id.card_select_backup_folder)
         val pathTextView: TextView = view.findViewById(R.id.backup_path_summary)
 
@@ -77,7 +76,7 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
             dismiss()
         }
 
-        // ✅ ВІДНОВЛЕНО: Слухач для вибору папки
+        // Слухач для вибору папки
         cardSelectFolder.setOnClickListener {
             listener.onSelectBackupFolder()
             dismiss()

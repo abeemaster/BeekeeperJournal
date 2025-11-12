@@ -79,33 +79,4 @@ class HiveInfoViewModel @Inject constructor(
         // Припускаємо, що NoteRepository має метод для отримання NoteDisplayModel за ID
         return noteRepository.getNoteDisplayModelById(noteId)
     }
-
-    // ------------------------------------
-    // ФУНКЦІЇ ЗМІНИ ДАНИХ (CRUD)
-    // ------------------------------------
-
-    /**
-     * ОНОВЛЕНИЙ МЕТОД: Оновлює лише вміст (текст) нотатки.
-     * Це використовується після редагування нотатки у діалозі.
-     * @param noteId ID нотатки, яку потрібно оновити.
-     * @param newContent Новий текст нотатки.
-     *
-    fun updateNoteContent(noteId: Int, newContent: String) {
-        viewModelScope.launch {
-            noteRepository.updateNoteContent(noteId, newContent)
-        }
-    }
-    */
-
-    /**
-     * Видаляє нотатку з бази даних.
-     * @param noteId ID нотатки, яку потрібно видалити.
-
-    fun deleteNote(noteId: Int) {
-        viewModelScope.launch {
-            // Викликаємо функцію репозиторію для видалення за ID нотатки
-            noteRepository.deleteNote(noteId)
-        }
-    }
-     */
 }

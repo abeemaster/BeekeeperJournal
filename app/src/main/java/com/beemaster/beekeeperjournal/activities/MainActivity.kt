@@ -1,12 +1,11 @@
 // MainActivity Файл головної сторінки додатка
-// MainActivity Файл головної сторінки додатка
+
 
 package com.beemaster.beekeeperjournal.activities
 
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -27,12 +26,11 @@ import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveAddResult
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-@AndroidEntryPoint // Необхідно для інжекції
+@AndroidEntryPoint
 class MainActivity : BaseActivity(), OnHiveAddedListener {
 
     // --------------------------------------------------------------------

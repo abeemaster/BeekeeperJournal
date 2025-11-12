@@ -1,12 +1,13 @@
 package com.beemaster.beekeeperjournal.utils
 
 import android.content.Context
-import android.net.Uri // ✅ ДОДАНО: Потрібно для роботи з Uri
+import android.net.Uri
 import androidx.core.content.edit
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.core.net.toUri
 
 /**
  * Клас-менеджер для роботи з SharedPreferences, що стосуються функціоналу бекапу.
@@ -58,7 +59,7 @@ class BackupPrefsManager @Inject constructor(
 
     fun getBackupDirectoryUri(): Uri? {
         val uriString = prefs.getString(KEY_BACKUP_DIRECTORY_URI, null)
-        return uriString?.let { Uri.parse(it) }
+        return uriString?.toUri()
     }
 
     fun saveBackupDirectoryUri(uri: Uri) {
@@ -67,7 +68,6 @@ class BackupPrefsManager @Inject constructor(
         }
     }
 
-    // ❌ ВИДАЛЕНО: clearBackupDirectoryUri() - більше не потрібен, оскільки ми не очищуємо URI.
 
     // --- Логіка Версіонування ---
     fun getLastBackupIndex(): Int {

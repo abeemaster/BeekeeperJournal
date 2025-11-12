@@ -55,13 +55,11 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private lateinit var hiveInfoBtn: Button
     private lateinit var notesBtn: Button
     private lateinit var emptyNotesPlaceholder: View
-    private lateinit var currentHiveNumber: String // Номер вулика (String) або "Загальні записи"
-    private var currentHiveId: Int = 0 // ID вулика (0 для загальних записів)
-    private var currentEntryType: String = "" // Тип нотатки, що відображається ("hive", "queen", "notes", "general")
-    private val viewModel: HiveInfoViewModel by viewModels() // Ін'єкція ViewModel за допомогою Hilt
+    private lateinit var currentHiveNumber: String
+    private var currentHiveId: Int = 0
+    private var currentEntryType: String = ""
+    private val viewModel: HiveInfoViewModel by viewModels()
     private val hiveInfoViewModel: HiveInfoViewModel by viewModels()
-
-    // ✅ 2. НОВИЙ: Інжектуємо ViewModel, що містить логіку видалення
     private val editNoteViewModel: EditNoteViewModel by viewModels()
 
     /**

@@ -2,7 +2,6 @@ package com.beemaster.beekeeperjournal.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.net.Uri // ✅ ДОДАНО: Потрібно для роботи з Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,7 +51,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
     ) { uri ->
         if (uri != null) {
             lifecycleScope.launch {
-                // ✅ Викликаємо exportManualData
+                // Викликаємо exportManualData
                 backupManager.exportManualData(uri)
             }
         } else {
@@ -73,7 +72,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         }
     }
 
-    // ✅ ВІДНОВЛЕНО: Для вибору каталогу автоматичного бекапу (SAF Uri)
+    // Для вибору каталогу автоматичного бекапу (SAF Uri)
     private val pickDirectoryLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -83,7 +82,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
                 uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
-            // ✅ Зберігаємо URI у BackupPrefsManager
+            // Зберігаємо URI у BackupPrefsManager
             backupPrefsManager.saveBackupDirectoryUri(uri)
             Toast.makeText(this, getString(R.string.toast_directory_set_success), Toast.LENGTH_SHORT).show()
         } else {
@@ -122,29 +121,34 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
                 title = getString(R.string.setting_title_synchronization),
                 targetActivity = SettingsActivity::class.java
             ),
-            // ✅ ВІДНОВЛЕНО: Елемент для налаштування каталогу автобекапу
+            // Елемент для налаштування каталогу автобекапу
+            /**
             SettingItem(
                 title = getString(R.string.setting_title_auto_backup_directory),
                 targetActivity = SettingsActivity::class.java
             )
-
+            */
         )
 
         settingsRecyclerView.layoutManager = LinearLayoutManager(this)
         settingsRecyclerView.adapter = SettingsMenuAdapter(settingsList) { item ->
 
             // Обробка кліків
-            if (item.targetActivity == VoiceSettingsActivity::class.java) {
-                startActivity(Intent(this, item.targetActivity))
-            } else if (item.targetActivity == SettingsActivity::class.java) {
-                // Обробка спеціальних дій за допомогою порівняння заголовків
-                when (item.title) {
-                    getString(R.string.setting_title_synchronization) -> showSyncOptionsDialog()
-                    // ✅ ВІДНОВЛЕНО: Обробка кліку на вибір каталогу
-                    getString(R.string.setting_title_auto_backup_directory) -> onSelectBackupFolder()
+            when (item.targetActivity) {
+                VoiceSettingsActivity::class.java -> {
+                    startActivity(Intent(this, item.targetActivity))
                 }
-            } else {
-                startActivity(Intent(this, item.targetActivity))
+                SettingsActivity::class.java -> {
+                    // Обробка спеціальних дій за допомогою порівняння заголовків
+                    when (item.title) {
+                        getString(R.string.setting_title_synchronization) -> showSyncOptionsDialog()
+                        // Обробка кліку на вибір каталогу
+                        getString(R.string.setting_title_auto_backup_directory) -> onSelectBackupFolder()
+                    }
+                }
+                else -> {
+                    startActivity(Intent(this, item.targetActivity))
+                }
             }
         }
     }
@@ -178,7 +182,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
     }
 
     /**
-     * ✅ ВІДНОВЛЕНО: Реалізація абстрактного методу onSelectBackupFolder().
+     * Реалізація абстрактного методу onSelectBackupFolder().
      * Викликається з SyncOptionsDialogFragment.
      */
     override fun onSelectBackupFolder() {

@@ -42,7 +42,7 @@ class BackupManager @Inject constructor(
         if (this._dataSource == null) {
             this._dataSource = dataSource
             Log.d(TAG, context.getString(R.string.log_datasource_initialized))
-            // ❌ ВИДАЛЕНО: prefsManager.clearBackupDirectoryUri(), оскільки ми знову використовуємо URI.
+
         }
     }
 
@@ -128,7 +128,7 @@ class BackupManager @Inject constructor(
     /**
      * Копіює внутрішній файл у вибраний користувачем SAF-каталог.
      */
-    private suspend fun copyFileToSaf(sourceFile: File, treeUri: Uri) {
+    private fun copyFileToSaf(sourceFile: File, treeUri: Uri) {
         val fileName = sourceFile.name
         try {
             // 1. Отримуємо DocumentFile для каталогу SAF
