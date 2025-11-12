@@ -12,6 +12,7 @@ import com.beemaster.beekeeperjournal.models.Expense
 import com.beemaster.beekeeperjournal.models.Income
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
+import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,7 +30,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfitabilityViewModel @Inject constructor(
     private val incomeRepository: IncomeRepository,
-    private val expenseRepository: ExpenseRepository
+    private val expenseRepository: ExpenseRepository,
+    private val backupPrefsManager: BackupPrefsManager
 ) : ViewModel() {
 
     // ----------------------
@@ -98,9 +100,10 @@ class ProfitabilityViewModel @Inject constructor(
      * Виконується в фоновому потоці Dispatchers.IO.
      * @param income Об'єкт Income для вставки.
      */
-    fun insertIncome(income: Income) { // ЗМІНА ТИПУ НА Income
+    fun insertIncome(income: Income) {
         viewModelScope.launch(Dispatchers.IO) {
             incomeRepository.insertIncome(income)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 
@@ -109,9 +112,10 @@ class ProfitabilityViewModel @Inject constructor(
      * Виконується в фоновому потоці Dispatchers.IO.
      * @param income Об'єкт Income для оновлення.
      */
-    fun updateIncome(income: Income) { // ЗМІНА ТИПУ НА Income
+    fun updateIncome(income: Income) {
         viewModelScope.launch(Dispatchers.IO) {
             incomeRepository.updateIncome(income)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 
@@ -123,6 +127,7 @@ class ProfitabilityViewModel @Inject constructor(
     fun deleteIncome(incomeId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             incomeRepository.deleteIncome(incomeId)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 
@@ -138,6 +143,7 @@ class ProfitabilityViewModel @Inject constructor(
     fun insertExpense(expense: Expense) {
         viewModelScope.launch(Dispatchers.IO) {
             expenseRepository.insertExpense(expense)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 
@@ -149,6 +155,7 @@ class ProfitabilityViewModel @Inject constructor(
     fun updateExpense(expense: Expense) {
         viewModelScope.launch(Dispatchers.IO) {
             expenseRepository.updateExpense(expense)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 
@@ -160,6 +167,7 @@ class ProfitabilityViewModel @Inject constructor(
     fun deleteExpense(expenseId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             expenseRepository.deleteExpense(expenseId)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 }

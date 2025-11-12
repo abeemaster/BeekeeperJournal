@@ -100,11 +100,12 @@ class HiveInfoViewModel @Inject constructor(
     /**
      * Видаляє нотатку з бази даних.
      * @param noteId ID нотатки, яку потрібно видалити.
-     */
+
     fun deleteNote(noteId: Int) {
         viewModelScope.launch {
             // Викликаємо функцію репозиторію для видалення за ID нотатки
             noteRepository.deleteNote(noteId)
         }
     }
+     */
 }

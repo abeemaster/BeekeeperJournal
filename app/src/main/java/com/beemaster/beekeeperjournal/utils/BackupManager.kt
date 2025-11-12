@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.mappers.toIncome
 import com.beemaster.beekeeperjournal.mappers.toIncomeEntity
@@ -24,18 +25,14 @@ import javax.inject.Singleton
 class BackupManager @Inject constructor(
     @param:ApplicationContext
     private val context: Context,
-    private val prefsManager: BackupPrefsManager // Залишаємо для очищення старих налаштувань
+    private val prefsManager: BackupPrefsManager
 ) {
     private val gson = Gson()
 
     private companion object {
-        // --- Константи для АВТОМАТИЧНОГО БЕКАПУ (Приватний шлях) ---
-        private const val BACKUP_DIR_NAME = "auto_backups" // Новий каталог у приватній пам'яті
-        private const val AUTO_BACKUP_FILENAME = "beekeeper_auto_backup.json"
-
-        // --- Константи для SAF (Лише для ручного експорту) ---
-        // private const val MIME_TYPE_JSON = "application/json" // Видалено, оскільки не використовується тут
         private const val TAG = "BackupManager"
+        private const val BACKUP_DIR_NAME = "auto_backups"
+        private const val MIME_TYPE_JSON = "application/json"
     }
 
     @Volatile
@@ -45,9 +42,7 @@ class BackupManager @Inject constructor(
         if (this._dataSource == null) {
             this._dataSource = dataSource
             Log.d(TAG, context.getString(R.string.log_datasource_initialized))
-            // ✅ ОЧИЩЕННЯ СТАРИХ URI при першій ініціалізації
-            // Примусово очищаємо старі, некоректні URI, оскільки автобекап більше їх не використовує.
-            prefsManager.clearBackupDirectoryUri()
+            // ❌ ВИДАЛЕНО: prefsManager.clearBackupDirectoryUri(), оскільки ми знову використовуємо URI.
         }
     }
 
@@ -55,52 +50,115 @@ class BackupManager @Inject constructor(
         get() = _dataSource ?: throw IllegalStateException(context.getString(R.string.error_datasource_not_initialized))
 
     // --------------------------------------------------------------------
-    // НОВІ МЕТОДИ: АВТОМАТИЧНИЙ БЕКАП (ВНУТРІШНЯ ПАМ'ЯТЬ)
+    // МОДИФІКОВАНИЙ МЕТОД: АВТОМАТИЧНИЙ БЕКАП (Внутрішній + SAF Copy)
     // --------------------------------------------------------------------
 
     /**
-     * Створює автоматичну резервну копію у **приватній пам'яті програми**
-     * (фіксований шлях). Це надійніше і не залежить від SAF.
+     * Створює резервну копію у внутрішній пам'яті (надійно) та копіює її у SAF-каталог (доступно).
      */
     suspend fun createAutomaticBackup() = withContext(Dispatchers.IO) {
+
         // 1. Перевірка на зміни даних
         if (!dataSource.hasDataChanged()) {
             Log.d(TAG, context.getString(R.string.log_data_not_changed))
+            // Ми не викликаємо getAndIncrementNextIndex, тому тут не потрібен decrement.
             return@withContext
         }
 
-        // 2. Визначення фіксованого шляху
+        // 2. Отримуємо наступний індекс та ім'я файлу для версіонування
+        val nextIndex = prefsManager.getAndIncrementNextIndex()
+        val backupFileName = prefsManager.getBackupFileName(nextIndex)
+
+        // 3. Визначення фіксованого внутрішнього шляху
         val backupDir = File(context.filesDir, BACKUP_DIR_NAME)
         if (!backupDir.exists()) {
             backupDir.mkdirs()
         }
-        val backupFile = File(backupDir, AUTO_BACKUP_FILENAME)
-
-        // 3. Збір даних
-        val backupData = getBackupData()
-        val json = gson.toJson(backupData)
+        val internalFile = File(backupDir, backupFileName)
 
         try {
-            // 4. Запис даних у файл (стандартний Java/Kotlin File IO)
-            backupFile.outputStream().use { outputStream ->
+            // 4. Збір даних та запис у внутрішній файл
+            val backupData = getBackupData()
+            val json = gson.toJson(backupData)
+
+            internalFile.outputStream().use { outputStream ->
                 OutputStreamWriter(outputStream).use { writer ->
                     writer.write(json)
                     writer.flush()
                 }
             }
 
-            // 5. Валідація
-            if (validateBackupFile(backupFile)) {
-                Log.d(TAG, "Автобекап успішно створено у: ${backupFile.absolutePath}")
-            } else {
-                // Якщо файл невалідний, логіка виведення Toast не потрібна, оскільки це автобекап.
-                Log.e(TAG, "Автобекап створено, але валідація не вдалася: ${backupFile.absolutePath}")
+            // 5. Валідація внутрішнього файлу
+            if (!validateBackupFile(internalFile)) {
+                Log.e(TAG, "Внутрішній автобекап не пройшов валідацію. Індекс відкочено.")
+                prefsManager.decrementLastBackupIndex()
+                // Якщо невалідний, далі не продовжуємо
+                return@withContext
             }
 
+            Log.d(TAG, "Внутрішній автобекап успішно створено: ${internalFile.absolutePath}")
+
+            // 6. КРОК КОПІЮВАННЯ: Копіюємо файл у SAF-каталог
+            val safDirectoryUri = prefsManager.getBackupDirectoryUri()
+            if (safDirectoryUri != null) {
+                copyFileToSaf(internalFile, safDirectoryUri)
+            } else {
+                Log.d(TAG, "SAF каталог для автобекапу не встановлено. Копіювання не відбулося.")
+                // У цьому випадку бекап залишається лише у внутрішній пам'яті.
+            }
+
+            // 7. ОНОВЛЕННЯ ЧАСУ: Встановлюємо час останнього успішного бекапу
+            // Цей рядок виконується, лише якщо внутрішній бекап успішно створено та провалідовано.
+            prefsManager.updateLastBackupTime()
+
         } catch (e: Exception) {
-            Log.e(TAG, "Помилка при створенні автобекапу у внутрішній пам'яті", e)
+            // Обробка JobCancellationException
+            if (e is kotlinx.coroutines.CancellationException) {
+                // Це не справжня помилка бекапу, а скасування Job.
+                // Ми ігноруємо її, оскільки це нормально при завершенні роботи програми.
+                Log.w(TAG, "Автобекап був скасований Job: ${e.message}")
+            } else {
+                // Це справжня помилка IO або інша проблема
+                Log.e(TAG, "Помилка при створенні/копіюванні автобекапу.", e)
+                prefsManager.decrementLastBackupIndex()
+            }
         }
     }
+
+    /**
+     * Копіює внутрішній файл у вибраний користувачем SAF-каталог.
+     */
+    private suspend fun copyFileToSaf(sourceFile: File, treeUri: Uri) {
+        val fileName = sourceFile.name
+        try {
+            // 1. Отримуємо DocumentFile для каталогу SAF
+            val documentTree = DocumentFile.fromTreeUri(context, treeUri)
+
+            // 2. Створення або пошук файлу в SAF-каталозі
+            val documentFile = documentTree?.findFile(fileName)
+                ?: documentTree?.createFile(MIME_TYPE_JSON, fileName)
+
+            if (documentFile?.uri == null) {
+                Log.e(TAG, "Не вдалося створити або знайти файл $fileName в SAF каталозі.")
+                return
+            }
+
+            // 3. Копіювання вмісту (використовуємо ContentResolver для запису в SAF Uri)
+            context.contentResolver.openOutputStream(documentFile.uri)?.use { outputStream ->
+                sourceFile.inputStream().use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+            Log.i(TAG, "Автобекап успішно скопійовано до SAF: ${documentFile.uri}")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Помилка при копіюванні файлу $fileName до SAF", e)
+        }
+    }
+
+    // --------------------------------------------------------------------
+    // ІНШІ МЕТОДИ (Залишаються без змін)
+    // --------------------------------------------------------------------
 
     /**
      * Отримує об'єкт BackupData. Використовується для обох типів бекапу.
@@ -116,12 +174,8 @@ class BackupManager @Inject constructor(
         )
     }
 
-    // --------------------------------------------------------------------
-    // МОДИФІКОВАНИЙ МЕТОД: РУЧНИЙ ЕКСПОРТ (SAF)
-    // --------------------------------------------------------------------
-
     /**
-     * ✅ ПЕРЕЙМЕНОВАНО: Експортує дані в JSON-файл за вказаним Uri (для ручного експорту/архівування).
+     * Експортує дані в JSON-файл за вказаним Uri (для ручного експорту/архівування).
      * @param uri Document Uri, який повертається SAF.
      */
     suspend fun exportManualData(uri: Uri) = withContext(Dispatchers.IO) {
@@ -129,7 +183,6 @@ class BackupManager @Inject constructor(
             val backupData = getBackupData()
             val json = gson.toJson(backupData)
 
-            // 1. Запис даних у файл через ContentResolver (SAF)
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 OutputStreamWriter(outputStream).use { writer ->
                     writer.write(json)
@@ -137,7 +190,6 @@ class BackupManager @Inject constructor(
                 }
             }
 
-            // 2. КРОК ВАЛІДАЦІЇ: Перевіряємо щойно створений файл
             val isValid = validateBackupFile(uri)
 
             withContext(Dispatchers.Main) {
@@ -159,17 +211,11 @@ class BackupManager @Inject constructor(
         }
     }
 
-    // --------------------------------------------------------------------
-    // МОДИФІКОВАНИЙ МЕТОД: ІМПОРТ (ПІДТРИМУЄ І ВНУТРІШНІЙ, І SAF)
-    // --------------------------------------------------------------------
-
     /**
      * Імпортує дані з JSON-файлу за вказаним Uri.
-     * Якщо ви хочете імпортувати з автобекапу, передайте його File URI (за допомогою Uri.fromFile(File)).
      */
     suspend fun importData(uri: Uri) = withContext(Dispatchers.IO) {
         try {
-            // ... (Ваша оригінальна логіка імпорту залишається незмінною)
             val json = context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 InputStreamReader(inputStream).use { reader ->
                     reader.readText()
@@ -199,7 +245,6 @@ class BackupManager @Inject constructor(
 
     /**
      * Перевіряє щойно створений файл бекапу на валідність.
-     * Перевантажений метод для підтримки File (внутрішній бекап)
      */
     private suspend fun validateBackupFile(file: File): Boolean {
         return validateBackupFile(Uri.fromFile(file))
@@ -207,11 +252,8 @@ class BackupManager @Inject constructor(
 
     /**
      * Перевіряє щойно створений файл бекапу на валідність (основний метод).
-     * @param uri Uri щойно створеного файлу бекапу (може бути File Uri або Content Uri).
-     * @return true, якщо файл успішно читається та парситься, false в іншому випадку.
      */
     private suspend fun validateBackupFile(uri: Uri): Boolean {
-        // ... (Ваша оригінальна логіка валідації)
         return withContext(Dispatchers.IO) {
             try {
                 context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -229,8 +271,4 @@ class BackupManager @Inject constructor(
             }
         }
     }
-
-    // ✅ ВИДАЛЕНО: findOrCreateFile більше не потрібен для автобекапу, оскільки ми використовуємо File IO.
-    // Якщо ви плануєте використовувати його для ручного експорту, його треба перенести в Activity/Fragment
-    // і використовувати DocumentsContract.createDocument лише там.
 }

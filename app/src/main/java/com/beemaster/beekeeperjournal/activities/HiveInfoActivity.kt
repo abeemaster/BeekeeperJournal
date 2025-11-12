@@ -23,6 +23,7 @@ import com.beemaster.beekeeperjournal.models.NoteDisplayModel
 import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
 import com.beemaster.beekeeperjournal.utils.startActivityWithReverseSlideAnimation
 import com.beemaster.beekeeperjournal.viewmodel.HiveInfoViewModel
+import com.beemaster.beekeeperjournal.viewmodel.EditNoteViewModel
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -58,6 +59,10 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private var currentHiveId: Int = 0 // ID вулика (0 для загальних записів)
     private var currentEntryType: String = "" // Тип нотатки, що відображається ("hive", "queen", "notes", "general")
     private val viewModel: HiveInfoViewModel by viewModels() // Ін'єкція ViewModel за допомогою Hilt
+    private val hiveInfoViewModel: HiveInfoViewModel by viewModels()
+
+    // ✅ 2. НОВИЙ: Інжектуємо ViewModel, що містить логіку видалення
+    private val editNoteViewModel: EditNoteViewModel by viewModels()
 
     /**
      * Викликається при створенні активиті.
@@ -227,7 +232,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
 
         // Запит нотаток до ViewModel
-        viewModel.getNotesForHive(currentHiveId, currentEntryType)
+        hiveInfoViewModel.getNotesForHive(currentHiveId, currentEntryType)
     }
 
     /**
@@ -238,7 +243,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private fun observeNotes() {
         lifecycleScope.launch {
             // ✅ УВАГА: ViewModel.notes тепер має надавати List<NoteDisplayModel>
-            viewModel.notes.collect { notes ->
+            hiveInfoViewModel.notes.collect { notes ->
                 notesAdapter.submitList(notes)
 
                 // Логіка відображення заглушки
@@ -340,7 +345,7 @@ class HiveInfoActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             messageResId = R.string.delete_confirm_message,
             onConfirm = {
                 // Викликаємо видалення у ViewModel.
-                viewModel.deleteNote(noteId) //  Передаємо ID
+                editNoteViewModel.deleteNote(noteId) //  Передаємо ID
                 Toast.makeText(this, getString(R.string.note_deleted), Toast.LENGTH_SHORT).show()
             }
         )

@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
 
 /**
  * Клас-перерахування для кодування результатів операцій додавання вулика.
@@ -44,7 +45,8 @@ class MainActivityViewModel @Inject constructor(
     private val hiveRepository: HiveRepository,
     private val noteRepository: NoteRepository,
     private val expenseRepository: ExpenseRepository,
-    private val incomeRepository: IncomeRepository
+    private val incomeRepository: IncomeRepository,
+    private val backupPrefsManager: BackupPrefsManager
 ) : ViewModel(), BackupDataSource {
 
     private val MAX_HIVES_LIMIT = 100 // Максимальний ліміт вуликів
@@ -99,13 +101,16 @@ class MainActivityViewModel @Inject constructor(
     }
 
     /**
-     * TODO: МЕТОД ДЛЯ АВТОМАТИЧНОГО БЕКАПУ.
-     * Повертає true, якщо є зміни, які вимагають створення нової копії.
-     * ВИРІШУЄ Unresolved reference 'hasDataChanged'
+     * Реалізує логіку перевірки змін даних.
+     * Повертає true, якщо дані в БД змінилися пізніше, ніж був зроблений останній бекап (або якщо бекапу ще не було).
      */
     override fun hasDataChanged(): Boolean {
-        // Заглушка: повертаємо true для тестування автоматичного бекапу.
-        return true
+        val lastModified = backupPrefsManager.getLastDataModifiedTime()
+        val lastBackup = backupPrefsManager.getLastBackupTime()
+
+        // Бекап потрібен, якщо дані змінювалися пізніше, ніж був зроблений останній бекап.
+        // Також бекап потрібен, якщо lastBackup == 0L (бекап ніколи не робився).
+        return lastModified > lastBackup
     }
 
     // --------------------------------------------------------------------
@@ -119,6 +124,7 @@ class MainActivityViewModel @Inject constructor(
     fun addHive(hiveEntity: HiveEntity) {
         viewModelScope.launch {
             hiveRepository.insertHive(hiveEntity)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 
@@ -142,6 +148,7 @@ class MainActivityViewModel @Inject constructor(
 
         // 3. Додавання
         hiveRepository.insertHive(newHiveEntity)
+        backupPrefsManager.updateLastDataModifiedTime()
         _hiveEventChannel.send(HiveAddResult.SUCCESS)
     }
 
@@ -178,6 +185,7 @@ class MainActivityViewModel @Inject constructor(
             // яка, у свою чергу, викликає Room @Delete.
             hiveEntity?.let {
                 hiveRepository.deleteHive(it)
+                backupPrefsManager.updateLastDataModifiedTime()
             }
         }
     }
@@ -189,6 +197,7 @@ class MainActivityViewModel @Inject constructor(
      */
     suspend fun getHiveByNumber(hiveNumber: String): HiveEntity? {
         return hiveRepository.getHiveByNumber(hiveNumber)
+
     }
 
     /**
@@ -198,6 +207,7 @@ class MainActivityViewModel @Inject constructor(
      */
     override suspend fun getAllHivesSuspend(): List<HiveEntity> {
         return hiveRepository.getAllHives()
+
     }
 
     /**
@@ -208,6 +218,7 @@ class MainActivityViewModel @Inject constructor(
      */
     override suspend fun getAllNotesSuspend(): List<Note> {
         return noteRepository.getAllNotes().first()
+
     }
 
     /**
@@ -216,6 +227,7 @@ class MainActivityViewModel @Inject constructor(
      */
     override suspend fun getAllExpensesSuspend(): List<Expense> {
         return expenseRepository.getAllExpensesSuspend()
+
     }
 
     /**
@@ -232,6 +244,7 @@ class MainActivityViewModel @Inject constructor(
      */
     override suspend fun importHives(hives: List<HiveEntity>) = withContext(Dispatchers.IO) {
         hiveRepository.importHives(hives)
+        backupPrefsManager.updateLastDataModifiedTime()
     }
 
     /**
@@ -240,6 +253,7 @@ class MainActivityViewModel @Inject constructor(
      */
     override fun importNotes(notes: List<Note>) = viewModelScope.launch(Dispatchers.IO) {
         noteRepository.importNotes(notes)
+        backupPrefsManager.updateLastDataModifiedTime()
     }
 
     /**
@@ -248,6 +262,7 @@ class MainActivityViewModel @Inject constructor(
      */
     override fun importExpenses(expenses: List<Expense>) = viewModelScope.launch(Dispatchers.IO) {
         expenseRepository.importExpenses(expenses)
+        backupPrefsManager.updateLastDataModifiedTime()
     }
 
     /**
@@ -256,17 +271,20 @@ class MainActivityViewModel @Inject constructor(
      */
     override fun importIncomes(incomes: List<Income>) = viewModelScope.launch(Dispatchers.IO) {
         incomeRepository.importIncomes(incomes)
+        backupPrefsManager.updateLastDataModifiedTime()
     }
 
     fun updateHivePrimaryColor(hiveId: Long, @ColorInt color: Int) {
         viewModelScope.launch {
             hiveRepository.updatePrimaryColor(hiveId, color)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 
     fun updateHiveSecondaryColor(hiveId: Long, @ColorInt color: Int) {
         viewModelScope.launch {
             hiveRepository.updateSecondaryColor(hiveId, color)
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 }

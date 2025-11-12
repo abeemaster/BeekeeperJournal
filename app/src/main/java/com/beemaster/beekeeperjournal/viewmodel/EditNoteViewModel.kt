@@ -8,6 +8,7 @@ import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.models.Note
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
+import com.beemaster.beekeeperjournal.utils.BackupPrefsManager // ✅ 1. ІМПОРТ
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class EditNoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
-    private val hiveRepository: HiveRepository
+    private val hiveRepository: HiveRepository,
+    private val backupPrefsManager: BackupPrefsManager // ✅ 2. ІНЖЕКЦІЯ
 ) : ViewModel() {
 
     /**
@@ -52,6 +54,9 @@ class EditNoteViewModel @Inject constructor(
             } else {
                 noteRepository.insertNote(note)
             }
+
+            // 3. ВИКЛИК: Оновлюємо час останньої зміни даних
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
 
@@ -63,12 +68,13 @@ class EditNoteViewModel @Inject constructor(
     }
 
     /**
-     * Видаляє нотатку за її ID.
-     *
+    * Видаляє нотатку з бази даних за її ID.
+    */
     fun deleteNote(noteId: Int) {
         viewModelScope.launch {
             noteRepository.deleteNote(noteId)
+            // Оновлюємо час модифікації
+            backupPrefsManager.updateLastDataModifiedTime()
         }
     }
-    */
 }

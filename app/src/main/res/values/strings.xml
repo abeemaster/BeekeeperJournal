@@ -216,6 +216,7 @@
     <string name="toast_export_success">Резервна копія успішно створена.</string>
     <string name="toast_export_error_validation">Копія створилася з помилками. Повторіть процес.</string>
     <string name="auto_backup_location_internal">Місце розташування автоматичного резервного копіювання внутрішнє.</string>
+    <string name="current_saf_path">Автобекап копіюється до: %s</string>
 
 </resources>
 

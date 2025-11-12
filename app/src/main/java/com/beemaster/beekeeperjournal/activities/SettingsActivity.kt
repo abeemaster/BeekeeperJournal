@@ -2,6 +2,7 @@ package com.beemaster.beekeeperjournal.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.net.Uri // ✅ ДОДАНО: Потрібно для роботи з Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,28 +28,23 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsListener {
 
-    // 💡 ВИПРАВЛЕННЯ: Визначаємо TAG тут, щоб уникнути Unresolved reference 'TAG'
     private companion object {
         const val SYNC_DIALOG_TAG = "SyncOptionsDialogFragment"
     }
 
-    // Елемент списку, ініціалізується у onCreate
     private lateinit var settingsRecyclerView: RecyclerView
 
-    // 1. Інжекція ViewModel (для Setter Injection)
     private val viewModel: MainActivityViewModel by viewModels()
 
-    // 2. Інжекція Singleton BackupManager
     @Inject
     lateinit var backupManager: BackupManager
 
-    // 3. Інжекція BackupPrefsManager для роботи з каталогом
     @Inject
     lateinit var backupPrefsManager: BackupPrefsManager
 
-// -----------------------------------------------------------------------------------
-// ActivityResultContracts для роботи з файловою системою
-// -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
+    // ActivityResultContracts для роботи з файловою системою
+    // -----------------------------------------------------------------------------------
 
     // 1. Для ручного експорту (Створення файлу)
     private val createBackupLauncher = registerForActivityResult(
@@ -56,7 +52,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
     ) { uri ->
         if (uri != null) {
             lifecycleScope.launch {
-                // ЗМІНА: exportData -> exportManualData
+                // ✅ Викликаємо exportManualData
                 backupManager.exportManualData(uri)
             }
         } else {
@@ -77,9 +73,23 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         }
     }
 
-// 3. ВИДАЛЕНО: pickDirectoryLauncher (Логіка більше не потрібна)
-
-// ... Решта вашого коду SettingsActivity ...
+    // ✅ ВІДНОВЛЕНО: Для вибору каталогу автоматичного бекапу (SAF Uri)
+    private val pickDirectoryLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        if (uri != null) {
+            // Зберігаємо постійний доступ до URI каталогу
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            // ✅ Зберігаємо URI у BackupPrefsManager
+            backupPrefsManager.saveBackupDirectoryUri(uri)
+            Toast.makeText(this, getString(R.string.toast_directory_set_success), Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, getString(R.string.toast_directory_set_cancelled), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun getLayoutResId(): Int {
         return R.layout.activity_settings
@@ -88,7 +98,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ВИПРАВЛЕННЯ Dagger/Hilt: Setter Injection
+        // Setter Injection
         backupManager.setDataSource(viewModel)
 
         supportActionBar?.title = getString(R.string.title_settings)
@@ -112,12 +122,11 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
                 title = getString(R.string.setting_title_synchronization),
                 targetActivity = SettingsActivity::class.java
             ),
-/*
+            // ✅ ВІДНОВЛЕНО: Елемент для налаштування каталогу автобекапу
             SettingItem(
                 title = getString(R.string.setting_title_auto_backup_directory),
                 targetActivity = SettingsActivity::class.java
             )
-            */
 
         )
 
@@ -126,15 +135,15 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
 
             // Обробка кліків
             if (item.targetActivity == VoiceSettingsActivity::class.java) {
-                // Прямий перехід (якщо це не заглушка)
                 startActivity(Intent(this, item.targetActivity))
             } else if (item.targetActivity == SettingsActivity::class.java) {
                 // Обробка спеціальних дій за допомогою порівняння заголовків
                 when (item.title) {
                     getString(R.string.setting_title_synchronization) -> showSyncOptionsDialog()
+                    // ✅ ВІДНОВЛЕНО: Обробка кліку на вибір каталогу
+                    getString(R.string.setting_title_auto_backup_directory) -> onSelectBackupFolder()
                 }
             } else {
-                // Обробка інших Activity
                 startActivity(Intent(this, item.targetActivity))
             }
         }
@@ -145,7 +154,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
      */
     private fun showSyncOptionsDialog() {
         SyncOptionsDialogFragment()
-            .show(supportFragmentManager, SYNC_DIALOG_TAG) // ВИПРАВЛЕННЯ: Використовуємо локальний TAG
+            .show(supportFragmentManager, SYNC_DIALOG_TAG)
     }
 
     // -----------------------------------------------------------------------------------
@@ -168,4 +177,12 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         restoreBackupLauncher.launch(arrayOf("application/json"))
     }
 
+    /**
+     * ✅ ВІДНОВЛЕНО: Реалізація абстрактного методу onSelectBackupFolder().
+     * Викликається з SyncOptionsDialogFragment.
+     */
+    override fun onSelectBackupFolder() {
+        Log.d("SettingsActivity", "Опція: Вибір каталогу для автоматичного бекапу")
+        pickDirectoryLauncher.launch(null)
+    }
 }

@@ -1,6 +1,7 @@
 package com.beemaster.beekeeperjournal.dialogs
 
 import android.content.Context
+import android.net.Uri // ✅ ПОТРІБНО
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,9 +16,9 @@ import javax.inject.Inject
 
 /**
  * Bottom Sheet для вибору опцій синхронізації.
- * Тепер включає Ручний Експорт/Імпорт.
+ * Включає Ручний Експорт/Імпорт та Налаштування Каталогу для Автобекапу.
  *
- * ✅ Оновлено: Видалено логіку вибору каталогу для автобекапу.
+ * ✅ Оновлено: Відновлено логіку вибору каталогу, необхідну для копіювання автобекапу в SAF.
  */
 @AndroidEntryPoint
 class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
@@ -30,13 +31,15 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
     interface SyncOptionsListener {
         fun onExportSelected()
         fun onImportSelected()
-        // ❌ ВИДАЛЕНО: fun onSelectBackupFolder()
+        // ✅ ВІДНОВЛЕНО: Потрібно для виклику pickDirectoryLauncher в SettingsActivity
+        fun onSelectBackupFolder()
     }
 
     private lateinit var listener: SyncOptionsListener
 
     @Inject
-    lateinit var prefsManager: BackupPrefsManager // Залишено, але не використовується для URI
+    // ✅ ПОТРІБНО: Тепер використовуємо prefsManager для отримання URI SAF
+    lateinit var prefsManager: BackupPrefsManager
 
     override fun getTheme(): Int = R.style.CustomBottomSheetDialogTheme
 
@@ -53,10 +56,14 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        // Припускаємо, що ви повернули елемент card_select_backup_folder у ваш XML
         val view = inflater.inflate(R.layout.dialog_sync_options, container, false)
 
         val cardExport: MaterialCardView = view.findViewById(R.id.card_create_backup)
         val cardImport: MaterialCardView = view.findViewById(R.id.card_restore_backup)
+
+        // ✅ ВІДНОВЛЕНО: Елемент для вибору папки
+        val cardSelectFolder: MaterialCardView = view.findViewById(R.id.card_select_backup_folder)
         val pathTextView: TextView = view.findViewById(R.id.backup_path_summary)
 
         // Слухачі
@@ -70,18 +77,39 @@ class SyncOptionsDialogFragment : BottomSheetDialogFragment() {
             dismiss()
         }
 
+        // ✅ ВІДНОВЛЕНО: Слухач для вибору папки
+        cardSelectFolder.setOnClickListener {
+            listener.onSelectBackupFolder()
+            dismiss()
+        }
+
         updatePathDisplay(pathTextView)
 
         return view
     }
 
     /**
-     * Оновлює TextView, щоб відобразити поточний статус бекапу у внутрішній пам'яті.
+     * Оновлює TextView, щоб відобразити поточний вибраний каталог для SAF копіювання.
      */
     private fun updatePathDisplay(pathTextView: TextView) {
-        // Оскільки автобекап тепер працює у внутрішній пам'яті програми,
-        // ми завжди відображаємо фіксоване повідомлення про його місцезнаходження.
-        // Припускаємо, що R.string.auto_backup_location_internal було додано до strings.xml
-        pathTextView.text = getString(R.string.auto_backup_location_internal)
+        val uri: Uri? = prefsManager.getBackupDirectoryUri()
+
+        if (uri != null) {
+            // Ми не можемо отримати людське ім'я папки тут без DocumentsContract (який ми уникаємо),
+            // тому відображаємо загальний статус та останню частину Uri для підтвердження.
+            val pathString = uri.path ?: uri.toString()
+
+            val displayPath = if (pathString.length > 30) {
+                "...${pathString.substring(pathString.length - 30)}"
+            } else {
+                pathString
+            }
+
+            // Припускаємо, що R.string.current_saf_path існує у strings.xml
+            pathTextView.text = getString(R.string.current_saf_path, displayPath)
+        } else {
+            // Припускаємо, що R.string.backup_directory_not_set існує у strings.xml
+            pathTextView.text = getString(R.string.backup_directory_not_set)
+        }
     }
 }
