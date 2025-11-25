@@ -16,6 +16,7 @@ import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
+import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -40,6 +41,11 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
 
     @Inject
     lateinit var backupPrefsManager: BackupPrefsManager
+
+    // --- ДОДАНО: Інжекція VoskModelManager ---
+    @Inject
+    lateinit var voskModelManager: VoskModelManager
+    // ------------------------------------------
 
     // -----------------------------------------------------------------------------------
     // ActivityResultContracts для роботи з файловою системою
@@ -115,7 +121,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         val settingsList = listOf(
             SettingItem(
                 title = getString(R.string.setting_title_voice_input),
-                targetActivity = VoiceSettingsActivity::class.java
+                targetActivity = VoiceSettingsActivity::class.java // Це має вести до Activity, де буде вибір Vosk
             ),
             SettingItem(
                 title = getString(R.string.setting_title_synchronization),
@@ -124,10 +130,10 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
             // Елемент для налаштування каталогу автобекапу
             /**
             SettingItem(
-                title = getString(R.string.setting_title_auto_backup_directory),
-                targetActivity = SettingsActivity::class.java
+            title = getString(R.string.setting_title_auto_backup_directory),
+            targetActivity = SettingsActivity::class.java
             )
-            */
+             */
         )
 
         settingsRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -135,6 +141,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
 
             // Обробка кліків
             when (item.targetActivity) {
+                // ПЕРЕВІРКА: Якщо це VoiceSettingsActivity, запускаємо його
                 VoiceSettingsActivity::class.java -> {
                     startActivity(Intent(this, item.targetActivity))
                 }

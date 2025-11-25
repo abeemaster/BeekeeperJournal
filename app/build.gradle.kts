@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    kotlin("kapt")
 }
 android {
     namespace = "com.beemaster.beekeeperjournal"
@@ -60,6 +61,13 @@ dependencies {
     // Vosk для розпізнавання мовлення
     implementation(libs.alphacephei.vosk.android)
 
+    // WorkManager залежності для фонових задач (НОВІ)
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // Hilt інтеграція для WorkManager (НОВІ) - потрібна для @HiltWorker
+    implementation(libs.androidx.work.hilt.android)
+    ksp(libs.androidx.work.hilt.compiler)
+
     // Залежності для тестування
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -77,6 +85,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.room.compiler)
-    implementation(libs.ambilwarna)
-    implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.documentFile)
+
 }

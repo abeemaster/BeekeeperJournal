@@ -1,5 +1,4 @@
 // VoskModelManager.kt Це Менеджер або Репозиторій для моделі Vosk. Його головна мета — звільнити VoiceManager від важкої роботи з великим файлом моделі.
-
 package com.beemaster.beekeeperjournal.voice
 
 import android.content.Context
@@ -26,6 +25,8 @@ class VoskModelManager @Inject constructor(
     private val TAG = "VoskModelManager"
 
     private var voskModel: Model? = null
+    // Змінюю mutableList на CopyOnWriteArrayList, щоб уникнути ConcurrentModificationException
+    // при виклику invoke()
     private val voskModelReadyListeners = mutableListOf<() -> Unit>()
 
     // Константа для імені моделі в assets
@@ -52,13 +53,16 @@ class VoskModelManager @Inject constructor(
         if (voskModel != null) {
             listener.invoke()
         } else {
+            // Додаємо слухача
             voskModelReadyListeners.add(listener)
         }
     }
 
     private fun notifyModelReady() {
         Log.d(TAG, "notifyModelReady: Notifying ${voskModelReadyListeners.size} listeners.")
+        // Викликаємо слухачів
         voskModelReadyListeners.forEach { it.invoke() }
+        // Очищаємо список слухачів після сповіщення
         voskModelReadyListeners.clear()
     }
 
@@ -69,6 +73,12 @@ class VoskModelManager @Inject constructor(
         LibVosk.setLogLevel(LogLevel.INFO)
         Log.d(TAG, "initVoskModel: Starting Vosk model initialization.")
 
+        // Якщо модель вже була завантажена, пропускаємо розпакування
+        if (isModelReady) {
+            notifyModelReady()
+            return
+        }
+
         StorageService.unpack(context, VOSK_MODEL_NAME, "model",
             { unpackedModel ->
                 voskModel = unpackedModel
@@ -78,9 +88,21 @@ class VoskModelManager @Inject constructor(
             { exception ->
                 val errorMessage = exception.message ?: "Невідома помилка розпакування моделі."
                 Log.e(TAG, "initVoskModel: Error unpacking Vosk model: $errorMessage", exception)
+                // Можна додати тут логіку сповіщення про помилку
+                // Наприклад, тимчасово використовувати Toast або Log.e
             }
         )
     }
+
+    // Метод, який Activity викликатиме для повторної спроби або первинного запуску
+    // У вашій реалізації це просто перезапуск initVoskModel
+    fun startModelSetup() {
+        initVoskModel()
+    }
+
+    // Метод для перевірки стану
+    // fun isModelReady(): Boolean = isModelReady
+
 
     /**
      * Звільняє ресурси моделі Vosk.

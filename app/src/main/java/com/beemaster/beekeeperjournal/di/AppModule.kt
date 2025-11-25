@@ -22,6 +22,7 @@ import dagger.Binds
 import dagger.hilt.android.components.ViewModelComponent
 import com.beemaster.beekeeperjournal.viewmodel.BackupDataSource
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
+import com.beemaster.beekeeperjournal.voice.VoskModelManager
 
 /**
  * Модуль Dagger Hilt для надання залежностей на рівні життєвого циклу програми (Singleton).
@@ -47,6 +48,16 @@ object AppModule {
 
             .addMigrations(*ALL_MIGRATIONS)
             .build()
+    }
+
+    /**
+     * Надає singleton екземпляр VoskModelManager.
+     * Використовує ApplicationContext, наданий Hilt.
+     */
+    @Provides
+    @Singleton
+    fun provideVoskModelManager(@ApplicationContext context: Context): VoskModelManager {
+        return VoskModelManager(context)
     }
 
     /**
