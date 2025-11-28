@@ -12,6 +12,7 @@ import androidx.core.content.edit
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.dialogs.VoskModelDownloadDialog
+import com.beemaster.beekeeperjournal.dialogs.VoskModelProgressDialog
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -20,10 +21,11 @@ import javax.inject.Inject
  * Activity для налаштування параметрів додатку, зокрема, вибору рушія розпізнавання мови.
  */
 @AndroidEntryPoint
-class VoiceSettingsActivity : AppCompatActivity(), VoskModelDownloadDialog.DownloadDialogListener {
+class VoiceSettingsActivity : AppCompatActivity() {
 
     private companion object {
-        const val DOWNLOAD_DIALOG_TAG = "VoskDownloadDialog"
+        const val DOWNLOAD_CONFIRMATION_TAG = "VoskDownloadConfirmationDialog"
+        const val PROGRESS_DIALOG_TAG = "VoskProgressDialog"
     }
 
     private lateinit var backButton: ImageButton
@@ -35,8 +37,9 @@ class VoiceSettingsActivity : AppCompatActivity(), VoskModelDownloadDialog.Downl
     @Inject
     lateinit var voskModelManager: VoskModelManager
 
-    // isVoskModelReady тепер оновлюється через виклик методу VoskModelManager
     private var isVoskModelReady: Boolean = false
+    private var progressDialog: VoskModelProgressDialog? = null
+
 
     private val sharedPreferences: SharedPreferences by lazy {
         getSharedPreferences(Constants.SETTINGS_PREFS_NAME, MODE_PRIVATE)
@@ -46,15 +49,19 @@ class VoiceSettingsActivity : AppCompatActivity(), VoskModelDownloadDialog.Downl
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_voice_settings)
 
+        // Перевіряємо, чи діалог прогресу вже був у стані відновлення (наприклад, після зміни орієнтації)
+        // Це дозволяє відновити посилання на діалог, якщо він пережив конфігураційні зміни.
+        progressDialog = supportFragmentManager.findFragmentByTag(PROGRESS_DIALOG_TAG) as? VoskModelProgressDialog
+
         initViews()
         loadSettings()
         setupListeners()
 
-        // Ініціалізуємо стан моделі Vosk та додаємо слухача на готовність
         checkVoskModelStatus()
+        // Додаємо слухача. Якщо Vosk завантажився до відкриття Activity,
+        // він одразу викличе цей слухач і оновить стан.
         addModelReadyListener()
 
-        // Встановлення заголовка ActionBar
         supportActionBar?.title = getString(R.string.title_settings)
     }
 
@@ -83,16 +90,14 @@ class VoiceSettingsActivity : AppCompatActivity(), VoskModelDownloadDialog.Downl
 
     private fun setupListeners() {
         backButton.setOnClickListener {
-            // Використовуємо системну функцію "назад"
             onBackPressedDispatcher.onBackPressed()
         }
         saveButton.setOnClickListener {
             val selectedEngine = getSelectedEngine()
-            // Якщо обрано Vosk, але модель не готова, попереджаємо користувача
+            // Перевіряємо готовність моделі
             if (selectedEngine == Constants.ENGINE_VOSK && !isVoskModelReady) {
                 // Якщо Vosk вибрано, але не готово, то залишаємо Google як активний
                 Toast.makeText(this, getString(R.string.toast_vosk_not_ready), Toast.LENGTH_LONG).show()
-                // Переконаємось, що радіо-кнопка Vosk не залишається вибраною в налаштуваннях
                 googleRadioButton.isChecked = true
                 saveSettings(Constants.ENGINE_GOOGLE)
             } else {
@@ -105,35 +110,29 @@ class VoiceSettingsActivity : AppCompatActivity(), VoskModelDownloadDialog.Downl
         // Обробник натискання на Vosk RadioButton
         voskRadioButton.setOnClickListener {
             if (!isVoskModelReady) {
-                // Якщо модель не готова, показуємо діалог завантаження
-                showDownloadDialog()
+                // Якщо модель не готова, показуємо діалог підтвердження
+                showConfirmationDialog()
                 // Відновлюємо попередній стан, щоб уникнути помилкового вибору
-                val savedEngine = sharedPreferences.getString(Constants.KEY_SPEECH_ENGINE, Constants.DEFAULT_SPEECH_ENGINE)
-                if (savedEngine == Constants.ENGINE_GOOGLE) {
-                    googleRadioButton.isChecked = true
-                }
-                // Якщо була обрана Vosk, повертаємось до Google
-                else {
-                    googleRadioButton.isChecked = true
-                }
+                loadSettings()
+            } else {
+                // Модель готова, дозволяємо вибір
             }
         }
     }
 
     /**
-     * Перевіряє наявність моделі Vosk і оновлює isVoskModelReady.
-     * Якщо модель не готова, вимикає RadioButton.
+     * Перевіряє наявність моделі Vosk і оновлює isVoskModelReady та текст кнопки.
      */
     private fun checkVoskModelStatus() {
-        // ВИПРАВЛЕННЯ: Викликаємо isModelReady() як функцію (як оголошено у VoskModelManager)
         isVoskModelReady = voskModelManager.isModelReady
-        voskRadioButton.isEnabled = isVoskModelReady
+        voskRadioButton.isEnabled = true
 
         if (isVoskModelReady) {
             voskRadioButton.text = getString(R.string.radio_vosk_ready)
+            // Приховуємо діалог прогресу, якщо він був
+            progressDialog?.dismiss()
+            progressDialog = null
         } else {
-            // Оскільки ми не маємо індикатора прогресу від Vosk StorageService,
-            // відображаємо лише, що потрібно завантаження.
             voskRadioButton.text = getString(R.string.radio_vosk_download_required)
             // Якщо модель не готова, і вона була обрана, скидаємо до Google
             if (sharedPreferences.getString(Constants.KEY_SPEECH_ENGINE, "") == Constants.ENGINE_VOSK) {
@@ -147,20 +146,20 @@ class VoiceSettingsActivity : AppCompatActivity(), VoskModelDownloadDialog.Downl
      */
     private fun addModelReadyListener() {
         voskModelManager.addModelReadyListener {
-            // Цей код виконається, коли розпакування завершиться (навіть при помилці)
-            // Оскільки Vosk StorageService не має on-error callback, ми припускаємо success
-            // і оновлюємо стан.
-            runOnUiThread {
-                checkVoskModelStatus()
-                // Якщо модель стала готова, автоматично обираємо Vosk (за бажанням)
-                if (isVoskModelReady) {
-                    voskRadioButton.isChecked = true
-                    Toast.makeText(this, getString(R.string.toast_download_success), Toast.LENGTH_LONG).show()
-                } else {
-                    // Якщо модель не готова (розпакування не вдалося)
-                    googleRadioButton.isChecked = true
-                    Toast.makeText(this, getString(R.string.toast_download_failed), Toast.LENGTH_LONG).show()
-                }
+            // Цей код виконається, коли розпакування завершиться (успіх або помилка)
+            // Завжди викликається в Main Thread завдяки VoskModelManager.
+            progressDialog?.dismiss()
+            progressDialog = null
+            checkVoskModelStatus()
+
+            if (isVoskModelReady) {
+                // Якщо модель стала готова, автоматично обираємо Vosk
+                voskRadioButton.isChecked = true
+                Toast.makeText(this, getString(R.string.toast_download_success), Toast.LENGTH_LONG).show()
+            } else {
+                // Якщо модель не готова (розпакування не вдалося або помилка)
+                googleRadioButton.isChecked = true
+                Toast.makeText(this, getString(R.string.toast_download_failed), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -168,22 +167,47 @@ class VoiceSettingsActivity : AppCompatActivity(), VoskModelDownloadDialog.Downl
     /**
      * Відображає діалог із пропозицією завантажити модель Vosk.
      */
-    private fun showDownloadDialog() {
-        VoskModelDownloadDialog().show(supportFragmentManager, DOWNLOAD_DIALOG_TAG)
+    private fun showConfirmationDialog() {
+        VoskModelDownloadDialog.newInstance(
+            onConfirm = { onDownloadConfirmed() },
+            onCancel = { onDownloadCancelled() }
+        ).show(supportFragmentManager, DOWNLOAD_CONFIRMATION_TAG)
     }
 
-    // Реалізація інтерфейсу VoskModelDownloadDialog.DownloadDialogListener
-    override fun onDownloadConfirmed() {
-        // ВИПРАВЛЕННЯ: Викликаємо startModelSetup()
-        // Цей метод запустить initVoskModel(), який запустить StorageService.unpack()
+    /**
+     * Обробка підтвердження завантаження.
+     * Запускає асинхронну операцію Vosk та відображає діалог прогресу.
+     */
+    private fun onDownloadConfirmed() {
+        // 1. Створюємо та відображаємо діалог прогресу, якщо його ще немає
+        if (progressDialog == null) {
+            progressDialog = VoskModelProgressDialog.newInstance()
+            progressDialog?.show(supportFragmentManager, PROGRESS_DIALOG_TAG)
+        } else {
+            // Якщо діалог вже є (після відновлення Activity), просто перепоказуємо його
+            progressDialog?.dismiss()
+            progressDialog?.show(supportFragmentManager, PROGRESS_DIALOG_TAG)
+        }
+
+        // 2. Встановлюємо слухача прогресу в менеджер
+        // Це зв'язує менеджер із діалогом.
+        voskModelManager.setProgressUpdateCallback { state, progress ->
+            progressDialog?.updateProgress(state, progress)
+        }
+
+        // 3. Запускаємо асинхронний процес (якщо він вже не запущений)
         voskModelManager.startModelSetup()
-        // Показуємо, що процес розпочато
+
+        // 4. Оновлюємо UI Activity
         voskRadioButton.isEnabled = false
-        voskRadioButton.text = getString(R.string.radio_vosk_downloading_simple) // Новий, спрощений рядок
+        voskRadioButton.text = getString(R.string.radio_vosk_downloading_simple)
         Toast.makeText(this, getString(R.string.toast_download_in_progress_simple), Toast.LENGTH_SHORT).show()
     }
 
-    override fun onDownloadCancelled() {
+    /**
+     * Обробка скасування завантаження.
+     */
+    private fun onDownloadCancelled() {
         Toast.makeText(this, getString(R.string.toast_download_cancelled_by_user), Toast.LENGTH_SHORT).show()
         checkVoskModelStatus() // Перевіряємо статус ще раз, щоб оновити інтерфейс
     }
@@ -199,7 +223,6 @@ class VoiceSettingsActivity : AppCompatActivity(), VoskModelDownloadDialog.Downl
 
     /**
      * Зберігає вибраний рушій розпізнавання мови у SharedPreferences.
-     * ВИКОРИСТАННЯ KTX: Використовує функцію-розширення SharedPreferences.edit { ... }.
      * @param engine Вибраний рушій ("google" або "vosk").
      */
     private fun saveSettings(engine: String) {

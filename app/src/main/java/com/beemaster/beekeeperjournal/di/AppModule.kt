@@ -23,6 +23,8 @@ import dagger.hilt.android.components.ViewModelComponent
 import com.beemaster.beekeeperjournal.viewmodel.BackupDataSource
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
+import androidx.work.WorkManager // Імпорт WorkManager
+import androidx.work.Configuration // Додатковий імпорт
 
 /**
  * Модуль Dagger Hilt для надання залежностей на рівні життєвого циклу програми (Singleton).
@@ -45,19 +47,33 @@ object AppModule {
             AppDatabase::class.java,
             DATABASE_NAME
         )
-
             .addMigrations(*ALL_MIGRATIONS)
             .build()
     }
 
+    // НОВА ФУНКЦІЯ: Надання WorkManager
     /**
-     * Надає singleton екземпляр VoskModelManager.
-     * Використовує ApplicationContext, наданий Hilt.
+     * Надає singleton екземпляр WorkManager.
+     * WorkManager завжди має бути Singleton у контексті додатку.
      */
     @Provides
     @Singleton
-    fun provideVoskModelManager(@ApplicationContext context: Context): VoskModelManager {
-        return VoskModelManager(context)
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+        // ВИПРАВЛЕНО: Hilt тепер знає, як створити WorkManager
+        return WorkManager.getInstance(context)
+    }
+
+    /**
+     * Надає singleton екземпляр VoskModelManager.
+     * Використовує ApplicationContext та WorkManager, надані Hilt.
+     */
+    @Provides
+    @Singleton
+    fun provideVoskModelManager(
+        @ApplicationContext context: Context,
+        workManager: WorkManager
+    ): VoskModelManager {
+        return VoskModelManager(context, workManager)
     }
 
     /**

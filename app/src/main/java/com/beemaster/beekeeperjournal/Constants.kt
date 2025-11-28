@@ -32,21 +32,24 @@ object Constants {
     const val EXTRA_ORIGINAL_NOTE_TEXT = "com.beemaster.beekeeperjournal.ORIGINAL_NOTE_TEXT"
     const val EXTRA_START_VOICE_INPUT = "com.beemaster.beekeeperjournal.START_VOICE_INPUT"
 
-    // КОНСТАНТИ VOSK MODEL (ДЛЯ WORK MANAGER ТА ЗБЕРІГАННЯ)
-    // URL для завантаження Vosk моделі
+    // КОНСТАНТИ VOSK MODEL
     const val VOSK_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-small-uk-v3-small.zip"
 
     // Імена файлів та директорій
     const val VOSK_MODEL_ZIP_NAME = "vosk-model-small-uk-v3-small.zip"
-    const val VOSK_MODEL_UNPACKED_NAME = "vosk-model-uk-small-0.22"
 
-    // Теги та ключі WorkManager
-    const val WORK_TAG_MODEL_SETUP = "vosk_model_setup"
-    const val WORK_KEY_MODEL_ZIP_NAME = "model_zip_file_name"
-    const val WORK_KEY_MODEL_UNPACKED_NAME = "model_unpacked_dir_name"
-    const val WORK_KEY_MODEL_DOWNLOAD_URL = "model_download_url"
+    const val VOSK_MODEL_DIR_NAME = "vosk-model"
 
-    // Ідентифікатор сповіщення для завантаження моделі
-    const val NOTIFICATION_CHANNEL_ID_MODEL = "model_download_channel"
-    const val NOTIFICATION_ID_MODEL = 101
+    // Ключі для WorkManager
+    const val WORK_KEY_MODEL_ZIP_NAME = "model_zip_name"
+    // Ключ для шляху до розпакованої моделі
+    const val WORK_KEY_MODEL_UNZIPPED_PATH = "model_unzipped_path"
+
+    // Ключ для оновлення прогресу (використовується в setProgressAsync)
+    const val WORK_KEY_PROGRESS = "Progress"
+
+    // Розміри
+    const val BUFFER_SIZE = 8192 // 8KB для операцій читання/запису
+
 }
+

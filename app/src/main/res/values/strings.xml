@@ -219,7 +219,7 @@
     <string name="current_saf_path">Автобекап копіюється до: %s</string>
 
     <string name="radio_vosk_ready">Vosk (Офлайн) - Готово</string>
-    <string name="radio_vosk_download_required">Vosk (Офлайн) - Потрібне завантаження</string>
+    <string name="radio_vosk_download_required">Vosk відсутній - Потрібне завантаження</string>
     <string name="vosk_download_dialog_title">Завантаження моделі Vosk</string>
     <string name="vosk_download_dialog_message">Для роботи офлайн-розпізнавання мови необхідно завантажити мовну модель (близько 50 МБ). Це варто зробити лише один раз.</string>
     <string name="vosk_download_dialog_confirm">Завантажити</string>
@@ -231,6 +231,14 @@
     <string name="toast_download_failed">Помилка розпакування моделі Vosk. Спробуйте пізніше.</string>
     <string name="toast_download_cancelled_by_user">Розпакування моделі Vosk скасовано.</string>
     <string name="toast_vosk_not_ready">Модель Vosk не завантажена. Збережено Google як поточний рушій.</string>
+
+    <string name="radio_vosk_downloading">Vosk: Завантаження (%1$d%%)…</string>
+    <string name="radio_vosk_unpacking">Vosk: Розпакування…</string>
+    <string name="dialog_vosk_download_title">Завантаження моделі Vosk</string>
+    <string name="dialog_vosk_progress_description">Будь ласка, зачекайте. Це може зайняти кілька хвилин, залежно від швидкості вашого інтернету. Не закривайте додаток.</string>
+    <string name="dialog_progress_value">%1$d%%</string>
+    <string name="toast_download_in_progress">Завантаження моделі Vosk: %1$d%%</string>
+    <string name="toast_notification_denied">Дозвіл на сповіщення відхилено. Завантаження моделі відбудеться у фоновому режимі, але ви не побачите сповіщення про прогрес.</string>
 
 </resources>
 

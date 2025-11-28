@@ -87,4 +87,16 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.androidx.documentFile)
 
+    // OkHttp (ОКНО: використовуємо BOM для вирішення проблеми з імпортом)
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+
+    // WorkManager (необхідний для нового VoskModelManager)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+// Hilt WorkManager (якщо ви використовуєте Hilt для ін'єкції воркерів)
+// kapt "androidx.hilt:hilt-compiler:1.1.0"
+// implementation "androidx.hilt:hilt-work:1.1.0"
+// Lifecycle (якщо ще не додано, для LiveData Observer)
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
 }

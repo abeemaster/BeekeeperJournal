@@ -1,5 +1,6 @@
 package com.beemaster.beekeeperjournal.activities
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -15,6 +16,9 @@ import com.beemaster.beekeeperjournal.data.SettingItem
 import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
+// --- НОВИЙ ІМПОРТ ---
+import com.beemaster.beekeeperjournal.utils.NotificationPermissionHelper
+// --------------------
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,7 +52,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
     // ------------------------------------------
 
     // -----------------------------------------------------------------------------------
-    // ActivityResultContracts для роботи з файловою системою
+    // ActivityResultContracts для роботи з дозволами та файловою системою
     // -----------------------------------------------------------------------------------
 
     // 1. Для ручного експорту (Створення файлу)
@@ -78,7 +82,7 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         }
     }
 
-    // Для вибору каталогу автоматичного бекапу (SAF Uri)
+    // 3. Для вибору каталогу автоматичного бекапу (SAF Uri)
     private val pickDirectoryLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -96,6 +100,22 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         }
     }
 
+    // --- ДОДАНО: Лаунчер для запиту дозволу на сповіщення (Android 13+) ---
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                Log.i("SettingsActivity", "Notification permission granted. Vosk Worker will show progress.")
+            } else {
+                // Якщо дозвіл відхилено, WorkManager все одно може працювати, але без видимого сповіщення.
+                Log.w("SettingsActivity", "Notification permission denied. Vosk Worker will run silently.")
+                // Додайте тут повідомлення для користувача, якщо це критично.
+                Toast.makeText(this, getString(R.string.toast_notification_denied), Toast.LENGTH_LONG).show()
+            }
+        }
+    // -----------------------------------------------------------------------
+
     override fun getLayoutResId(): Int {
         return R.layout.activity_settings
     }
@@ -111,6 +131,14 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         settingsRecyclerView = findViewById(R.id.settingsRecyclerView)
 
         setupSettingsList()
+
+        // --- ДОДАНО: Запит дозволу на сповіщення при відкритті налаштувань ---
+        // Це забезпечує наявність дозволу до того, як користувач перейде до завантаження моделі
+        NotificationPermissionHelper.requestNotificationPermission(
+            this,
+            requestNotificationPermissionLauncher
+        )
+        // -----------------------------------------------------------------------
     }
 
     /**
@@ -196,4 +224,6 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         Log.d("SettingsActivity", "Опція: Вибір каталогу для автоматичного бекапу")
         pickDirectoryLauncher.launch(null)
     }
+
+    // Примітка: Для повної коректності вам також потрібно додати ресурс `toast_notification_denied` до `strings.xml`.
 }

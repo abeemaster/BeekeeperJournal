@@ -8,112 +8,190 @@ import androidx.work.workDataOf
 import com.beemaster.beekeeperjournal.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
 
 /**
- * Воркер для розпакування завантаженого ZIP-файлу Vosk-моделі
- * та її розміщення у постійній директорії програми (filesDir).
- * Також очищує ZIP-файл з кешу.
+ * Воркер для розпакування завантаженого ZIP-файлу Vosk-моделі.
+ * Ця версія ВИПРАВЛЯЄ проблему подвійного вкладення папок, видаляючи
+ * кореневу папку з імені файлу ZIP-архіву, що дозволяє Vosk правильно знайти файли.
  */
-class ModelUnpackWorker(
+class ModelUnpackWorker( // Використовуємо New в назві класу, щоб уникнути конфліктів
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
-        // Константа, що вирішує помилку "Unresolved reference 'TAG'"
-        const val TAG = "ModelUnpackWorker"
-        const val MODEL_NAME = "vosk-model-small-uk-v3-small"
+        const val TAG = "ModelUnzipWorkerNew"
     }
 
-    private val TAG = "ModelUnpackWorker"
-    private val BUFFER_SIZE = 4096
-
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        // Отримання імені ZIP-файлу з вхідних даних від попереднього воркера
         val zipFileName = inputData.getString(Constants.WORK_KEY_MODEL_ZIP_NAME)
-        val unpackedDirName = Constants.VOSK_MODEL_UNPACKED_NAME
-
         if (zipFileName.isNullOrEmpty()) {
-            Log.e(TAG, "Помилка вхідних даних: Відсутнє ім'я ZIP-файлу моделі.")
+            Log.e(TAG, "Input data missing: ${Constants.WORK_KEY_MODEL_ZIP_NAME}")
             return@withContext Result.failure()
         }
 
-        // Файл, який потрібно розпакувати (знаходиться в cacheDir)
-        val cacheZipFile = File(applicationContext.cacheDir, zipFileName)
-        // Цільова директорія для розпакування (знаходиться в filesDir)
-        val targetDir = File(applicationContext.filesDir, unpackedDirName)
+        val zipFile = File(applicationContext.cacheDir, zipFileName)
+        // Цільова директорія: /files/vosk-model (однорівневе розпакування)
+        val targetDir = File(applicationContext.filesDir, Constants.VOSK_MODEL_DIR_NAME)
 
-        // 1. Перевірка, чи модель вже розпакована (перевіряємо, чи директорія існує і не порожня)
-        if (targetDir.exists() && targetDir.isDirectory && targetDir.listFiles()?.isNotEmpty() == true) {
-            Log.i(TAG, "Директорія моделі вже існує і не порожня. Пропуск розпакування.")
-            // Повертаємо успіх, оскільки робота вже виконана
+        if (!zipFile.exists() || zipFile.length() == 0L) {
+            Log.e(TAG, "ZIP file not found or empty: ${zipFile.absolutePath}")
+            return@withContext Result.failure()
+        }
+
+        if (targetDir.exists() && targetDir.listFiles()?.isNotEmpty() == true) {
+            Log.i(TAG, "Model directory already exists and is not empty. Skipping unzip.")
             return@withContext Result.success(workDataOf(
-                Constants.WORK_KEY_MODEL_UNPACKED_NAME to unpackedDirName
+                Constants.WORK_KEY_MODEL_UNZIPPED_PATH to targetDir.absolutePath
             ))
         }
 
-        // 2. Перевірка наявності ZIP-файлу
-        if (!cacheZipFile.exists()) {
-            Log.e(TAG, "ZIP-файл не знайдено в кеші: ${cacheZipFile.absolutePath}")
-            // Це критична помилка, оскільки попередній крок не зміг надати файл
+        Log.d(TAG, "Starting unzip operation for: ${zipFile.name} to ${targetDir.absolutePath}")
+
+        if (!targetDir.exists() && !targetDir.mkdirs()) {
+            Log.e(TAG, "Failed to create target directory: ${targetDir.absolutePath}")
             return@withContext Result.failure()
         }
 
+        var processedFiles = 0
+
         try {
-            Log.d(TAG, "Початок розпакування ${cacheZipFile.name} у ${targetDir.absolutePath}")
+            zipFile.inputStream().use { fileInput ->
+                ZipInputStream(fileInput).use { zipInput ->
 
-            // Створення цільової директорії, якщо вона не існує
-            if (!targetDir.exists()) {
-                targetDir.mkdirs()
-            }
+                    // --- ВИПРАВЛЕНА ЛОГІКА ШЛЯХІВ: КРОК 1 (ВИЗНАЧЕННЯ КОРЕНЯ) ---
+                    var rootDirName: String? = null
+                    val entries = mutableListOf<java.util.zip.ZipEntry>()
 
-            // Виконання розпакування
-            ZipInputStream(FileInputStream(cacheZipFile)).use { zipInputStream ->
-                var zipEntry = zipInputStream.nextEntry
-                val buffer = ByteArray(BUFFER_SIZE)
-
-                while (zipEntry != null) {
-                    val newFile = File(targetDir, zipEntry.name)
-
-                    if (zipEntry.isDirectory) {
-                        newFile.mkdirs()
-                    } else {
-                        // Запис файлу, переконавшись, що батьківські директорії існують
-                        newFile.parentFile?.mkdirs()
-                        FileOutputStream(newFile).use { fos ->
-                            var count: Int
-                            while (zipInputStream.read(buffer, 0, BUFFER_SIZE).also { count = it } != -1) {
-                                fos.write(buffer, 0, count)
+                    // Перший прохід: зчитуємо всі записи та визначаємо кореневу папку
+                    // Створюємо новий потік для цього, щоб не порушити основний zipInput
+                    val tempZipInput = ZipInputStream(zipFile.inputStream())
+                    var tempEntry = tempZipInput.nextEntry
+                    while (tempEntry != null) {
+                        entries.add(tempEntry)
+                        if (rootDirName == null) {
+                            val entryName = tempEntry.name
+                            val firstSeparator = entryName.indexOf('/')
+                            if (firstSeparator > 0) {
+                                rootDirName = entryName.substring(0, firstSeparator)
+                            } else if (tempEntry.isDirectory && entryName.endsWith('/')) {
+                                rootDirName = entryName.trimEnd('/')
                             }
                         }
+                        tempEntry = tempZipInput.nextEntry
                     }
-                    zipEntry = zipInputStream.nextEntry
+                    tempZipInput.close()
+
+                    Log.d(TAG, "Identified potential root directory: $rootDirName")
+
+                    // Другий прохід: фактична обробка та розпакування
+                    // Потрібно знову відкрити ZIP, оскільки перший потік було закрито
+                    val secondFileInput = zipFile.inputStream()
+                    val secondZipInput = ZipInputStream(secondFileInput)
+
+                    var currentZipEntry = secondZipInput.nextEntry
+
+                    while (currentZipEntry != null) {
+                        if (isStopped) {
+                            Log.w(TAG, "Unzip cancelled.")
+                            targetDir.deleteRecursively()
+                            secondZipInput.close()
+                            secondFileInput.close()
+                            return@withContext Result.failure()
+                        }
+
+                        // --- ВИПРАВЛЕНА ЛОГІКА ШЛЯХІВ: КРОК 2 (КОРЕКЦІЯ ШЛЯХУ) ---
+                        var entryName = currentZipEntry.name
+                        if (rootDirName != null && entryName.startsWith("$rootDirName/")) {
+                            // Видаляємо назву кореневої папки з шляху
+                            entryName = entryName.substring(rootDirName.length + 1)
+                        }
+
+                        // Якщо шлях став порожнім, це сама коренева папка, пропускаємо її
+                        if (entryName.isEmpty()) {
+                            currentZipEntry = secondZipInput.nextEntry
+                            continue
+                        }
+
+                        // Створення файлу/папки в targetDir, використовуючи СКОРИГОВАНИЙ entryName
+                        val newFile = File(targetDir, entryName)
+                        Log.v(TAG, "Processing entry: $entryName")
+
+                        // Перевірка Zip Slip Attack
+                        if (!newFile.canonicalPath.startsWith(targetDir.canonicalPath + File.separator)) {
+                            secondZipInput.close()
+                            secondFileInput.close()
+                            throw SecurityException("Zip Slip Attack detected: Entry is outside of the target directory.")
+                        }
+
+                        // Створення батьківських директорій, якщо необхідно
+                        val parentDir = newFile.parentFile
+                        if (parentDir != null && !parentDir.exists() && !parentDir.mkdirs()) {
+                            secondZipInput.close()
+                            secondFileInput.close()
+                            throw Exception("Parent directory creation failed for ${newFile.parent}")
+                        }
+
+
+                        if (currentZipEntry.isDirectory) {
+                            if (!newFile.isDirectory && !newFile.mkdirs()) {
+                                secondZipInput.close()
+                                secondFileInput.close()
+                                throw Exception("Failed to create directory $newFile")
+                            }
+                        } else {
+                            // Запис файлу
+                            FileOutputStream(newFile).use { fileOutput ->
+                                BufferedOutputStream(fileOutput, Constants.BUFFER_SIZE).use { bufferOut ->
+                                    val buffer = ByteArray(Constants.BUFFER_SIZE)
+                                    var read: Int
+                                    while (secondZipInput.read(buffer).also { read = it } != -1) {
+                                        bufferOut.write(buffer, 0, read)
+                                    }
+                                }
+                            }
+                            processedFiles++
+                        }
+
+                        currentZipEntry = secondZipInput.nextEntry
+                    }
+                    secondZipInput.close()
+                    secondFileInput.close()
                 }
             }
 
-            Log.i(TAG, "Розпакування успішне. Модель готова в: ${targetDir.absolutePath}")
+            Log.i(TAG, "Unzip successful. Total files processed: $processedFiles. ZIP file deleted.")
+            zipFile.delete()
 
-            // 3. Очищення: Видалення тимчасового ZIP-файлу з кешу
-            if (cacheZipFile.delete()) {
-                Log.d(TAG, "Очищення успішне: Видалено ${cacheZipFile.name}")
-            } else {
-                Log.w(TAG, "Попередження очищення: Не вдалося видалити ${cacheZipFile.name}")
-            }
-
-            // 4. Успішне завершення, передача імені директорії
             return@withContext Result.success(workDataOf(
-                Constants.WORK_KEY_MODEL_UNPACKED_NAME to unpackedDirName
+                Constants.WORK_KEY_MODEL_UNZIPPED_PATH to targetDir.absolutePath
             ))
 
         } catch (e: Exception) {
-            Log.e(TAG, "Помилка при розпакуванні моделі: ${e.message}", e)
-            // Видалення частково розпакованої директорії у разі помилки
+            Log.e(TAG, "Error during unzip operation: ${e.message}", e)
+            // Видаляємо невдало розпаковані файли
             targetDir.deleteRecursively()
             return@withContext Result.failure()
         }
+    }
+
+    /**
+     * Допоміжна функція для рекурсивного видалення вмісту директорії
+     */
+    private fun File.deleteRecursively(): Boolean {
+        var success = true
+        if (isDirectory) {
+            listFiles()?.forEach {
+                if (!it.deleteRecursively()) success = false
+            }
+        }
+        if (success) {
+            success = delete()
+        }
+        return success
     }
 }

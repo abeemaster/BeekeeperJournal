@@ -1,51 +1,47 @@
 package com.beemaster.beekeeperjournal.dialogs
 
 import android.app.Dialog
-import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import com.beemaster.beekeeperjournal.R
 
 /**
- * Діалог, який пропонує користувачу завантажити модель Vosk для офлайн-розпізнавання мови.
+ * Діалог, який запитує підтвердження на завантаження моделі Vosk.
+ * Використовує лямбди для обробки подій Confirm/Cancel.
  */
-class VoskModelDownloadDialog : DialogFragment() {
+class VoskModelDownloadDialog private constructor() : DialogFragment() {
 
-    // Інтерфейс для передачі результатів натискання в Activity
-    interface DownloadDialogListener {
-        fun onDownloadConfirmed()
-        fun onDownloadCancelled()
-    }
+    // Лямбди для обробки подій
+    private var onConfirm: (() -> Unit)? = null
+    private var onCancel: (() -> Unit)? = null
 
-    private lateinit var listener: DownloadDialogListener
-
-    // Викликається для створення діалогу
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return AlertDialog.Builder(requireContext())
-            .setTitle(R.string.vosk_download_dialog_title)
-            .setMessage(R.string.vosk_download_dialog_message)
-            .setPositiveButton(R.string.vosk_download_dialog_confirm) { _, _ ->
-                // Кнопка "Завантажити"
-                listener.onDownloadConfirmed()
+            .setTitle(getString(R.string.vosk_download_dialog_title)) // Наприклад: "Потрібне завантаження"
+            .setMessage(getString(R.string.vosk_download_dialog_message)) // Наприклад: "Модель Vosk ще не встановлена. Завантажити її зараз?"
+            .setPositiveButton(getString(R.string.vosk_download_dialog_confirm)) { _, _ ->
+                onConfirm?.invoke()
             }
-            .setNegativeButton(R.string.vosk_download_dialog_cancel) { _, _ ->
-                // Кнопка "Скасувати"
-                listener.onDownloadCancelled()
+            .setNegativeButton(getString(R.string.vosk_download_dialog_cancel)) { _, _ ->
+                onCancel?.invoke()
             }
             .create()
     }
 
-    // Викликається при приєднанні фрагмента до Activity
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        // Перевіряємо, чи Activity реалізує необхідний інтерфейс
-        try {
-            listener = context as DownloadDialogListener
-        } catch (_: ClassCastException) {
-            throw ClassCastException(
-                "$context must implement VoskModelDownloadDialog.DownloadDialogListener"
-            )
+    override fun onCancel(dialog: android.content.DialogInterface) {
+        super.onCancel(dialog)
+        onCancel?.invoke()
+    }
+
+    companion object {
+        const val TAG = "VoskDownloadConfirmationDialog"
+
+        fun newInstance(onConfirm: () -> Unit, onCancel: () -> Unit): VoskModelDownloadDialog {
+            return VoskModelDownloadDialog().apply {
+                this.onConfirm = onConfirm
+                this.onCancel = onCancel
+            }
         }
     }
 }
