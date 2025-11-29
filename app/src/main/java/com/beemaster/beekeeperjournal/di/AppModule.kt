@@ -2,29 +2,24 @@ package com.beemaster.beekeeperjournal.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
+import com.beemaster.beekeeperjournal.db.ALL_MIGRATIONS
 import com.beemaster.beekeeperjournal.db.AppDatabase
 import com.beemaster.beekeeperjournal.db.dao.ExpenseDao
 import com.beemaster.beekeeperjournal.db.dao.HiveDao
 import com.beemaster.beekeeperjournal.db.dao.IncomeDao
-import com.beemaster.beekeeperjournal.db.ALL_MIGRATIONS
 import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
+import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import dagger.Binds
-import dagger.hilt.android.components.ViewModelComponent
-import com.beemaster.beekeeperjournal.viewmodel.BackupDataSource
-import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
-import com.beemaster.beekeeperjournal.voice.VoskModelManager
-import androidx.work.WorkManager // Імпорт WorkManager
-import androidx.work.Configuration // Додатковий імпорт
 
 /**
  * Модуль Dagger Hilt для надання залежностей на рівні життєвого циклу програми (Singleton).
@@ -59,7 +54,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
-        // ВИПРАВЛЕНО: Hilt тепер знає, як створити WorkManager
         return WorkManager.getInstance(context)
     }
 
@@ -148,26 +142,4 @@ object AppModule {
         return ExpenseRepository(expenseDao)
     }
 
-    // --------------------------------------------------------------------------
-    // Hilt Bindings для інтерфейсів
-    // --------------------------------------------------------------------------
-
-    /**
-     * Абстрактний Dagger Hilt модуль для зв'язування інтерфейсів з їхніми реалізаціями.
-     * Інстальовано у ViewModelComponent, оскільки він зв'язує ViewModel.
-     */
-    @Module
-    @InstallIn(ViewModelComponent::class) // ✅ Встановлюємо у ViewModelComponent
-    abstract class ViewModelBindsModule {
-
-        /**
-         * Зв'язує інтерфейс BackupDataSource з його реалізацією MainActivityViewModel.
-         * Це дозволяє інжектувати BackupDataSource у BackupManager,
-         * не порушуючи правила Hilt щодо HiltViewModel.
-         */
-        @Binds
-        abstract fun bindBackupDataSource(
-            mainActivityViewModel: MainActivityViewModel
-        ): BackupDataSource
-    }
 }

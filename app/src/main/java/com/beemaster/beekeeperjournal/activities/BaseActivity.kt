@@ -10,42 +10,11 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.beemaster.beekeeperjournal.R
 import com.google.android.material.navigation.NavigationView
 
-// -----------------------------------------------------------------------------------
-// VOSK ІНІЦІАЛІЗАЦІЯ ІНТЕРФЕЙС
-// -----------------------------------------------------------------------------------
-
-/**
- * Інтерфейс для отримання подій ініціалізації моделі Vosk.
- * Використовується для оновлення UI (діалогів прогресу) в Activity.
- */
-interface VoskInitListener {
-    fun onModelInitStarted()
-    fun onModelInitProgress(progress: Int, message: String)
-    fun onModelInitUnpacking()
-    fun onModelInitSuccessful()
-    fun onModelInitFailed(error: String)
-}
-
 abstract class BaseActivity : AppCompatActivity() {
 
-    // Статична змінна, яка тримає посилання на поточну активну BaseActivity.
-    // Це дозволяє синглтонам (наприклад, VoskModelManager) отримувати доступ до
-    // методів сповіщення про UI.
-    companion object {
-        @JvmStatic
-        var currentActivity: BaseActivity? = null
-            private set
-    }
-
-    // Ці змінні повинні бути visible у дочірніх класах
     protected lateinit var drawerLayout: DrawerLayout
     protected lateinit var navigationView: NavigationView
     protected lateinit var drawerToggleButton: ImageButton
-
-    // Множина слухачів VoskInitListener, які активні в поточному життєвому циклі
-    private val voskInitListeners = mutableSetOf<VoskInitListener>()
-
-    // Абстрактна функція, яку дочірні класи повинні імплементувати
     protected abstract fun getLayoutResId(): Int
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,65 +27,11 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        // Встановлюємо себе як поточну активну Activity
-        currentActivity = this
     }
 
     override fun onStop() {
         super.onStop()
-        // Якщо поточна активність закривається, очищаємо посилання
-        if (currentActivity == this) {
-            currentActivity = null
-        }
     }
-
-    /**
-     * Реєструє VoskInitListener. Дочірні Activity повинні викликати це у onCreate.
-     */
-    fun registerVoskInitListener(listener: VoskInitListener) {
-        voskInitListeners.add(listener)
-    }
-
-    /**
-     * Видаляє VoskInitListener. Дочірні Activity повинні викликати це у onDestroy.
-     */
-    fun unregisterVoskInitListener(listener: VoskInitListener) {
-        voskInitListeners.remove(listener)
-    }
-
-    // -----------------------------------------------------------------------------------
-    // МЕТОДИ ДЛЯ РОЗСИЛКИ ПОДІЙ VOSK УСІМ ЗАРЕЄСТРОВАНИМ СЛУХАЧАМ
-    // -----------------------------------------------------------------------------------
-
-    /**
-     * Розсилає подію: Ініціалізація моделі розпочата.
-     * Цей метод буде викликаний з VoskModelManager.
-     */
-    fun notifyModelInitStarted() = voskInitListeners.forEach { it.onModelInitStarted() }
-
-    /**
-     * Розсилає подію: Оновлення прогресу завантаження.
-     * Цей метод буде викликаний з VoskModelManager.
-     */
-    fun notifyModelInitProgress(progress: Int, message: String) = voskInitListeners.forEach { it.onModelInitProgress(progress, message) }
-
-    /**
-     * Розсилає подію: Розпакування моделі.
-     * Цей метод буде викликаний з VoskModelManager.
-     */
-    fun notifyModelInitUnpacking() = voskInitListeners.forEach { it.onModelInitUnpacking() }
-
-    /**
-     * Розсилає подію: Ініціалізація моделі успішна.
-     * Цей метод буде викликаний з VoskModelManager.
-     */
-    fun notifyModelInitSuccessful() = voskInitListeners.forEach { it.onModelInitSuccessful() }
-
-    /**
-     * Розсилає подію: Ініціалізація моделі не вдалася.
-     * Цей метод буде викликаний з VoskModelManager.
-     */
-    fun notifyModelInitFailed(error: String) = voskInitListeners.forEach { it.onModelInitFailed(error) }
 
     private fun initBaseViews() {
         drawerLayout = findViewById(R.id.drawer_layout)
@@ -136,7 +51,6 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
-    // Виносна функція для обробки навігації
     private fun handleNavigationItem(menuItem: MenuItem) {
         drawerLayout.closeDrawer(GravityCompat.START)
 
@@ -167,17 +81,22 @@ abstract class BaseActivity : AppCompatActivity() {
             }
 
             R.id.nav_add_hive -> {
+                // Якщо поточна Activity - MainActivity, викликаємо її метод
                 if (this is MainActivity) {
                     this.addHive()
                 } else {
+                    // Інакше повертаємося на головний екран і відкриваємо додавання
                     val intent = Intent(this, MainActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     }
+                    // Можливо, тут потрібно додати Extra, щоб MainActivity знала, що потрібно відкрити діалог додавання?
+                    // Наразі залишаю без змін, але це потенційне місце для покращення.
                     startActivity(intent)
                 }
             }
 
             R.id.nav_exit_button -> {
+                // Завершуємо всі Activity в поточній задачі
                 finishAffinity()
             }
         }

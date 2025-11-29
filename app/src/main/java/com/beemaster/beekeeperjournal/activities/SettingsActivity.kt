@@ -1,6 +1,7 @@
 package com.beemaster.beekeeperjournal.activities
 
-import android.Manifest
+// --- НОВИЙ ІМПОРТ ---
+// --------------------
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -16,14 +17,12 @@ import com.beemaster.beekeeperjournal.data.SettingItem
 import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
-// --- НОВИЙ ІМПОРТ ---
 import com.beemaster.beekeeperjournal.utils.NotificationPermissionHelper
-// --------------------
 import com.beemaster.beekeeperjournal.viewmodel.MainActivityViewModel
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Activity, що відображає головне меню налаштувань.
