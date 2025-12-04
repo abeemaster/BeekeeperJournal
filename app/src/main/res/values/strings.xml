@@ -226,7 +226,7 @@
     <string name="vosk_download_dialog_cancel">Скасувати</string>
     <!-- Змінено для спрощення, оскільки немає відстеження прогресу % -->
     <string name="radio_vosk_downloading_simple">Vosk (Офлайн) - Розпакування…</string>
-    <string name="toast_download_in_progress_simple">Розпакування моделі розпочато. Зачекайте.</string>
+    <string name="toast_download_in_progress_simple">Розпаковування моделі розпочато. Зачекайте.</string>
     <string name="toast_download_success">Модель Vosk успішно завантажено!</string>
     <string name="toast_download_failed">Помилка розпакування моделі Vosk. Спробуйте пізніше.</string>
     <string name="toast_download_cancelled_by_user">Розпакування моделі Vosk скасовано.</string>

@@ -51,7 +51,7 @@ class VoskModelManager @Inject constructor(
     init {
         // Ініціалізація Vosk: встановлення рівня логування
         LibVosk.setLogLevel(LogLevel.INFO)
-        checkAndStartModelDownload()
+        // checkAndStartModelDownload() видаляю бо він викликає завантаження без вимоги користувача.
     }
 
     /**
