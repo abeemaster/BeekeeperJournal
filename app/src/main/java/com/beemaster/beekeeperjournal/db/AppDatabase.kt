@@ -4,10 +4,12 @@ package com.beemaster.beekeeperjournal.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.beemaster.beekeeperjournal.db.dao.BeekeepingYearDao
 import com.beemaster.beekeeperjournal.db.dao.ExpenseDao
 import com.beemaster.beekeeperjournal.db.dao.HiveDao
 import com.beemaster.beekeeperjournal.db.dao.IncomeDao
 import com.beemaster.beekeeperjournal.db.dao.NoteDao
+import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
 import com.beemaster.beekeeperjournal.db.entity.ExpenseEntity
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
@@ -18,8 +20,8 @@ import com.beemaster.beekeeperjournal.db.entity.NoteEntity
  * Визначає всі сутності, версію бази даних та надає доступ до Data Access Objects (DAO).
  */
 @Database(
-    entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class],
-    version = 8,
+    entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class, BeekeepingYear::class],
+    version = 9,
     exportSchema = false // Встановлено в 'false', оскільки схеми міграції винесені окремо.
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -43,4 +45,9 @@ abstract class AppDatabase : RoomDatabase() {
      * Надає доступ до DAO для керування прибутками ([IncomeEntity]).
      */
     abstract fun incomeDao(): IncomeDao
+
+    /**
+     * Надає доступ до DAO для керування пасічними роками.
+     */
+    abstract fun beekeepingYearDao(): BeekeepingYearDao // <--- ДОДАЙТЕ ЦЕЙ РЯДОК
 }

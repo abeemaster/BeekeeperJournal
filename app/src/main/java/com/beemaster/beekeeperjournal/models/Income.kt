@@ -25,5 +25,6 @@ data class Income(
     val quantity: Double,
     val unitName: String,
     val price: Double,
+    val yearId: Int = 0,
     val totalAmount: Double
 ) : Serializable

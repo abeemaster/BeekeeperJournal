@@ -78,25 +78,36 @@ interface NoteDao {
      * @param query Рядок пошуку.
      * @return [Flow], що містить список результатів [NoteSearchResultEntity].
      */
+    /**
+     * Шукає нотатки за текстом та номером вулика.
+     * Фільтрує за активним роком.
+     */
+    /**
+     * Шукає нотатки за текстом та номером вулика.
+     * Фільтрує за активним роком.
+     */
     @Query("""
         SELECT 
-            N.id AS id,                 -- Змінено з noteId на id
-            N.title AS title,           -- Змінено з noteTitle на title
-            N.content AS content,       -- Змінено з noteText на content
-            N.createdAt AS createdAt,   -- Змінено з noteCreatedAt на createdAt
-            N.type AS type,             -- ДОДАНО: вимагається сутністю NoteSearchResultEntity
-            N.hiveId AS hiveId,
-            N.imagePath AS imagePath,
+            N.id, 
+            N.hiveId, 
+            N.type, 
+            N.title, 
+            N.content, 
+            N.createdAt,
+            N.imagePath, 
+            N.yearId, -- !!! ДОДАНО !!!
             H.hiveNumber AS currentHiveDisplayNumber
-        FROM notes AS N
-        LEFT JOIN hives AS H ON N.hiveId = H.id
-        WHERE N.content LIKE '%' || :query || '%' 
-        OR N.title LIKE '%' || :query || '%' 
-        OR N.type LIKE '%' || :query || '%'
-        OR H.hiveNumber LIKE '%' || :query || '%'
+        FROM notes AS N 
+        INNER JOIN hives AS H ON N.hiveId = H.id 
+        WHERE N.yearId = :activeYearId AND (
+            N.title LIKE '%' || :query || '%'
+            OR N.content LIKE '%' || :query || '%'
+            OR H.hiveNumber LIKE '%' || :query || '%'
+        )
         ORDER BY N.createdAt DESC
     """)
-    fun searchNotes(query: String): Flow<List<NoteSearchResultEntity>>
+    fun searchNotes(query: String, activeYearId: Int): Flow<List<NoteSearchResultEntity>>
+
 
     /**
      * Видаляє всі записи з таблиці нотаток.
@@ -122,6 +133,13 @@ interface NoteDao {
         insertAllNotes(notes)
     }
 
+    /**
+     * Отримує нотатки за ID вулика та типом запису.
+     * @param hiveId ID вулика (0 для загальних).
+     * @param noteType Тип нотатки (наприклад, "hive", "queen", "general").
+     * @param activeYearId ID поточного активного пасічного року.
+     * @return Flow зі списком [NoteSearchResultEntity].
+     */
     @Query("""
         SELECT 
             N.id, 
@@ -131,6 +149,7 @@ interface NoteDao {
             N.content, 
             N.createdAt,
             N.imagePath, 
+            N.yearId, 
             H.hiveNumber AS currentHiveDisplayNumber
         FROM notes AS N 
         INNER JOIN hives AS H ON N.hiveId = H.id 
@@ -140,4 +159,74 @@ interface NoteDao {
 
     @Query("UPDATE notes SET content = :newContent WHERE id = :noteId")
     suspend fun updateNoteContent(noteId: Int, newContent: String)
+
+    /**
+     * Отримує всі нотатки для відображення на головному екрані, відсортовані за датою.
+     * @param activeYearId ID поточного активного пасічного року.
+     */
+    /**
+     * Отримує всі нотатки для відображення на головному екрані.
+     * Фільтрує за активним роком.
+     */
+    @Query("""
+        SELECT 
+            N.id, 
+            N.hiveId, 
+            N.type, 
+            N.title, 
+            N.content, 
+            N.createdAt,
+            N.imagePath, 
+            N.yearId, -- !!! ДОДАНО !!!
+            H.hiveNumber AS currentHiveDisplayNumber
+        FROM notes AS N 
+        INNER JOIN hives AS H ON N.hiveId = H.id 
+        WHERE N.yearId = :activeYearId
+        ORDER BY N.createdAt DESC
+    """)
+    fun getAllNotes(activeYearId: Int): Flow<List<NoteSearchResultEntity>>
+
+    /**
+     * Отримує всі нотатки, пов'язані з конкретним вуликом.
+     * @param hiveId ID вулика.
+     * @param activeYearId ID поточного активного пасічного року.
+     */
+    @Query("SELECT * FROM notes WHERE hiveId = :hiveId AND yearId = :activeYearId ORDER BY createdAt DESC")
+    fun getNotesByHiveId(hiveId: Int, activeYearId: Int): Flow<List<NoteEntity>> // ДОДАНО ПАРАМЕТР
+
+    /**
+     * Отримує нотатки за ID вулика та типом запису.
+     * @param hiveId ID вулика (0 для загальних).
+     * @param noteType Тип нотатки (наприклад, "hive", "queen", "general").
+     * @param activeYearId ID поточного активного пасічного року.
+     * @return Flow зі списком [NoteSearchResultEntity].
+     */
+    @Query("""
+        SELECT 
+            N.id, 
+            N.hiveId, 
+            N.type, 
+            N.title, 
+            N.content, 
+            N.createdAt,
+            N.imagePath, 
+            N.yearId, 
+            H.hiveNumber AS currentHiveDisplayNumber
+        FROM notes AS N 
+        INNER JOIN hives AS H ON N.hiveId = H.id 
+        WHERE N.hiveId = :hiveId 
+          AND N.type = :noteType
+          AND N.yearId = :activeYearId
+        ORDER BY N.createdAt DESC
+    """)
+    fun getNotesForHiveAndType(hiveId: Int, noteType: String, activeYearId: Int): Flow<List<NoteSearchResultEntity>>
+
+    /**
+     * Отримує всі нотатки без фільтрації за роком. Використовується виключно для експорту (бекапу).
+     * @return Список усіх [NoteEntity].
+     */
+    @Query("SELECT * FROM notes")
+    suspend fun getAllNotesForExport(): List<NoteEntity> // НОВИЙ МЕТОД
+
+
 }

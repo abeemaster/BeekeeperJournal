@@ -14,12 +14,14 @@ import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import com.beemaster.beekeeperjournal.voice.VoskModelManager
+import com.beemaster.beekeeperjournal.utils.YearPrefsManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.beemaster.beekeeperjournal.db.dao.BeekeepingYearDao
 
 /**
  * Модуль Dagger Hilt для надання залежностей на рівні життєвого циклу програми (Singleton).
@@ -45,6 +47,54 @@ object AppModule {
             .addMigrations(*ALL_MIGRATIONS)
             .build()
     }
+///----------------------------------
+
+        // НОВА ФУНКЦІЯ: Надання YearPrefsManager
+        /**
+         * Надає singleton екземпляр менеджера для роботи з активним пасічним роком.
+         * @param appContext Контекст додатку, необхідний для роботи з DataStore/SharedPreferences.
+         */
+        @Provides
+        @Singleton
+        fun provideYearPrefsManager(@ApplicationContext appContext: Context): YearPrefsManager {
+            // Припускаємо, що YearPrefsManager ініціалізується через Context
+            return YearPrefsManager(appContext)
+        }
+
+        /**
+         * Надає екземпляр Note Repository.
+         * Тепер приймає NoteDao, HiveRepository ТА YearPrefsManager.
+         */
+        @Provides
+        fun provideNoteRepository(
+            noteDao: NoteDao,
+            hiveRepository: HiveRepository,
+            yearPrefsManager: YearPrefsManager // ДОДАНО
+        ): NoteRepository {
+
+            return NoteRepository(noteDao, yearPrefsManager,hiveRepository, ) // ОНОВЛЕНО
+        }
+
+        /**
+         * Надає екземпляр Income Repository.
+         * Тепер приймає IncomeDao ТА YearPrefsManager.
+         */
+        @Provides
+        fun provideIncomeRepository(incomeDao: IncomeDao, yearPrefsManager: YearPrefsManager): IncomeRepository { // ДОДАНО
+            return IncomeRepository(incomeDao, yearPrefsManager) // ОНОВЛЕНО
+        }
+
+        /**
+         * Надає екземпляр Expense Repository.
+         * Тепер приймає ExpenseDao ТА YearPrefsManager.
+         */
+        @Provides
+        fun provideExpenseRepository(expenseDao: ExpenseDao, yearPrefsManager: YearPrefsManager): ExpenseRepository { // ДОДАНО
+            return ExpenseRepository(expenseDao, yearPrefsManager) // ОНОВЛЕНО
+        }
+
+
+    ///----------------------------------
 
     // НОВА ФУНКЦІЯ: Надання WorkManager
     /**
@@ -102,6 +152,14 @@ object AppModule {
         return database.incomeDao()
     }
 
+    /**
+     * Надає BeekeepingYear Data Access Object (DAO).
+     */
+    @Provides
+    fun provideBeekeepingYearDao(database: AppDatabase): BeekeepingYearDao {
+        return database.beekeepingYearDao()
+    }
+
     // --------------------------------------------------------------------------
     // Repositories
     // --------------------------------------------------------------------------
@@ -113,33 +171,4 @@ object AppModule {
     fun provideHiveRepository(hiveDao: HiveDao, noteDao: NoteDao): HiveRepository {
         return HiveRepository(hiveDao, noteDao)
     }
-
-    /**
-     * Надає екземпляр Note Repository.
-     * Тепер приймає NoteDao ТА HiveRepository.
-     */
-    @Provides
-    fun provideNoteRepository(
-        noteDao: NoteDao,
-        hiveRepository: HiveRepository
-    ): NoteRepository {
-        return NoteRepository(noteDao, hiveRepository)
-    }
-
-    /**
-     * Надає екземпляр Income Repository.
-     */
-    @Provides
-    fun provideIncomeRepository(incomeDao: IncomeDao): IncomeRepository {
-        return IncomeRepository(incomeDao)
-    }
-
-    /**
-     * Надає екземпляр Expense Repository.
-     */
-    @Provides
-    fun provideExpenseRepository(expenseDao: ExpenseDao): ExpenseRepository {
-        return ExpenseRepository(expenseDao)
-    }
-
 }

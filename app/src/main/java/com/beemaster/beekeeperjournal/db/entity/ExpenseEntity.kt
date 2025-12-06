@@ -22,5 +22,7 @@ data class ExpenseEntity(
     /** Одиниця виміру (наприклад, "кг", "л", "шт"). */
     val nameQuantity: String,
     /** Загальна сума витрати (вартість). */
-    val amount: Double
+    val amount: Double,
+    /** Рік, до якого належить нотатка (наприклад, 2025). Використовується для фільтрації. */
+    val yearId: Int
 )

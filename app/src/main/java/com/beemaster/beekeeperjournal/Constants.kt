@@ -51,5 +51,8 @@ object Constants {
     // Розміри
     const val BUFFER_SIZE = 8192 // 8KB для операцій читання/запису
 
+    // Ключ для збереження ID активного пасічного року в SharedPreferences
+    const val KEY_ACTIVE_YEAR_ID = "active_beekeeping_year_id"
+
 }
 

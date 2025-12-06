@@ -35,6 +35,8 @@ fun NoteEntity.toNote(): Note {
     )
 }
 
+
+
 /**
  * Перетворює доменну модель [Note] на сутність бази даних [NoteEntity].
  * Використовується перед збереженням чи оновленням.
@@ -47,9 +49,11 @@ fun Note.toNoteEntity(): NoteEntity {
         title = this.title,
         content = this.text,
         imagePath = null,
-        createdAt = this.timestamp
+        createdAt = this.timestamp,
+        yearId = this.yearId
     )
 }
+
 
 /**
  * Перетворює список сутностей [NoteEntity] на список доменних моделей [Note].
@@ -61,7 +65,7 @@ fun List<NoteEntity>.toNoteList(): List<Note> {
 /**
  * Конвертує об'єкт NoteSearchResultEntity (результат DAO-запиту з JOIN)
  * у модель NoteSearchResult для відображення в адаптері результатів пошуку.
- */
+
 fun NoteSearchResultEntity.toSearchResult(): NoteSearchResult {
 
     // 1. Створюємо модель Note з полів Entity
@@ -80,6 +84,33 @@ fun NoteSearchResultEntity.toSearchResult(): NoteSearchResult {
         ?: this.hiveId.toString()
 
     // 3. Створюємо NoteSearchResult, передаючи Note та відображувану назву вулика.
+    return NoteSearchResult(
+        note = noteModel,
+        hiveNumber = displayHiveNumber
+    )
+}
+ */
+/**
+ * Перетворює NoteSearchResultEntity (з бази даних) на NoteSearchResult (для UI).
+ */
+fun NoteSearchResultEntity.toSearchResult(): NoteSearchResult {
+
+    // 1. Створюємо модель Note з полів Entity
+    val noteModel = Note(
+        id = this.id,
+        text = this.content,
+        type = this.type,
+        hiveId = this.hiveId,
+        timestamp = this.createdAt,
+        title = this.title,
+        imagePath = this.imagePath // Додано imagePath
+    )
+
+    // 2. Визначаємо відображуваний номер вулика.
+    val displayHiveNumber: String = this.currentHiveNumber
+        ?: this.hiveId.toString()
+
+    // 3. Створюємо NoteSearchResult.
     return NoteSearchResult(
         note = noteModel,
         hiveNumber = displayHiveNumber

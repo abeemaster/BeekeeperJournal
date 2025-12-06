@@ -22,5 +22,7 @@ data class NoteEntity(
     /** Часова мітка створення нотатки у форматі Unix timestamp (Long). */
     val createdAt: Long,
     /** Шлях до зображення, пов'язаного з нотаткою (може бути null). */
-    val imagePath: String?
+    val imagePath: String?,
+    /** Рік, до якого належить нотатка (наприклад, 2025). Використовується для фільтрації. */
+    val yearId: Int
 )

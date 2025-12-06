@@ -4,6 +4,7 @@ package com.beemaster.beekeeperjournal.db
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import java.util.Calendar
 
 /**
  * Файл містить усі об'єкти міграції (схеми бази даних) для Room.
@@ -115,6 +116,49 @@ val MIGRATION_7_8: Migration = object : Migration(7, 8) {
     }
 }
 
+//------------------- Нова міграція ---------------------
+
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // --- 1. Створюємо таблицю beekeeping_years ---
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `beekeeping_years` (" +
+                    "`yearId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                    "`name` TEXT NOT NULL, " +
+                    "`startDate` INTEGER NOT NULL)"
+        )
+
+        // Визначаємо поточний рік та час за допомогою Calendar (сумісний з API 24)
+        val currentCalendar = Calendar.getInstance()
+        val currentYear = currentCalendar.get(Calendar.YEAR)
+        val currentTimeMillis = System.currentTimeMillis()
+
+        // --- 2. Вставляємо початковий рік (ID 1) ---
+        // Всі існуючі записи будуть прив'язані до цього року (DEFAULT 1).
+        db.execSQL(
+            "INSERT INTO beekeeping_years (yearId, name, startDate) " +
+                    "VALUES (1, 'Початковий Рік $currentYear', $currentTimeMillis)"
+        )
+
+        // --- 3. Додавання стовпчика yearId до існуючих таблиць ---
+
+        // notes
+        db.execSQL("""
+                    ALTER TABLE notes ADD COLUMN yearId INTEGER NOT NULL DEFAULT 1
+                """.trimIndent())
+
+        // incomes
+        db.execSQL("""
+                    ALTER TABLE incomes ADD COLUMN yearId INTEGER NOT NULL DEFAULT 1
+                """.trimIndent())
+
+        // expenses
+        db.execSQL("""
+                    ALTER TABLE expenses ADD COLUMN yearId INTEGER NOT NULL DEFAULT 1
+                """.trimIndent())
+    }
+}
+
 // --------------------------------------------------------------------------
 //  Масив усіх міграцій (Оголошується після всіх об'єктів)
 // --------------------------------------------------------------------------
@@ -130,6 +174,7 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_5_6,
     MIGRATION_6_7,
     MIGRATION_7_8,
+    MIGRATION_8_9,
 
 )
 

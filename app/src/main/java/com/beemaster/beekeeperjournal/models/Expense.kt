@@ -24,5 +24,6 @@ data class Expense(
     val name: String,
     val quantityUnits: Double,
     val nameQuantity: String,
+    val yearId: Int = 0,
     val amount: Double
 ) : Serializable

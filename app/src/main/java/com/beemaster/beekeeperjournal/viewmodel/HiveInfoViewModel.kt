@@ -61,13 +61,14 @@ class HiveInfoViewModel @Inject constructor(
      */
     fun getNotesForHive(hiveId: Int, noteType: String) {
         viewModelScope.launch {
-            // ✅ ВИПРАВЛЕНО: Використовуємо нову функцію репозиторію, яка повертає NoteDisplayModel
             noteRepository.getNotesForHiveDisplay(hiveId, noteType)
                 .collect { notesList ->
                     _notes.value = notesList // Оновлюємо StateFlow
                 }
         }
     }
+
+
 
     /**
      * Отримує повну модель відображення нотатки за її ID.
@@ -76,7 +77,6 @@ class HiveInfoViewModel @Inject constructor(
      * @return Об'єкт [NoteDisplayModel] або null, якщо нотатка не знайдена.
      */
     suspend fun getNoteDisplayModelById(noteId: Int): NoteDisplayModel? {
-        // Припускаємо, що NoteRepository має метод для отримання NoteDisplayModel за ID
         return noteRepository.getNoteDisplayModelById(noteId)
     }
 }

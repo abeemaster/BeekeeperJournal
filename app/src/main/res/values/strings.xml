@@ -240,6 +240,20 @@
     <string name="toast_download_in_progress">Завантаження моделі Vosk: %1$d%%</string>
     <string name="toast_notification_denied">Дозвіл на сповіщення відхилено. Завантаження моделі відбудеться у фоновому режимі, але ви не побачите сповіщення про прогрес.</string>
 
+    <string name="title_beekeeper_year">Пасічний рік</string>
+    <string name="desc_beekeeper_year">Перемикання та управління пасічними роками.</string>
+    <string name="dialog_beekeeper_year_title">Керування роками</string>
+    <string name="action_add_year">Додати наступний рік</string>
+    <string name="year_switched_success">Успішно перемкнуто на %d рік.</string>
+    <string name="year_added_success">Рік %d успішно додано.</string>
+    <string name="error_adding_year">Помилка при додаванні року. Можливо, він вже існує.</string>
+    <string name="label_current_year">Поточний рік:</string>
+    <string name="action_switch_year">Перемкнути</string>
+    <string name="label_active">АКТИВНИЙ</string>
+    <string name="cd_year_icon">Календар</string>
+    <string name="label_current_year_status">Активний рік: %1$s (початок %2$s)</string>
+    <string name="label_current_year_not_set">Активний рік не встановлено</string>
+
 </resources>
 
 

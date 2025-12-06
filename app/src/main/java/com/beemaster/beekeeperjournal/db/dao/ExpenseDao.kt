@@ -14,75 +14,59 @@ import kotlinx.coroutines.flow.Flow
  */
 @Dao
 interface ExpenseDao {
-    /**
-     * Вставляє нову витрату в базу даних або замінює існуючу в разі конфлікту ID.
-     */
+
+    // --- CRUD Operations (Без змін) ---
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertExpense(expense: ExpenseEntity)
 
-    /**
-     * Оновлює інформацію про існуючу витрату.
-     */
     @Update
     suspend fun updateExpense(expense: ExpenseEntity)
 
-    /**
-     * Видаляє витрату з бази даних за об'єктом.
-     */
     @Delete
     suspend fun deleteExpense(expense: ExpenseEntity)
 
-    /**
-     * Видаляє витрату з бази даних за її унікальним ідентифікатором.
-     */
     @Query("DELETE FROM expenses WHERE id = :expenseId")
     suspend fun deleteExpense(expenseId: Int)
 
-    /**
-     * Отримує всі витрати з бази даних.
-     * Повертає [Flow], що емітує новий список щоразу, коли дані змінюються.
-     */
-    @Query("SELECT * FROM expenses ORDER BY date DESC")
-    fun getAllExpenses(): Flow<List<ExpenseEntity>>
+    // --- Оновлені методи з Фільтрацією за Роком ---
 
     /**
-     * Отримує витрату за її унікальним ідентифікатором.
-     *
-     * @return [ExpenseEntity] або null, якщо не знайдено.
+     * Отримує всі витрати з бази даних.
+     * @param activeYearId ID поточного активного пасічного року.
+     * @return Flow зі списком об'єктів [ExpenseEntity], відфільтрованих за роком.
      */
+    @Query("SELECT * FROM expenses WHERE yearId = :activeYearId ORDER BY date DESC")
+    fun getAllExpenses(activeYearId: Int): Flow<List<ExpenseEntity>>
+
+    /**
+     * Отримує потік загальної суми витрат, фільтруючи за активним роком.
+     * @param activeYearId ID поточного активного пасічного року.
+     * @return Flow, що містить загальну суму витрат ([Double] або null).
+     */
+    @Query("SELECT SUM(amount) FROM expenses WHERE yearId = :activeYearId")
+    fun getTotalExpenseFlow(activeYearId: Int): Flow<Double?>
+
+    // --- Додаткові синхронні методи (Без змін у фільтрації) ---
+
     @Query("SELECT * FROM expenses WHERE id = :expenseId")
     suspend fun getExpenseById(expenseId: Int): ExpenseEntity?
 
-    /**
-     * Отримує суму всіх витрат.
-     * Повертає [Flow], що автоматично оновлюється при зміні даних.
-     */
-    @Query("SELECT SUM(amount) FROM expenses")
-    fun getTotalExpenseFlow(): Flow<Double?>
-
-    /**
-     * Отримує суму всіх витрат як одноразове значення (для синхронних операцій).
-     */
     @Query("SELECT SUM(amount) FROM expenses")
     suspend fun getTotalExpenseSuspend(): Double?
 
-    /**
-     * Отримує всі витрати як статичний список. Використовується, як правило, для операцій бекапу.
-     */
     @Query("SELECT * FROM expenses")
     suspend fun getAllExpensesSuspend(): List<ExpenseEntity>
 
-    /**
-     * Вставляє список витрат у базу даних (для операцій імпорту/відновлення).
-     * Використовує OnConflictStrategy.REPLACE для оновлення існуючих записів.
-     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExpenses(expenses: List<ExpenseEntity>)
 
-    /**
-     * Очищає всю таблицю витрат. Використовується перед операціями імпорту.
-     */
     @Query("DELETE FROM expenses")
     suspend fun deleteAllExpenses()
 
+    @Update
+    suspend fun updateExpenses(expenses: List<ExpenseEntity>)
+
+    // ... (інші методи)
 }
+//-------------------------------
+

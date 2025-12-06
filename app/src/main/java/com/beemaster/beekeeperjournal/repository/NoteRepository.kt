@@ -7,12 +7,14 @@ import com.beemaster.beekeeperjournal.db.dao.NoteDao
 import com.beemaster.beekeeperjournal.mappers.toNoteEntity
 import com.beemaster.beekeeperjournal.mappers.toNote
 import com.beemaster.beekeeperjournal.mappers.toNoteList
-import kotlinx.coroutines.flow.Flow
 import com.beemaster.beekeeperjournal.db.entity.NoteSearchResultEntity
 import com.beemaster.beekeeperjournal.mappers.toNoteDisplayModel
 import com.beemaster.beekeeperjournal.models.Note
-import com.beemaster.beekeeperjournal.models.NoteDisplayModel // ✅ НОВИЙ ІМПОРТ
-import kotlinx.coroutines.flow.first // Для перетворення Flow на List
+import com.beemaster.beekeeperjournal.models.NoteDisplayModel
+import com.beemaster.beekeeperjournal.utils.YearPrefsManager
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,64 +26,98 @@ import javax.inject.Singleton
 @Singleton
 class NoteRepository @Inject constructor(
     private val noteDao: NoteDao,
+    private val yearPrefsManager: YearPrefsManager, // 1. ІНЖЕКЦІЯ МЕНЕДЖЕРА
     @Suppress("unused") private val hiveRepository: HiveRepository
 ) {
     /**
-     * Отримує всі нотатки з бази даних у вигляді потоку Flow.
+     * Отримує всі нотатки з бази даних у вигляді потоку Flow, фільтруючи за активним роком.
+     *
+     * Активний yearId береться з yearPrefsManager.
      * @return Flow, що містить список усіх Note.
      */
-    fun getAllNotes(): Flow<List<Note>> {
-        return noteDao.getAllNotes().map { entities ->
-            // Мапимо Entity на Domain Model
-            entities.toNoteList()
-        }
+    fun getAllNotes(): Flow<List<NoteDisplayModel>> { // ЗМІНЕНО: повертає NoteDisplayModel
+        return yearPrefsManager.activeYearId
+            .flatMapLatest { yearIdLong ->
+                // Передаємо ID активного року в DAO
+                noteDao.getAllNotes(yearIdLong.toInt())
+            }
+            .map { searchResults -> // searchResults: List<NoteSearchResultEntity>
+                // Використовуємо коректний мапер: NoteSearchResultEntity -> NoteDisplayModel
+                searchResults.map { it.toNoteDisplayModel() }
+            }
     }
-
+//---------------
     /**
-     * Отримує нотатки, збагачені номером вулика, для відображення в UI.
-     * Ця функція замінює getNotesByHiveAndType для використання у HiveInfoViewModel.
+     * Отримує нотатки для конкретного вулика та типу запису (hive, queen, general).
      * @param hiveId ID вулика (0 для загальних нотаток).
-     * @param noteType Тип нотатки.
-     * @return Flow, що містить відфільтрований список NoteDisplayModel.
+     * @param noteType Тип запису (наприклад, "hive", "queen").
+     * @return Flow зі списком об'єктів NoteDisplayModel.
      */
     fun getNotesForHiveDisplay(hiveId: Int, noteType: String): Flow<List<NoteDisplayModel>> {
-        return noteDao.searchNotes(query = "")
-            .map { searchResults ->
-                searchResults
-                    .filter { it.hiveId == hiveId && it.type == noteType }
-                    .map { it.toNoteDisplayModel() }
+        return yearPrefsManager.activeYearId
+            .flatMapLatest { yearIdLong ->
+                // Викликаємо метод DAO, який включає фільтр по noteType
+                noteDao.getNotesForHiveAndType(hiveId, noteType, yearIdLong.toInt())
+            }
+            .map { searchResults -> // searchResults: List<NoteSearchResultEntity>
+                // Конвертуємо результати пошуку в UI-модель
+                searchResults.map { it.toNoteDisplayModel() }
             }
     }
 
     /**
-     * Виконує ефективний пошук нотаток через DAO.
-     * Тепер це suspend-функція, яка збирає (collects) перше значення з Flow.
+     * Отримує повну модель відображення нотатки за її ID.
+     * Використовується для редагування.
+     * @param noteId ID нотатки.
+     * @return Об'єкт [NoteDisplayModel] або null.
      */
+    suspend fun getNoteDisplayModelById(noteId: Int): NoteDisplayModel? {
+        val resultEntity = noteDao.getNoteSearchResultById(noteId) // Цей метод повинен бути в DAO
+        return resultEntity?.toNoteDisplayModel()
+    }
     /**
-     * Виконує ефективний пошук нотаток та повертає List<NoteSearchResultEntity>.
-     * Перетворено на suspend-функцію для використання у ViewModel.
+     * Отримує всі нотатки, пов'язані з конкретним вуликом, фільтруючи за активним роком.
      */
-
-    suspend fun searchNotes(query: String): List<NoteSearchResultEntity> {
-        @Suppress("UNCHECKED_CAST")
-        return noteDao.searchNotes(query).first()
+    fun getNotesByHiveId(hiveId: Int): Flow<List<Note>> {
+        return yearPrefsManager.activeYearId
+            .flatMapLatest { yearIdLong ->
+                // Передаємо ID вулика та ID активного року в DAO
+                noteDao.getNotesByHiveId(hiveId, yearIdLong.toInt())
+            }
+            .map { noteEntities -> // noteEntities: List<NoteEntity>
+                // Використовуємо коректний мапер: NoteEntity -> Note
+                noteEntities.map { it.toNote() }
+            }
+    }
+    /**
+     * Шукає нотатки за текстом та номером вулика, фільтруючи за активним роком.
+     */
+    fun searchNotes(query: String): Flow<List<NoteSearchResultEntity>> {
+        return yearPrefsManager.activeYearId
+            .flatMapLatest { yearIdLong ->
+                // noteDao.searchNotes() повертає Flow<List<NoteSearchResultEntity>>
+                noteDao.searchNotes(query, yearIdLong.toInt())
+            }
+        // ВИДАЛЯЄМО зайвий .map {} блок, який конвертував у NoteDisplayModel
     }
 
-    /**
-     * Імпортує список нотаток у базу даних, зазвичай, після очищення існуючих даних.
-     * @param notes Список Note для імпорту.
-     */
-    suspend fun importNotes(notes: List<Note>) {
-        val noteEntities = notes.map { it.toNoteEntity() }
-        noteDao.clearAndInsertNotes(noteEntities)
-    }
+    // ----------------------------------------------------------------------------------
+    // CRUD Operations
+    // ----------------------------------------------------------------------------------
 
     /**
      * Додає нову нотатку або оновлює існуючу.
+     * Присвоює активний yearId, якщо він ще не встановлений (yearId == 0).
      * @param note Об'єкт Note для вставки/оновлення.
      */
     suspend fun insertNote(note: Note) {
-        noteDao.insertNote(note.toNoteEntity())
+        val noteWithYearId = if (note.yearId == 0) { // ПОМИЛКА ЗНИКНЕ ПІСЛЯ ВИПРАВЛЕННЯ Note.kt
+            val currentYearId = yearPrefsManager.activeYearId.first().toInt()
+            note.copy(yearId = currentYearId) // ПОМИЛКА ЗНИКНЕ ПІСЛЯ ВИПРАВЛЕННЯ Note.kt
+        } else {
+            note
+        }
+        noteDao.insertNote(noteWithYearId.toNoteEntity())
     }
 
     /**
@@ -89,6 +125,7 @@ class NoteRepository @Inject constructor(
      * @param note Об'єкт Note для оновлення.
      */
     suspend fun updateNote(note: Note) {
+        // При оновленні yearId, як правило, вже встановлений.
         noteDao.updateNote(note.toNoteEntity())
     }
 
@@ -100,6 +137,34 @@ class NoteRepository @Inject constructor(
     }
 
     /**
+     * Отримує всі нотатки як статичний список (наприклад, для експорту).
+     * Фільтрація за роком тут не потрібна, оскільки експорт, ймовірно, має включати всі роки.
+     * @return Список усіх Note.
+     */
+    suspend fun getAllNotesSuspend(): List<Note> {
+        val noteEntities = noteDao.getAllNotesSuspend()
+        return noteEntities.toNoteList()
+    }
+
+    /**
+     * Отримує всі нотатки без фільтрації за роком. Використовується виключно для експорту (бекапу).
+     * @return Список усіх Note.
+     */
+    suspend fun getAllNotesForExportSuspend(): List<Note> {
+        return noteDao.getAllNotesForExport().map { it.toNote() }
+    }
+
+    /**
+     * Виконує очищення таблиці нотаток та подальшу вставку нового списку
+     * в рамках однієї атомарної транзакції (для імпорту/відновлення), після очищення існуючих даних.
+     * @param notes Список Note для імпорту.
+     */
+    suspend fun importNotes(notes: List<Note>) {
+        val noteEntities = notes.map { it.toNoteEntity() }
+        noteDao.clearAndInsertNotes(noteEntities)
+    }
+
+    /**
      * Отримує нотатку за її унікальним ID.
      * @param id ID нотатки, яку потрібно знайти.
      * @return Об'єкт Note або null.
@@ -108,15 +173,4 @@ class NoteRepository @Inject constructor(
         val noteEntity = noteDao.getNoteById(id)
         return noteEntity?.toNote()
     }
-
-    /**
-     * Отримує повну модель відображення нотатки, збагачену номером вулика, за її ID.
-     * @param id ID нотатки.
-     * @return Об'єкт [NoteDisplayModel] або null.
-     */
-    suspend fun getNoteDisplayModelById(id: Int): NoteDisplayModel? {
-        val searchResult = noteDao.getNoteSearchResultById(id)
-        return searchResult?.toNoteDisplayModel()
-    }
-
 }

@@ -217,10 +217,9 @@ class MainActivityViewModel @Inject constructor(
      * Видалено зайвий маппер, оскільки repo, ймовірно, повертає List<Note>.
      */
     override suspend fun getAllNotesSuspend(): List<Note> {
-        return noteRepository.getAllNotes().first()
-
+        // ВИПРАВЛЕНО: Використовуємо спеціальний метод для бекапу, який повертає List<Note>
+        return noteRepository.getAllNotesForExportSuspend()
     }
-
     /**
      * Отримує всі об'єкти Expense. Використовується для експорту даних.
      * @return Список усіх Expense.

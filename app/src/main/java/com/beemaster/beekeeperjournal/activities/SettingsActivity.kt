@@ -1,7 +1,5 @@
 package com.beemaster.beekeeperjournal.activities
 
-// --- НОВИЙ ІМПОРТ ---
-// --------------------
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.SettingsMenuAdapter
 import com.beemaster.beekeeperjournal.data.SettingItem
+import com.beemaster.beekeeperjournal.dialogs.BeekeeperYearDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.SyncOptionsDialogFragment
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
@@ -33,6 +32,8 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
 
     private companion object {
         const val SYNC_DIALOG_TAG = "SyncOptionsDialogFragment"
+        // ДОДАНО: Тег для нового діалогу
+        const val BEEKEEPER_YEAR_DIALOG_TAG = "BeekeeperYearDialogFragment"
     }
 
     private lateinit var settingsRecyclerView: RecyclerView
@@ -146,6 +147,12 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
     private fun setupSettingsList() {
 
         val settingsList = listOf(
+            // --- ДОДАНО: Пункт меню для керування пасічним роком ---
+            SettingItem(
+                title = getString(R.string.title_beekeeper_year),
+                targetActivity = SettingsActivity::class.java // Обробляється всередині
+            ),
+            // -------------------------------------------------------
             SettingItem(
                 title = getString(R.string.setting_title_voice_input),
                 targetActivity = VoiceSettingsActivity::class.java // Це має вести до Activity, де буде вибір Vosk
@@ -175,6 +182,9 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
                 SettingsActivity::class.java -> {
                     // Обробка спеціальних дій за допомогою порівняння заголовків
                     when (item.title) {
+                        // --- ДОДАНО: Обробка кліку по новому пункту ---
+                        getString(R.string.title_beekeeper_year) -> showBeekeeperYearDialog()
+                        // --------------------------------------------
                         getString(R.string.setting_title_synchronization) -> showSyncOptionsDialog()
                         // Обробка кліку на вибір каталогу
                         getString(R.string.setting_title_auto_backup_directory) -> onSelectBackupFolder()
@@ -185,6 +195,16 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
                 }
             }
         }
+    }
+
+    /**
+     * Відображає BottomSheetDialogFragment для управління пасічним роком.
+     * НОВА ФУНКЦІЯ
+     */
+    private fun showBeekeeperYearDialog() {
+        Log.d("SettingsActivity", "Опція: Вибір пасічного року")
+        BeekeeperYearDialogFragment()
+            .show(supportFragmentManager, BEEKEEPER_YEAR_DIALOG_TAG)
     }
 
     /**
@@ -223,6 +243,4 @@ class SettingsActivity : BaseActivity(), SyncOptionsDialogFragment.SyncOptionsLi
         Log.d("SettingsActivity", "Опція: Вибір каталогу для автоматичного бекапу")
         pickDirectoryLauncher.launch(null)
     }
-
-    // Примітка: Для повної коректності вам також потрібно додати ресурс `toast_notification_denied` до `strings.xml`.
 }

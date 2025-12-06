@@ -19,5 +19,7 @@ data class Note(
     val type: String,
     val hiveId: Int,
     val timestamp: Long,
-    val title: String
+    val yearId: Int = 0,
+    val title: String,
+    val imagePath: String? = null // Шлях до зображення
 )

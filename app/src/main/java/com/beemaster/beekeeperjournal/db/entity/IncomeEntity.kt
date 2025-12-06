@@ -24,5 +24,7 @@ data class IncomeEntity(
     /** Ціна за одну одиницю продукції. */
     val price: Double,
     /** Загальна сума, отримана з продажу (quantity * price). */
-    val totalAmount: Double
+    val totalAmount: Double,
+    /** Рік, до якого належить нотатка (наприклад, 2025). Використовується для фільтрації. */
+    val yearId: Int
 )
