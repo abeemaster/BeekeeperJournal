@@ -251,8 +251,17 @@
     <string name="action_switch_year">Перемкнути</string>
     <string name="label_active">АКТИВНИЙ</string>
     <string name="cd_year_icon">Календар</string>
-    <string name="label_current_year_status">Активний рік: %1$s (початок %2$s)</string>
+    <string name="label_current_year_status">Активний рік: %1$s</string>
     <string name="label_current_year_not_set">Активний рік не встановлено</string>
+
+    <string name="action_edit_year">Редагувати рік</string>
+    <string name="action_delete_year">Видалити рік</string>
+    <string name="delete_year_title">Видалити рік %s?</string>
+    <string name="delete_year_message">Ви впевнені, що хочете видалити цей пасічний рік? Це незворотна дія. Якщо рік містить дані (вулики, нотатки), їхня прив\'язка до року буде втрачена, що може призвести до проблем, якщо не реалізовано каскадне видалення.</string>
+    <string name="cannot_delete_last_year">Неможливо видалити: це єдиний пасічний рік у системі.</string>
+    <string name="year_deleted_message">Рік %s успішно видалено.</string>
+    <string name="action_delete">Видалити</string>
+    <string name="action_cancel">Скасувати</string>
 
 </resources>
 

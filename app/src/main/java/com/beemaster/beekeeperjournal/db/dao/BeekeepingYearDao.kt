@@ -37,6 +37,12 @@ interface BeekeepingYearDao {
     suspend fun deleteYearById(yearId: Long)
 
     /**
+     * Отримує рік за його унікальною назвою (наприклад, "2025").
+     */
+    @Query("SELECT * FROM beekeeping_years WHERE name = :yearName")
+    suspend fun getYearByName(yearName: String): BeekeepingYear? // <-- ДОДАЄМО ЦЕЙ МЕТОД
+
+    /**
      * Отримує рік за його ID.
      */
     @Query("SELECT * FROM beekeeping_years WHERE yearId = :yearId")

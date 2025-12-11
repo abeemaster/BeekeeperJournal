@@ -22,6 +22,19 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+// НОВІ ІМПОРТИ ДЛЯ МЕНЮ ТА ДІАЛОГІВ
+import android.view.Menu
+import android.widget.PopupMenu
+import androidx.appcompat.app.AlertDialog
+import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
+import android.widget.Toast // Для повідомлень про помилки
+import androidx.recyclerview.widget.LinearLayoutManager // Зазвичай потрібен, якщо не встановлено в XML
+
+/**
+ * BottomSheetDialogFragment, який відображає список усіх доступних пасічних років
+ * та дозволяє користувачеві перемикати активний рік або додавати новий рік.
+ * * Використовує [BeekeepingYearViewModel] для взаємодії з даними років.
+ */
 @AndroidEntryPoint
 class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
 
@@ -31,6 +44,13 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
     private lateinit var currentYearTextView: TextView
     private lateinit var yearAdapter: BeekeepingYearAdapter
 
+
+    // Властивість для зберігання імені поточного активного року, щоб використовувати його для розрахунку наступного року.
+    private var currentActiveYearName: String? = null
+
+    /**
+     * Створює та повертає ієрархію представлень (View) для діалогового вікна.
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -39,39 +59,102 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
         return inflater.inflate(R.layout.beekeeper_year_dialog, container, false)
     }
 
+    /**
+     * Викликається після створення View, налаштовує UI-компоненти та прив'язує адаптер.
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initViews(view)
+        setupAdapter() // ВИПРАВЛЕНО: Один виклик для ініціалізації адаптера
+        setupListeners()
+        observeViewModel()
+        // ВИДАЛЕНО: setupRecyclerView()
+    }
 
+    /**
+     * Ініціалізує посилання на View-елементи з layout.
+     * @param view Кореневе View діалогу.
+     */
+    private fun initViews(view: View) {
         yearsRecyclerView = view.findViewById(R.id.yearsRecyclerView)
         addYearButton = view.findViewById(R.id.addYearButton)
         currentYearTextView = view.findViewById(R.id.currentYearTextView)
 
-        setupAdapter()
-        observeViewModel()
+        // Встановлюємо LayoutManager, якщо він не встановлений у XML
+        if (yearsRecyclerView.layoutManager == null) {
+            yearsRecyclerView.layoutManager = LinearLayoutManager(context)
+        }
+    }
 
+    /**
+     * Налаштовує обробники подій для UI-елементів.
+     * Містить **виправлену** логіку додавання нового пасічного року,
+     * який тепер розраховується як *наступний* рік відносно активного.
+     */
+    private fun setupListeners() {
         addYearButton.setOnClickListener {
-            // Генеруємо ім'я нового року
-            val nextYear = Calendar.getInstance().get(Calendar.YEAR) + 1
+            // 1. Отримуємо рік, наступний за поточним активним.
+            val nextYearInt = try {
+                // Намагаємося перетворити ім'я активного року на число та додати 1
+                val currentYear = currentActiveYearName?.toInt()
+                currentYear?.plus(1) ?: (Calendar.getInstance().get(Calendar.YEAR) + 1)
+            } catch (_: NumberFormatException) {
+                // Якщо ім'я активного року не є числом, використовуємо поточний календарний рік + 1
+                Calendar.getInstance().get(Calendar.YEAR) + 1
+            }
+
+            val nextYearName = nextYearInt.toString()
+
+            // 2. Встановлюємо дату початку нового року (1 січня наступного року)
+            val nextYearStartDate = Calendar.getInstance().apply {
+                set(Calendar.YEAR, nextYearInt)
+                set(Calendar.MONTH, Calendar.JANUARY)
+                set(Calendar.DAY_OF_MONTH, 1)
+                // Обнуляємо час, щоб це був початок дня
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+
+            // 3. Викликаємо ViewModel з динамічними даними
             viewModel.createNewYear(
-                yearName = "Пасічний рік $nextYear",
-                startDate = Calendar.getInstance().apply { set(Calendar.YEAR, nextYear); set(Calendar.MONTH, Calendar.JANUARY); set(Calendar.DAY_OF_MONTH, 1) }.timeInMillis
+                yearName = nextYearName,
+                startDate = nextYearStartDate
             )
         }
     }
 
-    private fun setupAdapter() {
-        // Початковий ID 1L, поки не отримаємо дані зі StateFlow
+    /**
+     * Ініціалізує адаптер для RecyclerView.
+     * Встановлює callback [onSwitchClicked] для перемикання активного року у ViewModel,
+     * та **[onLongClick] для виклику меню керування роком (Редагувати/Видалити)**.
+     */
+    private fun setupAdapter() { // ОБ'ЄДНАНА ФУНКЦІЯ
         yearAdapter = BeekeepingYearAdapter(
-            activeYearId = 1L,
+            // ВИПРАВЛЕНО: Беремо актуальний activeId з ViewModel
+            activeYearId = viewModel.yearListState.value.activeYearId,
+
             onSwitchClicked = { year ->
+                // Встановлює вибраний рік як активний у SharedPreferences
                 viewModel.setActiveYear(year.yearId)
-                // Можна закрити діалог, якщо потрібно
+                // Закриваємо діалог після перемикання
                 dismiss()
+            },
+
+            // НОВИЙ ОБРОБНИК ДОВГОГО НАТИСКАННЯ
+            onLongClick = { year, anchorView ->
+                showYearOptionsPopupMenu(year, anchorView)
             }
         )
         yearsRecyclerView.adapter = yearAdapter
     }
 
+    /**
+     * Спостерігає за StateFlow ([BeekeepingYearViewModel.yearListState]) з ViewModel.
+     * Оновлює список років у RecyclerView, мітку активного року в заголовку,
+     * а також зберігає ім'я активного року у [currentActiveYearName] для логіки додавання наступного року.
+     */
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.yearListState.collectLatest { state ->
@@ -81,13 +164,86 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
                 // Оновлення мітки активного року у заголовку діалогу
                 val activeYear = state.years.find { it.yearId == state.activeYearId }
                 if (activeYear != null) {
+                    currentActiveYearName = activeYear.name
+
                     val formattedDate = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(activeYear.startDate)
-                    currentYearTextView.text = getString(R.string.label_current_year_status, activeYear.name, formattedDate)
+
+                    // ВИПРАВЛЕНО: Об'єднуємо назву року та дату в один рядок,
+                    // щоб уникнути помилки "Wrong argument count"
+                    val combinedInfo = "${activeYear.name} (${formattedDate})"
+                    currentYearTextView.text = getString(R.string.label_current_year_status, combinedInfo)
+
                     yearAdapter.setActiveYear(state.activeYearId)
                 } else {
                     currentYearTextView.text = getString(R.string.label_current_year_not_set)
+                    currentActiveYearName = null
                 }
             }
         }
+    }
+
+    // ----------------------------------------------------------------------
+    // МЕТОДИ ДЛЯ ОБРОБКИ МЕНЮ "РЕДАГУВАТИ/ВИДАЛИТИ"
+    // ----------------------------------------------------------------------
+
+    /**
+     * Відображає спливаюче меню "Редагувати/Видалити" при довгому натисканні.
+     */
+    private fun showYearOptionsPopupMenu(year: BeekeepingYear, anchorView: View) {
+        val popup = PopupMenu(requireContext(), anchorView)
+
+        // Використовуйте константи, якщо не маєте R.id для меню
+        val ACTION_EDIT_YEAR = 1
+        val ACTION_DELETE_YEAR = 2
+
+        popup.menu.apply {
+            add(Menu.NONE, ACTION_EDIT_YEAR, 0, getString(R.string.action_edit_year))
+
+            // Запобігаємо появі опції "Видалити", якщо це єдиний рік (ViewModel також блокує видалення)
+            if (viewModel.yearListState.value.years.size > 1) {
+                add(Menu.NONE, ACTION_DELETE_YEAR, 1, getString(R.string.action_delete_year))
+            }
+        }
+
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                ACTION_EDIT_YEAR -> {
+                    // TODO: 1. Логіка відкриття діалогового вікна для РЕДАГУВАННЯ
+                    Toast.makeText(requireContext(), "Редагувати рік: ${year.name}", Toast.LENGTH_SHORT).show()
+                    dismiss() // Закриваємо поточний діалог
+                    true
+                }
+                ACTION_DELETE_YEAR -> {
+                    showDeleteConfirmationDialog(year)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+
+    /**
+     * Відображає діалог підтвердження перед видаленням року.
+     */
+    private fun showDeleteConfirmationDialog(year: BeekeepingYear) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.delete_year_title, year.name))
+            .setMessage(R.string.delete_year_message)
+            .setPositiveButton(R.string.action_delete) { _, _ ->
+                // Викликаємо функцію видалення з ViewModel
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val success = viewModel.deleteYear(year.yearId)
+                    if (!success) {
+                        // Якщо видалення не вдалося (бо це був останній рік)
+                        Toast.makeText(requireContext(), R.string.cannot_delete_last_year, Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(requireContext(), getString(R.string.year_deleted_message, year.name), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
     }
 }

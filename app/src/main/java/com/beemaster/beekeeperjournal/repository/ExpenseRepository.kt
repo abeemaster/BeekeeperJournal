@@ -81,6 +81,13 @@ class ExpenseRepository @Inject constructor(
     }
 
     /**
+     * Видаляє всі витрати, пов'язані з певним пасічним роком.
+     */
+    suspend fun deleteExpensesByYearId(yearId: Long) { // 👈 НОВА ФУНКЦІЯ
+        expenseDao.deleteExpensesByYearId(yearId)
+    }
+
+    /**
      * Отримує всі витрати (не Flow). Конвертує List<ExpenseEntity> у List<Expense>.
      * @return Список об'єктів Expense.
      */

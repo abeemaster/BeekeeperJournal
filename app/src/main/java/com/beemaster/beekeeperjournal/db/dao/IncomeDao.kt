@@ -61,6 +61,13 @@ interface IncomeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertIncomes(incomes: List<IncomeEntity>)
 
+    /**
+     * Видаляє всі прибутки, пов'язані з певним пасічним роком.
+     * @param yearId ID року для видалення.
+     */
+    @Query("DELETE FROM incomes WHERE yearId = :yearId")
+    suspend fun deleteIncomesByYearId(yearId: Long) // 👈 ДОДАЙТЕ ЦЕ
+
     @Query("DELETE FROM incomes")
     suspend fun deleteAllIncomes()
 

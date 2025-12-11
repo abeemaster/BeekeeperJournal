@@ -110,7 +110,7 @@ class NoteActivity : AppCompatActivity() {
     private fun setupListeners() {
         saveEditedNoteButton.setOnClickListener { saveEditedNote() }
         microphoneBtnEditNote.setOnClickListener {
-            // ✅ ВИПРАВЛЕНО: Викликаємо універсальний метод хелпера
+
             voskHelper.checkPermissionAndStartListening()
         }
     }
@@ -173,7 +173,7 @@ class NoteActivity : AppCompatActivity() {
         val startVoiceInputImmediately = intent.getBooleanExtra(Constants.EXTRA_START_VOICE_INPUT, false)
         if (startVoiceInputImmediately) {
             editNoteContentInput.post {
-                // ✅ ВИПРАВЛЕНО: Викликаємо універсальний метод
+
                 voskHelper.checkPermissionAndStartListening()
             }
         } else {

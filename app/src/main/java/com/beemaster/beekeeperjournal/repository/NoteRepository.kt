@@ -111,9 +111,9 @@ class NoteRepository @Inject constructor(
      * @param note Об'єкт Note для вставки/оновлення.
      */
     suspend fun insertNote(note: Note) {
-        val noteWithYearId = if (note.yearId == 0) { // ПОМИЛКА ЗНИКНЕ ПІСЛЯ ВИПРАВЛЕННЯ Note.kt
+        val noteWithYearId = if (note.yearId == 0) {
             val currentYearId = yearPrefsManager.activeYearId.first().toInt()
-            note.copy(yearId = currentYearId) // ПОМИЛКА ЗНИКНЕ ПІСЛЯ ВИПРАВЛЕННЯ Note.kt
+            note.copy(yearId = currentYearId)
         } else {
             note
         }
@@ -134,6 +134,15 @@ class NoteRepository @Inject constructor(
      */
     suspend fun deleteNote(id: Int) {
         noteDao.deleteNote(id)
+    }
+
+    /**
+     * Видаляє всі нотатки, пов'язані з певним пасічним роком.
+     * @param yearId ID року для видалення.
+     * @return Кількість видалених нотаток.
+     */
+    suspend fun deleteNotesByYearId(yearId: Long): Int { // 👈 НОВА ФУНКЦІЯ
+        return noteDao.deleteNotesByYearId(yearId)
     }
 
     /**

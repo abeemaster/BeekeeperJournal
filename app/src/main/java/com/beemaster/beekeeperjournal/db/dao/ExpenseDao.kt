@@ -25,6 +25,13 @@ interface ExpenseDao {
     @Delete
     suspend fun deleteExpense(expense: ExpenseEntity)
 
+    /**
+     * Видаляє всі витрати, пов'язані з певним пасічним роком.
+     * @param yearId ID року для видалення.
+     */
+    @Query("DELETE FROM expenses WHERE yearId = :yearId")
+    suspend fun deleteExpensesByYearId(yearId: Long) // 👈 ДОДАЙТЕ ЦЕ
+
     @Query("DELETE FROM expenses WHERE id = :expenseId")
     suspend fun deleteExpense(expenseId: Int)
 

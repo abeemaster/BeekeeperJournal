@@ -72,6 +72,13 @@ class IncomeRepository @Inject constructor(
         incomeDao.updateIncome(income.toIncomeEntity())
     }
 
+    /**
+     * Видаляє всі прибутки, пов'язані з певним пасічним роком.
+     */
+    suspend fun deleteIncomesByYearId(yearId: Long) { // 👈 НОВА ФУНКЦІЯ
+        incomeDao.deleteIncomesByYearId(yearId)
+    }
+
     suspend fun deleteIncome(incomeId: Int) {
         incomeDao.deleteIncome(incomeId)
     }

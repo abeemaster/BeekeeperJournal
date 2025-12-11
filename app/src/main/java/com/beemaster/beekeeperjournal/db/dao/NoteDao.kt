@@ -36,6 +36,13 @@ interface NoteDao {
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNote(id: Int)
 
+    /**
+     * Видаляє всі нотатки, пов'язані з певним пасічним роком.
+     * @param yearId ID року для видалення.
+     * @return Кількість видалених рядків.
+     */
+    @Query("DELETE FROM notes WHERE yearId = :yearId")
+    suspend fun deleteNotesByYearId(yearId: Long): Int // 👈 НОВИЙ МЕТОД
 
     @Query("DELETE FROM notes WHERE hiveId = :hiveId")
     suspend fun deleteNotesByHiveId(hiveId: Int)
@@ -95,7 +102,7 @@ interface NoteDao {
             N.content, 
             N.createdAt,
             N.imagePath, 
-            N.yearId, -- !!! ДОДАНО !!!
+            N.yearId,
             H.hiveNumber AS currentHiveDisplayNumber
         FROM notes AS N 
         INNER JOIN hives AS H ON N.hiveId = H.id 
@@ -177,10 +184,10 @@ interface NoteDao {
             N.content, 
             N.createdAt,
             N.imagePath, 
-            N.yearId, -- !!! ДОДАНО !!!
+            N.yearId,
             H.hiveNumber AS currentHiveDisplayNumber
         FROM notes AS N 
-        INNER JOIN hives AS H ON N.hiveId = H.id 
+        LEFT JOIN hives AS H ON N.hiveId = H.id 
         WHERE N.yearId = :activeYearId
         ORDER BY N.createdAt DESC
     """)
@@ -213,7 +220,7 @@ interface NoteDao {
             N.yearId, 
             H.hiveNumber AS currentHiveDisplayNumber
         FROM notes AS N 
-        INNER JOIN hives AS H ON N.hiveId = H.id 
+        LEFT JOIN hives AS H ON N.hiveId = H.id 
         WHERE N.hiveId = :hiveId 
           AND N.type = :noteType
           AND N.yearId = :activeYearId
