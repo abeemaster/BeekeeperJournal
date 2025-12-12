@@ -21,14 +21,12 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-
-// НОВІ ІМПОРТИ ДЛЯ МЕНЮ ТА ДІАЛОГІВ
 import android.view.Menu
 import android.widget.PopupMenu
 import androidx.appcompat.app.AlertDialog
 import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
-import android.widget.Toast // Для повідомлень про помилки
-import androidx.recyclerview.widget.LinearLayoutManager // Зазвичай потрібен, якщо не встановлено в XML
+import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
 
 /**
  * BottomSheetDialogFragment, який відображає список усіх доступних пасічних років
@@ -68,7 +66,7 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
         setupAdapter() // ВИПРАВЛЕНО: Один виклик для ініціалізації адаптера
         setupListeners()
         observeViewModel()
-        // ВИДАЛЕНО: setupRecyclerView()
+        setupYearActionListener()
     }
 
     /**
@@ -144,7 +142,7 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
 
             // НОВИЙ ОБРОБНИК ДОВГОГО НАТИСКАННЯ
             onLongClick = { year, anchorView ->
-                showYearOptionsPopupMenu(year, anchorView)
+                showYearActionsBottomSheet(year.yearId)
             }
         )
         yearsRecyclerView.adapter = yearAdapter
@@ -183,44 +181,55 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
     }
 
     // ----------------------------------------------------------------------
-    // МЕТОДИ ДЛЯ ОБРОБКИ МЕНЮ "РЕДАГУВАТИ/ВИДАЛИТИ"
+    // МЕТОДИ ДЛЯ НОВОГО BOTTOM SHEET ДІАЛОГУ ТА ОБРОБКИ РЕЗУЛЬТАТІВ
     // ----------------------------------------------------------------------
 
     /**
-     * Відображає спливаюче меню "Редагувати/Видалити" при довгому натисканні.
+     * Відображає новий BottomSheetDialog з опціями "Редагувати/Видалити".
      */
-    private fun showYearOptionsPopupMenu(year: BeekeepingYear, anchorView: View) {
-        val popup = PopupMenu(requireContext(), anchorView)
+    private fun showYearActionsBottomSheet(yearId: Long) {
+        // ЗВЕРНІТЬ УВАГУ: YearActionsDialogFragment
+        val fragment = YearActionsDialogFragment.newInstance(yearId)
+        // Викликаємо діалог через childFragmentManager
+        fragment.show(childFragmentManager, YearActionsDialogFragment.TAG)
+    }
 
-        // Використовуйте константи, якщо не маєте R.id для меню
-        val ACTION_EDIT_YEAR = 1
-        val ACTION_DELETE_YEAR = 2
+    /**
+     * Налаштовує слухача для отримання результатів (вибраної дії) від YearActionsDialogFragment.
+     */
+    private fun setupYearActionListener() {
+        // ЗВЕРНІТЬ УВАГУ: YearActionsDialogFragment
+        childFragmentManager.setFragmentResultListener(
+            YearActionsDialogFragment.KEY_REQUEST,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val yearId = bundle.getLong(YearActionsDialogFragment.KEY_YEAR_ID)
+            val action = bundle.getString(YearActionsDialogFragment.KEY_ACTION)
 
-        popup.menu.apply {
-            add(Menu.NONE, ACTION_EDIT_YEAR, 0, getString(R.string.action_edit_year))
+            // Знаходимо об'єкт року для зручності
+            val year = viewModel.yearListState.value.years.find { it.yearId == yearId }
 
-            // Запобігаємо появі опції "Видалити", якщо це єдиний рік (ViewModel також блокує видалення)
-            if (viewModel.yearListState.value.years.size > 1) {
-                add(Menu.NONE, ACTION_DELETE_YEAR, 1, getString(R.string.action_delete_year))
-            }
-        }
-
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                ACTION_EDIT_YEAR -> {
-                    // TODO: 1. Логіка відкриття діалогового вікна для РЕДАГУВАННЯ
-                    Toast.makeText(requireContext(), "Редагувати рік: ${year.name}", Toast.LENGTH_SHORT).show()
+            when (action) {
+                YearActionsDialogFragment.ACTION_EDIT -> {
+                    // Логіка відкриття діалогового вікна для РЕДАГУВАННЯ
+                    if (year != null) {
+                        Toast.makeText(requireContext(), "Редагувати рік: ${year.name}", Toast.LENGTH_SHORT).show()
+                    }
                     dismiss() // Закриваємо поточний діалог
-                    true
                 }
-                ACTION_DELETE_YEAR -> {
-                    showDeleteConfirmationDialog(year)
-                    true
+                YearActionsDialogFragment.ACTION_DELETE -> {
+                    // Логіка перевірки та підтвердження видалення
+                    if (year != null) {
+                        // Перевіряємо, чи є це єдиний рік (ViewModel також блокує видалення)
+                        if (viewModel.yearListState.value.years.size <= 1) {
+                            Toast.makeText(requireContext(), R.string.cannot_delete_last_year, Toast.LENGTH_LONG).show()
+                            return@setFragmentResultListener // Виходимо, не показуючи діалог підтвердження
+                        }
+                        showDeleteConfirmationDialog(year)
+                    }
                 }
-                else -> false
             }
         }
-        popup.show()
     }
 
 
