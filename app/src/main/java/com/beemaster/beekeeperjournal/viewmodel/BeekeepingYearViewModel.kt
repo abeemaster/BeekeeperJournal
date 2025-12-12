@@ -138,11 +138,30 @@ class BeekeepingYearViewModel @Inject constructor(
     }
 
     /**
-     * Редагує дані існуючого пасічного року.
-     * @param year Об'єкт BeekeepingYear, який потрібно оновити.
+     * Додано функцію для оновлення назви існуючого року.
+     * @param yearId ID року для оновлення.
+     * @param newName Нова назва року.
+     * @param startDate Дата початку року (передається без змін).
+     * @return true, якщо оновлення успішне.
      */
-    fun editYear(year: BeekeepingYear) = viewModelScope.launch {
-        yearDao.updateYear(year)
+    suspend fun updateYear(yearId: Long, newName: String, startDate: Long): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Створюємо новий об'єкт BeekeepingYear з оновленою назвою,
+                // використовуючи існуючий ID та стару дату початку.
+                val updatedYear = BeekeepingYear(
+                    yearId = yearId,
+                    name = newName,
+                    startDate = startDate
+                )
+                // Викликаємо оновлення через DAO
+                yearDao.updateYear(updatedYear) //
+                true // Успіх
+            } catch (e: Exception) {
+                Log.e("YearViewModel", "Помилка при оновленні року ID: $yearId", e)
+                false // Помилка
+            }
+        }
     }
 
     /**

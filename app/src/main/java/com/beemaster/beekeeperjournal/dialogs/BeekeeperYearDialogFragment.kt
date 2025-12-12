@@ -168,7 +168,7 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
 
                     // ВИПРАВЛЕНО: Об'єднуємо назву року та дату в один рядок,
                     // щоб уникнути помилки "Wrong argument count"
-                    val combinedInfo = "${activeYear.name} (${formattedDate})"
+                    val combinedInfo = "${activeYear.name}"
                     currentYearTextView.text = getString(R.string.label_current_year_status, combinedInfo)
 
                     yearAdapter.setActiveYear(state.activeYearId)
@@ -188,7 +188,6 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
      * Відображає новий BottomSheetDialog з опціями "Редагувати/Видалити".
      */
     private fun showYearActionsBottomSheet(yearId: Long) {
-        // ЗВЕРНІТЬ УВАГУ: YearActionsDialogFragment
         val fragment = YearActionsDialogFragment.newInstance(yearId)
         // Викликаємо діалог через childFragmentManager
         fragment.show(childFragmentManager, YearActionsDialogFragment.TAG)
@@ -198,7 +197,7 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
      * Налаштовує слухача для отримання результатів (вибраної дії) від YearActionsDialogFragment.
      */
     private fun setupYearActionListener() {
-        // ЗВЕРНІТЬ УВАГУ: YearActionsDialogFragment
+        // Використовуємо childFragmentManager, оскільки діалог викликається через childFragmentManager
         childFragmentManager.setFragmentResultListener(
             YearActionsDialogFragment.KEY_REQUEST,
             viewLifecycleOwner
@@ -211,19 +210,21 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
 
             when (action) {
                 YearActionsDialogFragment.ACTION_EDIT -> {
-                    // Логіка відкриття діалогового вікна для РЕДАГУВАННЯ
+                    // *** НОВА ЛОГІКА: Відкриваємо діалог редагування ***
                     if (year != null) {
-                        Toast.makeText(requireContext(), "Редагувати рік: ${year.name}", Toast.LENGTH_SHORT).show()
+                        // Використовуємо parentFragmentManager, щоб EditYearDialogFragment
+                        // не закрився, коли закриється BeekeeperYearDialogFragment
+                        EditYearDialogFragment.newInstance(yearId).show(parentFragmentManager, EditYearDialogFragment.TAG)
                     }
                     dismiss() // Закриваємо поточний діалог
                 }
                 YearActionsDialogFragment.ACTION_DELETE -> {
                     // Логіка перевірки та підтвердження видалення
                     if (year != null) {
-                        // Перевіряємо, чи є це єдиний рік (ViewModel також блокує видалення)
+                        // Перевіряємо, чи є це єдиний рік
                         if (viewModel.yearListState.value.years.size <= 1) {
                             Toast.makeText(requireContext(), R.string.cannot_delete_last_year, Toast.LENGTH_LONG).show()
-                            return@setFragmentResultListener // Виходимо, не показуючи діалог підтвердження
+                            return@setFragmentResultListener
                         }
                         showDeleteConfirmationDialog(year)
                     }
@@ -232,9 +233,9 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-
     /**
      * Відображає діалог підтвердження перед видаленням року.
+     * Залишається незмінним, тепер викликається з setupYearActionListener.
      */
     private fun showDeleteConfirmationDialog(year: BeekeepingYear) {
         AlertDialog.Builder(requireContext())
