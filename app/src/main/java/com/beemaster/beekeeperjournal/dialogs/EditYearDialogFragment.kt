@@ -5,6 +5,8 @@ package com.beemaster.beekeeperjournal.dialogs
 import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -24,10 +26,12 @@ import kotlinx.coroutines.launch
  * Використовує MaterialAlertDialogBuilder для коректної роботи з клавіатурою.
  */
 @AndroidEntryPoint
-class EditYearDialogFragment : DialogFragment() { // Успадковуємось від DialogFragment
+class EditYearDialogFragment : DialogFragment() {
 
-    // Інжектуємо ViewModel
     private val viewModel: BeekeepingYearViewModel by activityViewModels()
+
+    // Ініціалізація поля введення як властивість класу
+    private var yearNameEditText: TextInputEditText? = null
 
     // ID року
     private val yearId: Long
@@ -36,10 +40,6 @@ class EditYearDialogFragment : DialogFragment() { // Успадковуємос�
 
     // Отримуємо поточний об'єкт року (завжди актуальний зі StateFlow)
     private fun getCurrentYear() = viewModel.yearListState.value.years.find { it.yearId == yearId }
-
-    // Клас повинен мати лише одне поле введення, яке ми ініціалізуємо
-    private var yearNameEditText: TextInputEditText? = null
-
 
     companion object {
         const val TAG = "EditYearDialog"
@@ -52,12 +52,7 @@ class EditYearDialogFragment : DialogFragment() { // Успадковуємос�
         }
     }
 
-    // ----------------------------------------------------------------------
-    // ВИКОРИСТАННЯ onCreateDialog для MaterialAlertDialogBuilder
-    // ----------------------------------------------------------------------
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        // ВИПРАВЛЕННЯ 1: Викликаємо функцію getCurrentYear()
         val yearData = getCurrentYear()
 
         if (yearData == null) {
@@ -66,31 +61,30 @@ class EditYearDialogFragment : DialogFragment() { // Успадковуємос�
             return super.onCreateDialog(savedInstanceState)
         }
 
-        // Створюємо view для вмісту діалогу
+        // 1. Створюємо view для вмісту діалогу
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_year, null)
-        yearNameEditText = view.findViewById(R.id.yearNameEditText) // Ініціалізуємо змінну
 
-        // 1. Заповнюємо поточні дані
-        yearNameEditText?.setText(yearData.name) // ВИПРАВЛЕННЯ 2: Використовуємо yearData
+        // 2. Ініціалізуємо поле введення як властивість класу, щоб до нього можна було звертатися пізніше
+        yearNameEditText = view.findViewById(R.id.yearNameEditText)
+        yearNameEditText?.setText(yearData.name)
 
-        // 2. Створюємо AlertDialog з Material Design стилем
+        // 3. Створюємо AlertDialog з Material Design стилем
         val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_BeekeeperJournal_AlertDialog)
             .setView(view)
-            .setPositiveButton(R.string.action_save, null)
-            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.action_save, null) // Кнопка з null-слухачем
+            .setNegativeButton(R.string.action_cancel, null) // Кнопка з null-слухачем
             .create()
 
-        // Налаштування вікна для коректної роботи з клавіатурою
+        // 4. Налаштування вікна
         dialog.setCanceledOnTouchOutside(false)
         dialog.window?.let { window ->
-            // Примусове встановлення заокругленого фону для вікна
             window.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
 
             val width = (resources.displayMetrics.widthPixels * 0.87).toInt()
             val height = WindowManager.LayoutParams.WRAP_CONTENT
             window.setLayout(width, height)
 
-            // ВАЖЛИВО: Встановлюємо фокус на поле введення і відкриваємо клавіатуру
+            // Фокус на полі введення і відкриття клавіатури
             yearNameEditText?.requestFocus()
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         }
@@ -101,7 +95,7 @@ class EditYearDialogFragment : DialogFragment() { // Успадковуємос�
     override fun onStart() {
         super.onStart()
 
-        // 3. Отримуємо AlertDialog для доступу до кнопок
+        // 5. Отримуємо AlertDialog для доступу до кнопок (після створення діалогу)
         val alertDialog = dialog as? AlertDialog ?: return
 
         // НАЛАШТУВАННЯ КНОПКИ "ЗБЕРЕГТИ"
@@ -130,7 +124,6 @@ class EditYearDialogFragment : DialogFragment() { // Успадковуємос�
             return
         }
 
-        // ВИПРАВЛЕННЯ 3: Викликаємо функцію getCurrentYear()
         val yearToUpdate = getCurrentYear()
 
         if (yearToUpdate == null) {
@@ -139,8 +132,8 @@ class EditYearDialogFragment : DialogFragment() { // Успадковуємос�
             return
         }
 
-        // Викликаємо оновлення у ViewModel
-        viewLifecycleOwner.lifecycleScope.launch {
+        // ВИПРАВЛЕННЯ: Змінюємо viewLifecycleOwner на lifecycleScope для надійності в onCreateDialog
+        lifecycleScope.launch {
             val success = viewModel.updateYear(
                 yearId = yearToUpdate.yearId,
                 newName = newName,
