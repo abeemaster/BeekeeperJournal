@@ -2,40 +2,44 @@
 
 package com.beemaster.beekeeperjournal.dialogs
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.viewmodel.BeekeepingYearViewModel
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
  * DialogFragment для редагування назви існуючого пасічного року.
- * Викликається після натискання на "Редагувати" у YearActionsDialogFragment.
+ * Використовує MaterialAlertDialogBuilder для коректної роботи з клавіатурою.
  */
 @AndroidEntryPoint
-class EditYearDialogFragment : BottomSheetDialogFragment() {
+class EditYearDialogFragment : DialogFragment() { // Успадковуємось від DialogFragment
 
-    // Інжектуємо ViewModel, оскільки він має бути спільним з BeekeeperYearDialogFragment
+    // Інжектуємо ViewModel
     private val viewModel: BeekeepingYearViewModel by activityViewModels()
 
-    private lateinit var yearNameEditText: TextInputEditText
-    private lateinit var saveButton: MaterialButton
-    private lateinit var cancelButton: MaterialButton
-
-    // ID року, який ми редагуємо
+    // ID року
     private val yearId: Long
         get() = arguments?.getLong(ARG_YEAR_ID)
             ?: throw IllegalStateException("EditYearDialogFragment requires year ID.")
+
+    // Отримуємо поточний об'єкт року (завжди актуальний зі StateFlow)
+    private fun getCurrentYear() = viewModel.yearListState.value.years.find { it.yearId == yearId }
+
+    // Клас повинен мати лише одне поле введення, яке ми ініціалізуємо
+    private var yearNameEditText: TextInputEditText? = null
+
 
     companion object {
         const val TAG = "EditYearDialog"
@@ -48,85 +52,99 @@ class EditYearDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    override fun getTheme(): Int = R.style.CustomBottomSheetDialogTheme
+    // ----------------------------------------------------------------------
+    // ВИКОРИСТАННЯ onCreateDialog для MaterialAlertDialogBuilder
+    // ----------------------------------------------------------------------
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Використовуємо наш новий макет
-        return inflater.inflate(R.layout.dialog_edit_year, container, false)
-    }
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        // ВИПРАВЛЕННЯ 1: Викликаємо функцію getCurrentYear()
+        val yearData = getCurrentYear()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        initViews(view)
-        loadYearData()
-        setupListeners()
-    }
-
-    private fun initViews(view: View) {
-        yearNameEditText = view.findViewById(R.id.yearNameEditText)
-        saveButton = view.findViewById(R.id.saveButton)
-        cancelButton = view.findViewById(R.id.cancelButton)
-    }
-
-    /**
-     * Завантажує поточні дані року (Назву) для відображення у полі редагування.
-     */
-    private fun loadYearData() {
-        // Ми використовуємо stateFlow з ViewModel, щоб знайти потрібний рік
-        val currentYear = viewModel.yearListState.value.years.find { it.yearId == yearId }
-
-        if (currentYear != null) {
-            // Відображаємо поточну назву року
-            yearNameEditText.setText(currentYear.name)
-        } else {
-            // Якщо рік не знайдено, ми не можемо редагувати. Закриваємо діалог.
+        if (yearData == null) {
             Toast.makeText(requireContext(), R.string.error_year_not_found, Toast.LENGTH_SHORT).show()
             dismiss()
+            return super.onCreateDialog(savedInstanceState)
         }
+
+        // Створюємо view для вмісту діалогу
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_year, null)
+        yearNameEditText = view.findViewById(R.id.yearNameEditText) // Ініціалізуємо змінну
+
+        // 1. Заповнюємо поточні дані
+        yearNameEditText?.setText(yearData.name) // ВИПРАВЛЕННЯ 2: Використовуємо yearData
+
+        // 2. Створюємо AlertDialog з Material Design стилем
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.Theme_BeekeeperJournal_AlertDialog)
+            .setView(view)
+            .setPositiveButton(R.string.action_save, null)
+            .setNegativeButton(R.string.action_cancel, null)
+            .create()
+
+        // Налаштування вікна для коректної роботи з клавіатурою
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.window?.let { window ->
+            // Примусове встановлення заокругленого фону для вікна
+            window.setBackgroundDrawableResource(R.drawable.bg_dialog_custom_corners)
+
+            val width = (resources.displayMetrics.widthPixels * 0.87).toInt()
+            val height = WindowManager.LayoutParams.WRAP_CONTENT
+            window.setLayout(width, height)
+
+            // ВАЖЛИВО: Встановлюємо фокус на поле введення і відкриваємо клавіатуру
+            yearNameEditText?.requestFocus()
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        }
+
+        return dialog
     }
 
-    private fun setupListeners() {
-        cancelButton.setOnClickListener {
-            dismiss()
-        }
+    override fun onStart() {
+        super.onStart()
 
-        saveButton.setOnClickListener {
+        // 3. Отримуємо AlertDialog для доступу до кнопок
+        val alertDialog = dialog as? AlertDialog ?: return
+
+        // НАЛАШТУВАННЯ КНОПКИ "ЗБЕРЕГТИ"
+        val positiveButton = alertDialog.getButton(Dialog.BUTTON_POSITIVE)
+        positiveButton.setOnClickListener {
+            // Викликаємо логіку збереження
             saveYearChanges()
         }
+
+        // НАЛАШТУВАННЯ КНОПКИ "СКАСУВАТИ"
+        val negativeButton = alertDialog.getButton(Dialog.BUTTON_NEGATIVE)
+        negativeButton.setOnClickListener {
+            dismiss()
+        }
     }
+
 
     /**
      * Обробка збереження: валідація та виклик функції оновлення у ViewModel.
      */
     private fun saveYearChanges() {
-        val newName = yearNameEditText.text.toString().trim()
+        val newName = yearNameEditText?.text?.toString()?.trim()
 
-        if (newName.isEmpty()) {
-            yearNameEditText.error = getString(R.string.error_year_name_required)
+        if (newName.isNullOrEmpty()) {
+            yearNameEditText?.error = getString(R.string.error_year_name_required)
             return
         }
 
-        // 1. Отримуємо старий об'єкт року, щоб зберегти стару дату початку
-        val currentYear = viewModel.yearListState.value.years.find { it.yearId == yearId }
+        // ВИПРАВЛЕННЯ 3: Викликаємо функцію getCurrentYear()
+        val yearToUpdate = getCurrentYear()
 
-        if (currentYear == null) {
+        if (yearToUpdate == null) {
             Toast.makeText(requireContext(), R.string.error_year_not_found, Toast.LENGTH_SHORT).show()
             dismiss()
             return
         }
 
-        // 2. Викликаємо оновлення у ViewModel
+        // Викликаємо оновлення у ViewModel
         viewLifecycleOwner.lifecycleScope.launch {
-            // NOTE: Ми викликаємо функцію updateYear. Припускаємо, що така функція вже існує
-            // або буде реалізована у BeekeepingYearViewModel.
             val success = viewModel.updateYear(
-                yearId = currentYear.yearId,
+                yearId = yearToUpdate.yearId,
                 newName = newName,
-                startDate = currentYear.startDate // Передаємо стару дату, щоб не втратити її
+                startDate = yearToUpdate.startDate
             )
 
             if (success) {

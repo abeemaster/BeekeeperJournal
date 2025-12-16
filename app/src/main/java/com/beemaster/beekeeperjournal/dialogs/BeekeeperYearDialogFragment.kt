@@ -8,25 +8,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.BeekeepingYearAdapter
+import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
 import com.beemaster.beekeeperjournal.viewmodel.BeekeepingYearViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
-import android.view.Menu
-import android.widget.PopupMenu
-import androidx.appcompat.app.AlertDialog
-import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
-import android.widget.Toast
-import androidx.recyclerview.widget.LinearLayoutManager
 
 /**
  * BottomSheetDialogFragment, який відображає список усіх доступних пасічних років
@@ -164,11 +160,11 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
                 if (activeYear != null) {
                     currentActiveYearName = activeYear.name
 
-                    val formattedDate = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(activeYear.startDate)
+                    //val formattedDate = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(activeYear.startDate)
 
                     // ВИПРАВЛЕНО: Об'єднуємо назву року та дату в один рядок,
                     // щоб уникнути помилки "Wrong argument count"
-                    val combinedInfo = "${activeYear.name}"
+                    val combinedInfo = activeYear.name
                     currentYearTextView.text = getString(R.string.label_current_year_status, combinedInfo)
 
                     yearAdapter.setActiveYear(state.activeYearId)
