@@ -25,6 +25,18 @@ interface BeekeepingYearDao {
     suspend fun insertYear(year: BeekeepingYear): Long
 
     /**
+     * Повертає статичний список (технічний інструмент для Room).
+     */
+    @Query("SELECT * FROM beekeeping_years")
+    suspend fun getAllYearsStatic(): List<BeekeepingYear>
+
+    /**
+     * Вставляє новий пасічний рік (технічний інструмент для Room).
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(years: List<BeekeepingYear>)
+
+    /**
      * Оновлює існуючий пасічний рік.
      */
     @Update
@@ -37,14 +49,25 @@ interface BeekeepingYearDao {
     suspend fun deleteYearById(yearId: Long)
 
     /**
+     * Видаляє пасічний рік (технічний інструмент для Room).
+     */
+    @Query("DELETE FROM beekeeping_years")
+    suspend fun deleteAllYears()
+    /**
      * Отримує рік за його унікальною назвою (наприклад, "2025").
      */
     @Query("SELECT * FROM beekeeping_years WHERE name = :yearName")
-    suspend fun getYearByName(yearName: String): BeekeepingYear? // <-- ДОДАЄМО ЦЕЙ МЕТОД
+    suspend fun getYearByName(yearName: String): BeekeepingYear?
 
     /**
      * Отримує рік за його ID.
      */
     @Query("SELECT * FROM beekeeping_years WHERE yearId = :yearId")
     suspend fun getYearById(yearId: Long): BeekeepingYear?
+
+    @Transaction
+    suspend fun clearAndInsertYears(years: List<BeekeepingYear>) {
+        deleteAllYears()
+        insertAll(years)
+    }
 }

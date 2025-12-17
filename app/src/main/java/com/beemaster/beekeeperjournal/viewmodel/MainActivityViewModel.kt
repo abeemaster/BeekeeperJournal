@@ -5,6 +5,7 @@ package com.beemaster.beekeeperjournal.viewmodel
 import androidx.annotation.ColorInt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.mappers.toIncomeEntity
 import com.beemaster.beekeeperjournal.models.BackupData
@@ -15,20 +16,20 @@ import com.beemaster.beekeeperjournal.repository.ExpenseRepository
 import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
+import com.beemaster.beekeeperjournal.repository.YearRepository
+import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
 import com.beemaster.beekeeperjournal.utils.NaturalHiveNumberComparator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
 
 /**
  * Клас-перерахування для кодування результатів операцій додавання вулика.
@@ -46,6 +47,7 @@ class MainActivityViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
     private val expenseRepository: ExpenseRepository,
     private val incomeRepository: IncomeRepository,
+    private val yearRepository: YearRepository,
     private val backupPrefsManager: BackupPrefsManager
 ) : ViewModel(), BackupDataSource {
 
@@ -86,6 +88,7 @@ class MainActivityViewModel @Inject constructor(
             val notes = getAllNotesSuspend()
             val expenses = getAllExpensesSuspend()
             val incomes = getAllIncomesSuspend()
+            val years = getAllYearsSuspend()
 
             // Конвертуємо Income (модель) у IncomeEntity (для BackupData),
             // оскільки BackupData.kt очікує List<IncomeEntity>
@@ -95,7 +98,8 @@ class MainActivityViewModel @Inject constructor(
                 hives = hives,
                 notes = notes,
                 expenses = expenses,
-                incomes = incomeEntities
+                incomes = incomeEntities,
+                years = years
             )
         }
     }
@@ -111,6 +115,23 @@ class MainActivityViewModel @Inject constructor(
         // Бекап потрібен, якщо дані змінювалися пізніше, ніж був зроблений останній бекап.
         // Також бекап потрібен, якщо lastBackup == 0L (бекап ніколи не робився).
         return lastModified > lastBackup
+    }
+
+    // --- Реалізація для РОКІВ (BeekeepingYear) ---
+
+    /**
+     * Отримує всі роки для експорту.
+     */
+    override suspend fun getAllYearsSuspend(): List<BeekeepingYear> {
+        return yearRepository.getAllYearsStatic()
+    }
+
+    /**
+     * Імпортує роки з резервної копії.
+     */
+    override suspend fun importYears(years: List<BeekeepingYear>) = withContext(Dispatchers.IO) {
+        yearRepository.importYears(years)
+        backupPrefsManager.updateLastDataModifiedTime()
     }
 
     // --------------------------------------------------------------------

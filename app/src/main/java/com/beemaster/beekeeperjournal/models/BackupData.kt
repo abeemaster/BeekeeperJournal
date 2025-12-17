@@ -2,6 +2,7 @@
 
 package com.beemaster.beekeeperjournal.models
 
+import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.db.entity.IncomeEntity
 
@@ -13,5 +14,6 @@ data class BackupData(
     val hives: List<HiveEntity>,
     val notes: List<Note>,
     val expenses: List<Expense>,
-    val incomes: List<IncomeEntity>
+    val incomes: List<IncomeEntity>,
+    val years: List<BeekeepingYear>
 )

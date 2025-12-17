@@ -1,6 +1,7 @@
 package com.beemaster.beekeeperjournal.viewmodel
 
 
+import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.models.Expense
 import com.beemaster.beekeeperjournal.models.Income
@@ -18,12 +19,14 @@ interface BackupDataSource {
     suspend fun getAllNotesSuspend(): List<Note>
     suspend fun getAllExpensesSuspend(): List<Expense>
     suspend fun getAllIncomesSuspend(): List<Income>
+    suspend fun getAllYearsSuspend(): List<BeekeepingYear>
 
     // Методи для ІМПОРТУ
     suspend fun importHives(hives: List<HiveEntity>)
     fun importNotes(notes: List<Note>): Job
     fun importExpenses(expenses: List<Expense>): Job
     fun importIncomes(incomes: List<Income>): Job
+    suspend fun importYears(years: List<BeekeepingYear>)
     /**
      * Перевіряє, чи були внесені зміни в базу даних
      * з моменту останнього бекапу (для оптимізації автобекапу).

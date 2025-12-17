@@ -165,13 +165,15 @@ class BackupManager @Inject constructor(
     Так було
      */
     private suspend fun getBackupData(): BackupData {
-        val incomes = dataSource.getAllIncomesSuspend()
+        // val incomes = dataSource.getAllIncomesSuspend()
 
         return BackupData(
             hives = dataSource.getAllHivesSuspend(),
             notes = dataSource.getAllNotesSuspend(),
             expenses = dataSource.getAllExpensesSuspend(),
-            incomes = incomes.map { it.toIncomeEntity() }
+            incomes = dataSource.getAllIncomesSuspend().map { it.toIncomeEntity() },
+            // incomes = incomes.map { it.toIncomeEntity() }, з цим рядком працювало
+            years = dataSource.getAllYearsSuspend()
         )
     }
 
@@ -228,6 +230,7 @@ class BackupManager @Inject constructor(
 
             val incomesToImport = backupData.incomes.map { it.toIncome() }
 
+            dataSource.importYears(backupData.years)
             dataSource.importHives(backupData.hives)
             dataSource.importNotes(backupData.notes)
             dataSource.importExpenses(backupData.expenses)

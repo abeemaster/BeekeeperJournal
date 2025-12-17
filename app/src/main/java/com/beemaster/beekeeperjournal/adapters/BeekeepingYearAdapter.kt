@@ -22,7 +22,6 @@ import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
 class BeekeepingYearAdapter(
     private var activeYearId: Long,
     private val onSwitchClicked: (BeekeepingYear) -> Unit,
-    // ДОДАНО: НОВИЙ ПАРАМЕТР для довгого натискання
     private val onLongClick: (BeekeepingYear, View) -> Unit
 ) : ListAdapter<BeekeepingYear, BeekeepingYearAdapter.YearViewHolder>(YearDiffCallback()) {
 
