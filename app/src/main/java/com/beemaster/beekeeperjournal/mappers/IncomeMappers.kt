@@ -17,7 +17,8 @@ fun IncomeEntity.toIncome(): Income {
         quantity = this.quantity,
         unitName = this.unitName,
         price = this.price,
-        totalAmount = this.totalAmount
+        totalAmount = this.totalAmount,
+        yearId = this.yearId
     )
 }
 

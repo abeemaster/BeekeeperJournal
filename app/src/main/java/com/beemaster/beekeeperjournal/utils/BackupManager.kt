@@ -162,6 +162,7 @@ class BackupManager @Inject constructor(
 
     /**
      * Отримує об'єкт BackupData. Використовується для обох типів бекапу.
+    Так було
      */
     private suspend fun getBackupData(): BackupData {
         val incomes = dataSource.getAllIncomesSuspend()

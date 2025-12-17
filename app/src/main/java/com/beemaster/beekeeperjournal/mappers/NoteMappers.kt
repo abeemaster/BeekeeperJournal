@@ -31,7 +31,9 @@ fun NoteEntity.toNote(): Note {
         type = this.type,
         hiveId = this.hiveId,
         timestamp = this.createdAt,
-        title = this.title
+        title = this.title,
+        yearId = this.yearId,    // ТЕПЕР ЗЧИТУЄТЬСЯ РЕАЛЬНЕ ЗНАЧЕННЯ
+        imagePath = this.imagePath // ТАКОЖ ДОДАЄМО ШЛЯХ ДО ФОТО
     )
 }
 
@@ -103,6 +105,7 @@ fun NoteSearchResultEntity.toSearchResult(): NoteSearchResult {
         hiveId = this.hiveId,
         timestamp = this.createdAt,
         title = this.title,
+        yearId = this.yearId,
         imagePath = this.imagePath // Додано imagePath
     )
 

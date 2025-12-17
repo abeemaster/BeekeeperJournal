@@ -17,7 +17,8 @@ fun ExpenseEntity.toExpense(): Expense {
         name = this.name,
         quantityUnits = this.quantityUnits,
         nameQuantity = this.nameQuantity,
-        amount = this.amount
+        amount = this.amount,
+        yearId = this.yearId
     )
 }
 
