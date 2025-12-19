@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.dsl.NdkOptions
+
 // /app/build.gradle.kts
 
 plugins {
@@ -30,8 +32,22 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Enables code-related app optimization.
+            isMinifyEnabled = true
+
+            // Enables resource shrinking.
+            isShrinkResources = true
+
+            // Default file with automatically generated optimization rules.
+            getDefaultProguardFile("proguard-android-optimize.txt")
+        }
+        release {
+            ndk {
+                debugSymbolLevel ;NdkOptions.DebugSymbolLevel.SYMBOL_TABLE
+            }
         }
     }
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

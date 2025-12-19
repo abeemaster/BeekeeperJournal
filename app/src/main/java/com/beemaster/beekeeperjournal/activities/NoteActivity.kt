@@ -43,6 +43,7 @@ class NoteActivity : AppCompatActivity() {
     private var currentHiveId: Int = 0
     private var originalCreatedAt: Long = System.currentTimeMillis()
     private val viewModel: EditNoteViewModel by viewModels()
+    private var currentYearId: Int = 0
 
 
     /**
@@ -131,6 +132,7 @@ class NoteActivity : AppCompatActivity() {
                     currentEntryType = loadedNote.type
                     editNoteContentInput.setText(loadedNote.text)
                     originalCreatedAt = loadedNote.timestamp
+                    currentYearId = loadedNote.yearId
 
                 } else {
                     Toast.makeText(this@NoteActivity, getString(R.string.error_note_not_found), Toast.LENGTH_LONG).show()
@@ -211,7 +213,8 @@ class NoteActivity : AppCompatActivity() {
             type = currentEntryType,
             title = noteTitle,
             content = updatedNoteText,
-            createdAt = saveTimestamp
+            createdAt = saveTimestamp,
+            yearId = currentYearId
         )
 
         finish()

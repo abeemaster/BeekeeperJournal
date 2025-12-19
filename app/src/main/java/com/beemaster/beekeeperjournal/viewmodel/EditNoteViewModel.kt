@@ -17,7 +17,7 @@ import javax.inject.Inject
 class EditNoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
     private val hiveRepository: HiveRepository,
-    private val backupPrefsManager: BackupPrefsManager // ✅ 2. ІНЖЕКЦІЯ
+    private val backupPrefsManager: BackupPrefsManager
 ) : ViewModel() {
 
     /**
@@ -36,9 +36,18 @@ class EditNoteViewModel @Inject constructor(
         type: String,
         title: String,
         content: String,
-        createdAt: Long
+        createdAt: Long,
+        yearId: Int
     ) {
         viewModelScope.launch {
+            // Визначаємо, який рік записати в об'єкт
+            val finalYearId = if (noteId > 0) {
+                // Якщо це редагування (ID > 0), використовуємо переданий рік
+                yearId
+            } else {
+                // Якщо це нова нотатка, беремо активний рік з репозиторію
+                noteRepository.getCurrentYearId()
+            }
 
             val note = Note(
                 id = noteId,
@@ -46,7 +55,9 @@ class EditNoteViewModel @Inject constructor(
                 title = title,
                 text = content,
                 hiveId = hiveId,
-                timestamp = createdAt
+                timestamp = createdAt,
+                yearId = finalYearId,
+                imagePath = null
             )
 
             if (noteId > 0) {

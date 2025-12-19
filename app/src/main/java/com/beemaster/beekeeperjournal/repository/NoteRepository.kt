@@ -29,6 +29,14 @@ class NoteRepository @Inject constructor(
     private val yearPrefsManager: YearPrefsManager, // 1. ІНЖЕКЦІЯ МЕНЕДЖЕРА
     @Suppress("unused") private val hiveRepository: HiveRepository
 ) {
+
+    /**
+     * Отримує поточний обраний користувачем ID року.
+     */
+    fun getCurrentYearId(): Int {
+        return yearPrefsManager.activeYearId.value.toInt()
+    }
+
     /**
      * Отримує всі нотатки з бази даних у вигляді потоку Flow, фільтруючи за активним роком.
      *
@@ -89,6 +97,7 @@ class NoteRepository @Inject constructor(
                 noteEntities.map { it.toNote() }
             }
     }
+
     /**
      * Шукає нотатки за текстом та номером вулика, фільтруючи за активним роком.
      */

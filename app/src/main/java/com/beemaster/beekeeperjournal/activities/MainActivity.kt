@@ -19,6 +19,7 @@ import com.beemaster.beekeeperjournal.data.HiveCreator
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.dialogs.AddHiveDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.HiveOptionsDialogFragment
+import com.beemaster.beekeeperjournal.dialogs.InitialSetupDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.OnHiveAddedListener
 import com.beemaster.beekeeperjournal.utils.BackupManager
 import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
@@ -79,14 +80,18 @@ class MainActivity : BaseActivity(), OnHiveAddedListener {
         observeHives()
         collectHiveEvents()
 
-        lifecycleScope.launch {
-            val existingHive = viewModel.getHiveByNumber("1")
-            if (existingHive == null) {
-                val defaultHiveNumber = "1"
-                val newHive = hiveCreator.createDefaultHiveEntity(defaultHiveNumber)
-                viewModel.addHive(newHive)
-            }
+        // Замість автоматичного створення вулика "1", перевіряємо перший запуск
+        if (viewModel.isFirstRun()) {
+            showInitialSetupDialog()
         }
+    }
+
+    private fun showInitialSetupDialog() {
+        val dialog = InitialSetupDialogFragment { count ->
+            viewModel.setupInitialHives(count)
+        }
+        dialog.isCancelable = false // Щоб користувач не закрив діалог випадково
+        dialog.show(supportFragmentManager, InitialSetupDialogFragment.TAG)
     }
 
 

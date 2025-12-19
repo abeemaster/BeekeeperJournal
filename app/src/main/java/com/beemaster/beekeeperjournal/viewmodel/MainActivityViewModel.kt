@@ -5,6 +5,7 @@ package com.beemaster.beekeeperjournal.viewmodel
 import androidx.annotation.ColorInt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.beemaster.beekeeperjournal.data.HiveCreator
 import com.beemaster.beekeeperjournal.db.entity.BeekeepingYear
 import com.beemaster.beekeeperjournal.db.entity.HiveEntity
 import com.beemaster.beekeeperjournal.mappers.toIncomeEntity
@@ -17,6 +18,7 @@ import com.beemaster.beekeeperjournal.repository.HiveRepository
 import com.beemaster.beekeeperjournal.repository.IncomeRepository
 import com.beemaster.beekeeperjournal.repository.NoteRepository
 import com.beemaster.beekeeperjournal.repository.YearRepository
+import com.beemaster.beekeeperjournal.utils.AppPrefsManager
 import com.beemaster.beekeeperjournal.utils.BackupPrefsManager
 import com.beemaster.beekeeperjournal.utils.NaturalHiveNumberComparator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,7 +50,9 @@ class MainActivityViewModel @Inject constructor(
     private val expenseRepository: ExpenseRepository,
     private val incomeRepository: IncomeRepository,
     private val yearRepository: YearRepository,
-    private val backupPrefsManager: BackupPrefsManager
+    private val backupPrefsManager: BackupPrefsManager,
+    private val appPrefsManager: AppPrefsManager,
+    private val hiveCreator: HiveCreator
 ) : ViewModel(), BackupDataSource {
 
     private val MAX_HIVES_LIMIT = 100 // Максимальний ліміт вуликів
@@ -70,6 +74,24 @@ class MainActivityViewModel @Inject constructor(
 
     // Публічний StateFlow, який UI може спостерігати.
     val hives: StateFlow<List<HiveEntity>> = _hives
+
+    /**
+     * Масово створює початкову кількість вуликів.
+     */
+    fun setupInitialHives(count: Int) = viewModelScope.launch(Dispatchers.IO) {
+        for (i in 1..count) {
+            val hiveNumber = i.toString()
+            val newHive = hiveCreator.createDefaultHiveEntity(hiveNumber)
+            hiveRepository.insertHive(newHive)
+        }
+        // Оновлюємо мітку часу для майбутнього автоматичного бекапу
+        backupPrefsManager.updateLastDataModifiedTime()
+        appPrefsManager.setFirstRunCompleted()
+    }
+
+    // Метод для перевірки першого запуску, який ми викличемо з Activity
+    fun isFirstRun() = appPrefsManager.isFirstRun()
+
 
     // --------------------------------------------------------------------
     // НОВІ МЕТОДИ ДЛЯ РЕЗЕРВНОГО КОПІЮВАННЯ (ВИКЛИКАЮТЬСЯ З BackupManager)
