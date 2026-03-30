@@ -21,7 +21,7 @@ import com.beemaster.beekeeperjournal.db.entity.NoteEntity
  */
 @Database(
     entities = [HiveEntity::class, NoteEntity::class, ExpenseEntity::class, IncomeEntity::class, BeekeepingYear::class],
-    version = 9,
+    version = 10,
     exportSchema = false // Встановлено в 'false', оскільки схеми міграції винесені окремо.
 )
 abstract class AppDatabase : RoomDatabase() {

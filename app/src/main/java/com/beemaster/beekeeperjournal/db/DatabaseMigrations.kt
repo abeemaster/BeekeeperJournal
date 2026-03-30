@@ -159,6 +159,19 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
     }
 }
 
+/**
+ * Міграція з версії 9 на 10.
+ * Додавання полів паспорта матки до таблиці 'hives'.
+ */
+val MIGRATION_9_10: Migration = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE hives ADD COLUMN queenYear TEXT")
+        db.execSQL("ALTER TABLE hives ADD COLUMN queenBreed TEXT")
+        db.execSQL("ALTER TABLE hives ADD COLUMN queenNotes TEXT")
+    }
+}
+
+
 // --------------------------------------------------------------------------
 //  Масив усіх міграцій (Оголошується після всіх об'єктів)
 // --------------------------------------------------------------------------
@@ -175,7 +188,7 @@ val ALL_MIGRATIONS = arrayOf(
     MIGRATION_6_7,
     MIGRATION_7_8,
     MIGRATION_8_9,
-
+    MIGRATION_9_10,
 )
 
 /** УВАГА!!!

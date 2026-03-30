@@ -115,4 +115,11 @@ class HiveRepository @Inject constructor(
         // Виклик методу DAO
         hiveDao.updateSecondaryColor(hiveId, color)
     }
+
+    /**
+     * Тепер додамо функцію в репозиторій, до якої буде звертатися наша ViewModel:
+     */
+    suspend fun updateQueenPassport(hiveId: Int, year: String?, breed: String?, notes: String?) {
+        hiveDao.updateQueenPassport(hiveId, year, breed, notes)
+    }
 }

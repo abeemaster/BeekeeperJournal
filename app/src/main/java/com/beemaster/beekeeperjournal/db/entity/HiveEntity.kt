@@ -19,5 +19,13 @@ data class HiveEntity(
     /** Основний колір вулика, збережений як Int-ресурс або значення кольору. */
     val color: Int,
     /** Додатковий (вторинний) колір вулика, збережений як Int-ресурс або значення кольору. */
-    val secondaryColor: Int
+    val secondaryColor: Int,
+
+    // Нові поля для паспорта матки:
+    /** Рік початку яйцекладки матки */
+    val queenYear: String? = null,
+    /** Порода матки */
+    val queenBreed: String? = null,
+    /** Короткі примітки (зовнішній вигляд тощо) */
+    val queenNotes: String? = null
 )

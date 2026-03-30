@@ -99,6 +99,13 @@ interface HiveDao {
     suspend fun deleteAllHives()
 
     /**
+     * Він дозволить оновлювати дані паспорта матки окремо від інших даних вулика:
+     * @param hives Список HiveEntity для імпорту.
+     */
+    @Query("UPDATE hives SET queenYear = :year, queenBreed = :breed, queenNotes = :notes WHERE id = :hiveId")
+    suspend fun updateQueenPassport(hiveId: Int, year: String?, breed: String?, notes: String?)
+
+    /**
      * Вставляє список вуликів. Використовується для імпорту/відновлення даних.
      * @param hives Список HiveEntity для вставки.
      */
