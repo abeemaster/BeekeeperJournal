@@ -10,7 +10,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import com.beemaster.beekeeperjournal.R
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 
 /**
@@ -77,6 +76,7 @@ class NoteActionsDialogFragment : BottomSheetDialogFragment() {
                 KEY_NOTE_ID to noteId,
                 KEY_ACTION to ACTION_DELETE // Надсилаємо дію "delete"
             ))
+
             dismiss()
         }
     }

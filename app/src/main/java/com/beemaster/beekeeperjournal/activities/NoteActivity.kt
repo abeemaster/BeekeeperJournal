@@ -3,7 +3,6 @@
 package com.beemaster.beekeeperjournal.activities
 
 import android.os.Bundle
-import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
@@ -73,7 +72,6 @@ class NoteActivity : AppCompatActivity() {
      */
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "onDestroy: Releasing voice recognition resources.")
         voskHelper.destroy()
 
     }
@@ -216,7 +214,6 @@ class NoteActivity : AppCompatActivity() {
             createdAt = saveTimestamp,
             yearId = currentYearId
         )
-
         finish()
     }
 }

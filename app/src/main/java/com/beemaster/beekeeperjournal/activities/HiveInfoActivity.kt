@@ -286,12 +286,14 @@ class HiveInfoActivity : BaseActivity() {
         supportFragmentManager.setFragmentResultListener(
             NoteActionsDialogFragment.KEY_REQUEST,
             this
-        ) { _, bundle ->
+        ) { requestKey, bundle ->
             val noteId = bundle.getInt(NoteActionsDialogFragment.KEY_NOTE_ID)
             val action = bundle.getString(NoteActionsDialogFragment.KEY_ACTION)
 
             when (action) {
-                NoteActionsDialogFragment.ACTION_EDIT -> handleEditAction(noteId)
+                NoteActionsDialogFragment.ACTION_EDIT -> {
+                    handleEditAction(noteId)
+                }
                 NoteActionsDialogFragment.ACTION_DELETE -> showDeleteConfirmationDialog(noteId)
             }
         }
@@ -303,15 +305,31 @@ class HiveInfoActivity : BaseActivity() {
     private fun handleEditAction(noteId: Int) {
         lifecycleScope.launch {
             val noteModel = hiveInfoViewModel.getNoteDisplayModelById(noteId)
+
             if (noteModel != null) {
+                // Сценарій 1: Модель знайдена (зазвичай для вуликів)
                 val intent = Intent(this@HiveInfoActivity, NoteActivity::class.java).apply {
                     putExtra(Constants.EXTRA_NOTE_ID, noteModel.id)
                     putExtra(Constants.EXTRA_ORIGINAL_NOTE_TEXT, noteModel.text)
                     putExtra(Constants.EXTRA_HIVE_ID, noteModel.hiveId)
                     putExtra(Constants.EXTRA_HIVE_NUMBER, noteModel.hiveDisplayNumber)
                     putExtra(Constants.EXTRA_ENTRY_TYPE, noteModel.type)
+                    putExtra("is_edit", true) // додайте цей прапорець, якщо він потрібен в NoteActivity
                 }
                 startActivityWithSlideAnimation(intent)
+            } else if (currentHiveId == 0) {
+
+                val intent = Intent(this@HiveInfoActivity, NoteActivity::class.java).apply {
+                    putExtra(Constants.EXTRA_NOTE_ID, noteId)
+                    putExtra(Constants.EXTRA_HIVE_ID, 0)
+                    putExtra(Constants.EXTRA_ENTRY_TYPE, "general")
+                    putExtra(Constants.EXTRA_HIVE_NUMBER, currentHiveNumber)
+                    putExtra("is_edit", true)
+                }
+                startActivityWithSlideAnimation(intent)
+            } else {
+
+                Toast.makeText(this@HiveInfoActivity, "Помилка: запис не знайдено", Toast.LENGTH_SHORT).show()
             }
         }
     }
