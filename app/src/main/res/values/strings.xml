@@ -126,7 +126,7 @@
     <string name="tab_title_income">Прибутки</string>
     <string name="error_invalid_tab_position">Недійсна позиція</string>
 
-    <string name="annual_profitability_format">За 2025 рік: %s</string>
+    <string name="annual_profitability_format">За %1$s рік: %2$s</string>
 
     <string name="error_note_not_found">Помилка записів не знайдено</string>
     <string name="dialog_choose_action">Оберіть дію</string>

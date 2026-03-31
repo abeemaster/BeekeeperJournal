@@ -20,6 +20,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlinx.coroutines.flow.collectLatest
 
 /**
  * Activity для відображення екрана річної рентабельності.
@@ -30,6 +31,7 @@ class ProfitabilityActivity : BaseActivity() {
 
     private lateinit var binding: ActivityProfitabilityBinding
     private val viewModel: ProfitabilityViewModel by viewModels()
+    private val yearViewModel: com.beemaster.beekeeperjournal.viewmodel.BeekeepingYearViewModel by viewModels()
 
     override fun getLayoutResId(): Int = R.layout.activity_profitability
 
@@ -71,43 +73,41 @@ class ProfitabilityActivity : BaseActivity() {
      */
     private fun observeProfitability() {
         lifecycleScope.launch {
-            viewModel.profitability.collect { profitability ->
-                val amountText: String
-                val colorId: Int
+            // Отримуємо поточний стан років
+            yearViewModel.yearListState.collectLatest { yearState ->
+                // Знаходимо назву активного року (або "----" якщо не знайдено)
+                val currentYearName = yearState.years.find { it.yearId == yearState.activeYearId }?.name ?: "----"
 
-                if (profitability > 0) {
-                    amountText = String.format(Locale.getDefault(), "+%.2f", profitability)
-                    colorId = R.color.color_primary
-                } else if (profitability < 0) {
-                    amountText = String.format(Locale.getDefault(), "%.2f", profitability)
-                    colorId = R.color.status_red
-                } else {
-                    amountText = String.format(Locale.getDefault(), "%.2f", profitability)
-                    colorId = R.color.status_blue
+                // Слухаємо зміни рентабельності
+                viewModel.profitability.collect { profitability ->
+                    val amountText: String
+                    val colorId: Int
+
+                    if (profitability < 0) {
+                        amountText = String.format(Locale.getDefault(), "%.2f", profitability)
+                        colorId = R.color.status_red
+                    } else {
+                        amountText = String.format(Locale.getDefault(), "%.2f", profitability)
+                        colorId = R.color.status_blue
+                    }
+
+                    // ПЕРЕДАЄМО ДВА ПАРАМЕТРИ: назву року та суму
+                    val fullText = getString(R.string.annual_profitability_format, currentYearName, amountText)
+                    val spannableString = SpannableString(fullText)
+
+                    val startIndex = fullText.indexOf(amountText)
+                    if (startIndex != -1) {
+                        val endIndex = startIndex + amountText.length
+                        spannableString.setSpan(
+                            ForegroundColorSpan(ContextCompat.getColor(this@ProfitabilityActivity, colorId)),
+                            startIndex,
+                            endIndex,
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    }
+
+                    binding.yearAmount.text = spannableString
                 }
-
-                // Використовуємо форматний рядок для локалізації
-                val fullText = getString(R.string.annual_profitability_format, amountText)
-                val spannableString = SpannableString(fullText)
-
-                val startIndex = fullText.indexOf(amountText)
-                if (startIndex != -1) {
-                    val endIndex = startIndex + amountText.length
-                    // Встановлюємо колір для суми
-                    spannableString.setSpan(
-                        ForegroundColorSpan(
-                            ContextCompat.getColor(
-                                this@ProfitabilityActivity,
-                                colorId
-                            )
-                        ),
-                        startIndex,
-                        endIndex,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                }
-
-                binding.yearAmount.text = spannableString
             }
         }
     }

@@ -43,6 +43,11 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="@string/hive_info_title"
+
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground"
+
                 app:layout_constraintBottom_toBottomOf="@id/drawer_toggle_button"
                 app:layout_constraintEnd_toStartOf="@id/btnSelectYear"
                 app:layout_constraintStart_toEndOf="@id/drawer_toggle_button"

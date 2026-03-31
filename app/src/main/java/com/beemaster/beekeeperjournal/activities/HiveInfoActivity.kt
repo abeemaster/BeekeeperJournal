@@ -138,6 +138,22 @@ class HiveInfoActivity : BaseActivity() {
             com.beemaster.beekeeperjournal.dialogs.BeekeeperYearDialogFragment()
                 .show(supportFragmentManager, "BEEKEEPER_YEAR_DIALOG_TAG")
         }
+        // Знаходимо заголовок
+        val infoTitle: TextView = findViewById(R.id.infoTitle)
+
+        // Встановлюємо обробник натискання
+        infoTitle.setOnClickListener {
+            // Створюємо Intent для переходу на MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+
+            // Очищаємо стек активностей, щоб MainActivity стала головною
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+
+            startActivity(intent)
+
+            // Додаємо анімацію переходу (опціонально)
+            finish()
+        }
     }
 
     /**
