@@ -35,7 +35,7 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
     private val viewModel: BeekeepingYearViewModel by activityViewModels()
     private lateinit var yearsRecyclerView: RecyclerView
     private lateinit var addYearButton: Button
-    private lateinit var currentYearTextView: TextView
+    // private lateinit var currentYearTextView: TextView
     private lateinit var yearAdapter: BeekeepingYearAdapter
 
 
@@ -72,7 +72,7 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
     private fun initViews(view: View) {
         yearsRecyclerView = view.findViewById(R.id.yearsRecyclerView)
         addYearButton = view.findViewById(R.id.addYearButton)
-        currentYearTextView = view.findViewById(R.id.currentYearTextView)
+        // currentYearTextView = view.findViewById(R.id.currentYearTextView)
 
         // Встановлюємо LayoutManager, якщо він не встановлений у XML
         if (yearsRecyclerView.layoutManager == null) {
@@ -164,12 +164,12 @@ class BeekeeperYearDialogFragment : BottomSheetDialogFragment() {
 
                     // ВИПРАВЛЕНО: Об'єднуємо назву року та дату в один рядок,
                     // щоб уникнути помилки "Wrong argument count"
-                    val combinedInfo = activeYear.name
-                    currentYearTextView.text = getString(R.string.label_current_year_status, combinedInfo)
+                    // val combinedInfo = activeYear.name
+                    // currentYearTextView.text = getString(R.string.label_current_year_status, combinedInfo)
 
                     yearAdapter.setActiveYear(state.activeYearId)
                 } else {
-                    currentYearTextView.text = getString(R.string.label_current_year_not_set)
+                    // currentYearTextView.text = getString(R.string.label_current_year_not_set)
                     currentActiveYearName = null
                 }
             }

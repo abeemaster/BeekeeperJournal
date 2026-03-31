@@ -12,15 +12,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
 import com.beemaster.beekeeperjournal.adapters.NotesAdapter
-import com.beemaster.beekeeperjournal.models.NoteDisplayModel
-import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
-import com.beemaster.beekeeperjournal.viewmodel.HiveInfoViewModel
-import com.beemaster.beekeeperjournal.viewmodel.EditNoteViewModel
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import com.beemaster.beekeeperjournal.dialogs.NoteActionsDialogFragment
 import com.beemaster.beekeeperjournal.dialogs.showDeleteConfirmationDialog
+import com.beemaster.beekeeperjournal.models.NoteDisplayModel
+import com.beemaster.beekeeperjournal.utils.startActivityWithSlideAnimation
+import com.beemaster.beekeeperjournal.viewmodel.BeekeepingYearViewModel
+import com.beemaster.beekeeperjournal.viewmodel.EditNoteViewModel
+import com.beemaster.beekeeperjournal.viewmodel.HiveInfoViewModel
 import com.google.android.material.button.MaterialButton
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * Активиті для відображення детальної інформації та нотаток конкретного вулика.
@@ -51,6 +53,14 @@ class HiveInfoActivity : BaseActivity() {
 
     private val hiveInfoViewModel: HiveInfoViewModel by viewModels()
     private val editNoteViewModel: EditNoteViewModel by viewModels()
+    private val yearViewModel: BeekeepingYearViewModel by viewModels()
+
+    private lateinit var queenPassportContainer: View
+    private lateinit var etQueenYear: android.widget.EditText
+    private lateinit var etQueenBreed: android.widget.EditText
+    private lateinit var etQueenDescription: android.widget.EditText
+    private lateinit var btnSelectYear: MaterialButton
+
 
     /**
      * Ініціалізує Activity, налаштовує компоненти інтерфейсу та завантажує дані.
@@ -63,6 +73,21 @@ class HiveInfoActivity : BaseActivity() {
         setupRecyclerView()
         loadInitialData()
         observeNotes()
+        observeHiveData()
+        observeActiveYear()
+        hiveInfoViewModel.loadHive(currentHiveId)
+
+        supportFragmentManager.setFragmentResultListener("beekeeping_year_request", this) { _, bundle ->
+            val isChanged = bundle.getBoolean("year_changed", false)
+            if (isChanged) {
+                // 1. Оновлюємо текст на кнопці (новий рік)
+                updateYearButtonText()
+                // 2. Перезавантажуємо нотатки для цього ж вулика, але вже за новий рік
+                hiveInfoViewModel.getNotesForHive(currentHiveId, currentEntryType)
+
+                Toast.makeText(this, "Рік змінено", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     /**
@@ -79,17 +104,40 @@ class HiveInfoActivity : BaseActivity() {
         notesBtn = findViewById(R.id.notesBtn)
 
         emptyNotesPlaceholder = findViewById(R.id.emptyNotesPlaceholder)
+
+        queenPassportContainer = findViewById(R.id.queenPassportContainer)
+        etQueenYear = findViewById(R.id.etQueenYear)
+        etQueenBreed = findViewById(R.id.etQueenBreed)
+        etQueenDescription = findViewById(R.id.etQueenDescription)
+        btnSelectYear = findViewById(R.id.btnSelectYear)
+        updateYearButtonText() // Викликаємо, щоб відразу встановити текст
     }
 
+    /**
+     * Функція оновлення тексту.
+     * бере дані з налаштувань у файлі Constants.kt та SettingsActivity.kt
+     */
+    private fun updateYearButtonText() {
+        val prefs = getSharedPreferences(Constants.SETTINGS_PREFS_NAME, MODE_PRIVATE)
+        // Використовуємо ключ, який зазвичай зберігає ваш BeekeeperYearDialogFragment
+        val currentYearName = prefs.getString("selected_beekeeping_year_name", "2025")
+        btnSelectYear.text = currentYearName
+    }
     /**
      * Встановлює слухачів натискань для керуючих елементів.
      */
     private fun setupListeners() {
         newNoteButton.setOnClickListener { openNoteEditorActivity() }
         microphoneBtn.setOnClickListener { openNoteEditorActivity(startVoiceInput = true) }
-        queenBtn.setOnClickListener { showInfo("queen") }
-        hiveInfoBtn.setOnClickListener { showInfo("hive") }
-        notesBtn.setOnClickListener { showInfo("notes") }
+
+        queenBtn.setOnClickListener { updateTabSelection("queen") }
+        hiveInfoBtn.setOnClickListener { updateTabSelection("hive") }
+        notesBtn.setOnClickListener { updateTabSelection("notes") }
+
+        btnSelectYear.setOnClickListener {
+            com.beemaster.beekeeperjournal.dialogs.BeekeeperYearDialogFragment()
+                .show(supportFragmentManager, "BEEKEEPER_YEAR_DIALOG_TAG")
+        }
     }
 
     /**
@@ -162,13 +210,16 @@ class HiveInfoActivity : BaseActivity() {
             getString(titleResId, currentHiveNumber)
         }
 
+        // Керування видимістю кнопок навігації
         val visibility = if (currentHiveId == 0) View.GONE else View.VISIBLE
         queenBtn.visibility = visibility
         hiveInfoBtn.visibility = visibility
         notesBtn.visibility = visibility
 
+        // Завантаження списку нотаток для вибраного типу
         hiveInfoViewModel.getNotesForHive(currentHiveId, currentEntryType)
     }
+
 
     /**
      * Підписується на оновлення списку нотаток у ViewModel.
@@ -188,13 +239,6 @@ class HiveInfoActivity : BaseActivity() {
                 }
             }
         }
-    }
-
-    /**
-     * Перемикає відображення на вказаний тип інформації.
-     */
-    private fun showInfo(entryType: String) {
-        updateUIAndLoadData(entryType)
     }
 
     /**
@@ -270,4 +314,83 @@ class HiveInfoActivity : BaseActivity() {
             }
         )
     }
+    private fun observeHiveData() {
+        lifecycleScope.launch {
+            hiveInfoViewModel.currentHive.collect { hive ->
+                hive?.let {
+                    // Заповнюємо поля, якщо вони ще не фокусовані користувачем
+                    if (!etQueenYear.isFocused) etQueenYear.setText(it.queenYear)
+                    if (!etQueenBreed.isFocused) etQueenBreed.setText(it.queenBreed)
+                    if (!etQueenDescription.isFocused) etQueenDescription.setText(it.queenNotes)
+                }
+            }
+        }
+    }
+
+    private fun saveQueenPassportData() {
+        val currentHive = hiveInfoViewModel.currentHive.value ?: return
+
+        val newYear = etQueenYear.text.toString()
+        val newBreed = etQueenBreed.text.toString()
+        val newDesc = etQueenDescription.text.toString()
+
+        // ПЕРЕВІРКА: якщо дані не змінилися, просто виходимо
+        if (newYear == currentHive.queenYear &&
+            newBreed == currentHive.queenBreed &&
+            newDesc == currentHive.queenNotes) {
+            return
+        }
+
+        // Якщо ми тут — значить щось змінилося, зберігаємо
+        hiveInfoViewModel.updateQueenPassport(newYear, newBreed, newDesc)
+    }
+
+
+    // Оновіть метод updateTabSelection:
+    /**
+     * Головний метод для перемикання вкладок та керування UI.
+     */
+    private fun updateTabSelection(selectedType: String) {
+        // 1. Збереження даних паспорта, якщо ми йдемо з вкладки матки
+        if (currentEntryType == "queen" && selectedType != "queen") {
+            saveQueenPassportData()
+        }
+
+        // 2. Керування видимістю контейнера паспорта
+        if (selectedType == "queen") {
+            queenPassportContainer.visibility = View.VISIBLE
+        } else {
+            queenPassportContainer.visibility = View.GONE
+        }
+
+        // 3. Оновлення заголовків та завантаження нотаток
+        updateUIAndLoadData(selectedType)
+    }
+
+
+    // Додаємо обов'язкове збереження при закритті активіті
+    override fun onPause() {
+        super.onPause()
+        if (currentEntryType == "queen") {
+            saveQueenPassportData()
+        }
+    }
+
+    private fun observeActiveYear() {
+        lifecycleScope.launch {
+            // Використовуємо yearListState, як у діалозі
+            yearViewModel.yearListState.collectLatest { state ->
+                // Знаходимо активний рік за його ID
+                val activeYear = state.years.find { it.yearId == state.activeYearId }
+
+                if (activeYear != null) {
+                    // Встановлюємо напис на кнопку (тільки назву року)
+                    btnSelectYear.text = activeYear.name
+                } else {
+                    btnSelectYear.text = "----" // Якщо рік не вибрано
+                }
+            }
+        }
+    }
+
 }

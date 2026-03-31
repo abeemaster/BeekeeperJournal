@@ -41,6 +41,28 @@ class HiveInfoViewModel @Inject constructor(
      */
     val notes: StateFlow<List<NoteDisplayModel>> = _notes.asStateFlow()
 
+
+    // У розділ Flows додайте:
+    private val _currentHive = MutableStateFlow<com.beemaster.beekeeperjournal.db.entity.HiveEntity?>(null)
+    val currentHive: StateFlow<com.beemaster.beekeeperjournal.db.entity.HiveEntity?> = _currentHive.asStateFlow()
+
+    // Додайте функцію завантаження вулика:
+    fun loadHive(hiveId: Int) {
+        viewModelScope.launch {
+            _currentHive.value = hiveRepository.getHiveById(hiveId.toLong())
+        }
+    }
+
+    // Додайте функцію збереження паспорта:
+    fun updateQueenPassport(year: String, breed: String, notes: String) {
+        val hive = _currentHive.value ?: return
+        viewModelScope.launch {
+            hiveRepository.updateQueenPassport(hive.id, year, breed, notes)
+            // Оновлюємо локальний стан, щоб UI знав про зміни
+            _currentHive.value = hive.copy(queenYear = year, queenBreed = breed, queenNotes = notes)
+        }
+    }
+
     // ------------------------------------
     // ФУНКЦІЇ ОТРИМАННЯ ДАНИХ
     // ------------------------------------

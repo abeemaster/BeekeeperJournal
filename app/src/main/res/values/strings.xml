@@ -271,6 +271,11 @@
     <string name="error_year_not_found">Помилка: Рік не знайдено.</string>
     <string name="error_update_failed">Помилка: Не вдалося оновити рік.</string>
     <string name="year_updated_successfully">Рік "%s" успішно оновлено.</string>
+    <string name="year">Рік</string>
+    <string name="breed">Порода</string>
+    <string name="notes">Примітки</string>
+    <string name="date_year">2025</string>
+
 
 </resources>
 

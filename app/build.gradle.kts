@@ -96,6 +96,7 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.work.hilt.android)
+    implementation(libs.androidx.ui.test)
     ksp(libs.androidx.work.hilt.compiler)
 
     implementation(libs.hilt.android)
