@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -177,6 +178,14 @@ class VoiceManager @Inject constructor(
      */
     private fun executeStartListening() {
         if (isListening) return
+
+        if (isEmulator()) {
+            Log.i(TAG, "Emulator detected. Forcing Google Speech Engine.")
+            startGoogleListening()
+            isListening = true
+            updateMicrophoneButtonState(true)
+            return
+        }
 
         val speechEngine = sharedPreferences.getString(
             Constants.KEY_SPEECH_ENGINE,
@@ -443,5 +452,27 @@ class VoiceManager @Inject constructor(
     private fun updateMicrophoneButtonState(isListening: Boolean) {
         val colorResId = if (isListening) R.color.status_red else R.color.button_microphone
         currentMicrophoneButton.backgroundTintList = ContextCompat.getColorStateList(activity, colorResId)
+    }
+
+    /**
+     * Визначає, чи запущено додаток на емуляторі.
+     */
+    private fun isEmulator(): Boolean {
+        return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.HARDWARE.contains("goldfish")
+                || Build.HARDWARE.contains("ranchu")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.PRODUCT.contains("sdk_google")
+                || Build.PRODUCT.contains("google_sdk")
+                || Build.PRODUCT.contains("sdk")
+                || Build.PRODUCT.contains("sdk_x86")
+                || Build.PRODUCT.contains("vbox86p")
+                || Build.PRODUCT.contains("emulator")
+                || Build.PRODUCT.contains("simulator"))
     }
 }

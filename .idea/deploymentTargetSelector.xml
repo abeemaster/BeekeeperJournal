@@ -4,21 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-03-30T09:06:16.023898800Z">
+        <DropdownSelection timestamp="2026-06-03T03:19:01.319800500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=R58RC0DPN1W" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
-      <SelectionState runConfigName="MainActivity">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-12-15T10:15:54.747420300Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=R58RC0DPN1W" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Олександр\.android\avd\Motorola_Edge_50.avd" />
             </handle>
           </Target>
         </DropdownSelection>

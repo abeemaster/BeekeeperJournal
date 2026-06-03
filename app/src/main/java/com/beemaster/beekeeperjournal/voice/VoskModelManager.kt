@@ -2,6 +2,7 @@
 package com.beemaster.beekeeperjournal.voice
 
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -49,13 +50,42 @@ class VoskModelManager @Inject constructor(
         get() = voskModel != null
 
     init {
-        // Ініціалізація Vosk: встановлення рівня логування
-        LibVosk.setLogLevel(LogLevel.INFO)
-        // checkAndStartModelDownload() видаляю бо він викликає завантаження без вимоги користувача.
+        if (!isEmulator()) {
+            // Ініціалізація Vosk: встановлення рівня логування
+            try {
+                LibVosk.setLogLevel(LogLevel.INFO)
+            } catch (e: Throwable) {
+                Log.e(TAG, "Failed to set Vosk log level: ${e.message}")
+            }
+        } else {
+            Log.i(TAG, "Vosk initialization skipped: Emulator detected")
+        }
     }
 
     /**
-     * Перевіряє, чи папка моделі існує і містить необхідний критичний файл.
+     * Визначає, чи запущено додаток на емуляторі.
+     */
+    private fun isEmulator(): Boolean {
+        return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.HARDWARE.contains("goldfish")
+                || Build.HARDWARE.contains("ranchu")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.PRODUCT.contains("sdk_google")
+                || Build.PRODUCT.contains("google_sdk")
+                || Build.PRODUCT.contains("sdk")
+                || Build.PRODUCT.contains("sdk_x86")
+                || Build.PRODUCT.contains("vbox86p")
+                || Build.PRODUCT.contains("emulator")
+                || Build.PRODUCT.contains("simulator"))
+    }
+
+    /**
+     * Перевіряє, чи тека моделі існує і містить необхідний критичний файл.
      */
     private fun isVoskModelIntegrityOk(modelDir: File): Boolean {
         // Vosk вимагає наявності model.conf
@@ -106,6 +136,12 @@ class VoskModelManager @Inject constructor(
      * Перевіряє наявність моделі та, за потреби, запускає ланцюжок WorkManager для завантаження/розпакування.
      */
     fun checkAndStartModelDownload() {
+        if (isEmulator()) {
+            Log.w(TAG, "Download skipped: Vosk is disabled on emulators.")
+            reportProgress("Голосовий ввід недоступний на емуляторі", 0)
+            notifyModelReady()
+            return
+        }
         if (isModelReady) {
             notifyModelReady()
             return
@@ -121,7 +157,7 @@ class VoskModelManager @Inject constructor(
             return
         }
 
-        // Якщо папка існує, але не цілісна (наприклад, корумпована або вкладена),
+        // Якщо тека існує, але не цілісна (наприклад, корумпована або вкладена),
         // ми видаляємо її, щоб WorkManager почав роботу з чистого листа.
         if (modelDir.exists() && modelDir.isDirectory) {
             Log.w(TAG, "Папка моделі існує, але не містить критичного файлу. Видаляємо для повторного завантаження/розпакування.")

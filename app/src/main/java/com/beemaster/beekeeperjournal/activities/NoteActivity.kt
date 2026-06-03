@@ -10,6 +10,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.beemaster.beekeeperjournal.Constants
 import com.beemaster.beekeeperjournal.R
@@ -53,6 +55,7 @@ class NoteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_note)
 
+        setupWindowInsets()
         bindViews()
         getIntentData()
         setupListeners()
@@ -64,6 +67,30 @@ class NoteActivity : AppCompatActivity() {
             inputField = editNoteContentInput,
             micButton = microphoneBtnEditNote
         )
+    }
+
+    /**
+     * Налаштовує відступи для системних панелей (навігація, статус-бар),
+     * щоб контент не перекривався кнопками телефона.
+     */
+    private fun setupWindowInsets() {
+        val root = findViewById<android.view.View>(R.id.noteActivityRoot)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // Додаємо системні відступи до існуючого padding (збереженого в XML)
+            val paddingLeft = resources.getDimensionPixelSize(R.dimen.screen_padding)
+            val paddingTop = resources.getDimensionPixelSize(R.dimen.screen_padding)
+            val paddingRight = resources.getDimensionPixelSize(R.dimen.screen_padding)
+            val paddingBottom = resources.getDimensionPixelSize(R.dimen.screen_padding)
+
+            view.setPadding(
+                paddingLeft + insets.left,
+                paddingTop + insets.top,
+                paddingRight + insets.right,
+                paddingBottom + insets.bottom
+            )
+            windowInsets
+        }
     }
 
     /**

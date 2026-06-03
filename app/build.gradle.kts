@@ -57,13 +57,15 @@ android {
 
     packaging {
         jniLibs {
-            // Змінюємо на false, якщо це можливо для вашої версії AGP,
-            // оскільки Google Play краще обробляє бандли без Legacy пакування.
-            // Якщо виникнуть проблеми з запуском Vosk — поверніть true.
-            useLegacyPackaging = false
-
-            // Додаємо виключення, щоб символи точно потрапили в бандл
+            useLegacyPackaging = true
             keepDebugSymbols.add("**/*.so")
+        }
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            pickFirsts += "com/sun/jna/android-x86-64/libjnidispatch.so"
+            pickFirsts += "com/sun/jna/android-x86/libjnidispatch.so"
+            pickFirsts += "com/sun/jna/android-armv7/libjnidispatch.so"
+            pickFirsts += "com/sun/jna/android-aarch64/libjnidispatch.so"
         }
     }
 
@@ -106,6 +108,8 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.room.compiler)
+
+    implementation("net.java.dev.jna:jna:5.13.0@aar")
 
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.google.gson)
